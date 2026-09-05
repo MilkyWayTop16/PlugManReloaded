@@ -1,0 +1,1666 @@
+#
+#
+#         █▀█ █░░ █░█ █▀▀ █▀▄▀█ ▄▀█ █▄░█ █▀█ █▀▀ █░░ █▀█ ▄▀█ █▀▄ █▀▀ █▀▄
+#         █▀▀ █▄▄ █▄█ █▄█ █░▀░█ █▀█ █░▀█ █▀▄ ██▄ █▄▄ █▄█ █▀█ █▄▀ ██▄ █▄▀
+#
+#                             (By MilkyWay for everyone)
+#
+#     ◆ Found a bug/issue? Message me on Telegram - @vkusniy_milkyway
+#            ◆ If you find this plugin useful, you can always
+#          leave it a review and subscribe to my Telegram - @GornaSqd
+#                             I would really appreciate it :)
+#
+#                     (Localization file: English / en-messages.yml)
+#
+
+# Localization file version
+config-version: 1.0
+
+# All plugin actions and messages
+actions:
+  errors:
+    details:
+      unload-failed: "failed to unload"
+      load-failed: "failed to load"
+      enable-failed: "failed to enable"
+      disable-failed: "failed to disable"
+      dependency-failed: "a dependency failed to load"
+      unknown: "unknown error"
+      self-disabled: "the plugin disabled itself on startup, or an initialization error occurred"
+      self-disabled-on-enable: "the plugin disabled itself on startup, or an initialization error occurred in onEnable()"
+      empty-load-result: "the server core returned an empty result while loading the plugin"
+      loaded-from-memory: "server memory"
+      file-not-found: "\"{file}\" was not found in the plugins folder — specify the plugin name or the .jar file name"
+    no-permission:
+      - "[message] &#FB8808▶ &fNot enough &#FB8808permissions to use &fthis command!"
+      - "[sound] BLOCK_ANVIL_LAND"
+    console-not-allowed:
+      - "[message] &#FB8808▶ Oops! &fOnly &#FB8808players &fcan use this command!"
+      - "[sound] BLOCK_ANVIL_LAND"
+    invalid-plugin:
+      - "[message] &#FB8808▶ Stop! &fSpecify a &#FB8808valid &fplugin name!"
+      - "[sound] BLOCK_ANVIL_LAND"
+    plugin-not-found:
+      - "[message] &#FB8808▶ Stop! &fPlugin &#FB8808«{plugin}» &fisn't installed on the server!"
+      - "[sound] BLOCK_ANVIL_LAND"
+    has-dependents:
+      - "[message] &#FB8808▶ Stop! &fOther plugins depend on &#FB8808«{plugin}»&f: &#FB8808{dependents}&f — unload cancelled to avoid breaking them"
+      - "[sound] BLOCK_ANVIL_LAND"
+    plugin-ignored:
+      - "[message] &#FB8808▶ Stop! &fPlugin &#FB8808«{plugin}» &fis on the &#FB8808protected list &fand &#FB8808cannot &fbe unloaded!"
+      - "[sound] BLOCK_ANVIL_LAND"
+    critical-protected:
+      - "[message] &#FB8808▶ Stop! &fPlugin &#FB8808«{plugin}» &fis &#FB8808protected &fas a critical server plugin and &#FB8808cannot &fbe unloaded!"
+      - "[sound] BLOCK_ANVIL_LAND"
+    self-protected:
+      - "[message] &#FB8808▶ Stop! &fPlugin &#FB8808«{plugin}» &fcan't manage &#FB8808itself&f, so &#FB8808that's &fnot going to work..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    already-enabled:
+      - "[message] &#FB8808▶ &fPlugin &#FB8808«{plugin}» &fis already enabled!"
+      - "[sound] BLOCK_ANVIL_LAND"
+    already-disabled:
+      - "[message] &#FB8808▶ &fPlugin &#FB8808«{plugin}» &fis already disabled!"
+      - "[sound] BLOCK_ANVIL_LAND"
+    reload-disabled:
+      - "[message] &#FB8808▶ Stop! &fPlugin &#FB8808«{plugin}» &fis disabled, use the command &#FB8808/plm enable {plugin} &fto enable it!"
+      - "[sound] BLOCK_ANVIL_LAND"
+    confirm-expired:
+      - "[message] &#FB8808▶ Oops! &fThe confirmation &#FB8808has expired &for &#FB8808has already &fbeen used!"
+      - "[sound] BLOCK_ANVIL_LAND"
+    operation-cancelled:
+      - "[message] &#FB8808▶ Stop! &fThe operation on plugin &#FB8808«{plugin}» &fwas cancelled &#FB8808by another plugin &fthrough a PlugManReloaded API event..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    internal-error:
+      - "[message] &#FB8808▶ Oops! &fAn &#FB8808internal error &foccurred while performing the operation&f: {error}"
+      - "[sound] BLOCK_ANVIL_LAND"
+    timeout:
+      - "[message] &#FB8808▶ Oops! &fThe operation &#FB8808didn't finish &fin time and was &#FB8808aborted&f..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    file-not-found:
+      - "[message] &#FB8808▶ Oops! &fPlugin file &#FB8808«{file}» &fwas not found in the &#FB8808plugins folder&f..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    unsupported-java:
+      - "[message] &#FB8808▶ Oops! &fPlugin &#FB8808«{plugin}» &frequires &#FB8808Java {required-java}+&f, but the server is running &#FB8808Java {current-java}&f..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    unsupported-api:
+      - "[message] &#FB8808▶ Oops! &fPlugin &#FB8808«{plugin}» &frequires an unsupported core API version &#FB8808{api}&f!"
+      - "[sound] BLOCK_ANVIL_LAND"
+    missing-deps:
+      - "[message] &#FB8808▶ Oops! &fPlugin &#FB8808«{plugin}» &fis missing required dependencies: &#FB8808{deps}"
+      - "[sound] BLOCK_ANVIL_LAND"
+
+    circular-deps:
+      - "[message] &#FB8808▶ Oops! &fA &#FB8808circular &fdependency was found between plugin &#FB8808«{plugin}» &fand other plugins..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    invalid-description:
+      - "[message] &#FB8808▶ Oops! &fFile &#FB8808«{file}» &fhas a corrupted or missing &#FB8808plugin.yml &fmanifest..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    jar-corrupted:
+      - "[message] &#FB8808▶ Oops! &fFile &#FB8808«{file}» &fis corrupted or &#FB8808isn't &fa .jar plugin..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    class-not-found:
+      - "[message] &#FB8808▶ Oops! &fPlugin &#FB8808«{plugin}» &fis missing the required class &#FB8808{class}&f..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    incompatible-core:
+      - "[message] &#FB8808▶ Oops! &fPlugin &#FB8808«{plugin}» &fis incompatible with the core (missing method/field &#FB8808{member}&f)"
+      - "[sound] BLOCK_ANVIL_LAND"
+    incompatible-class-change:
+      - "[message] &#FB8808▶ Oops! &fPlugin &#FB8808«{plugin}» &fwas compiled against an &#FB8808incompatible &fversion of the core interfaces..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    duplicate-plugin:
+      - "[message] &#FB8808▶ Oops! &fA plugin named &#FB8808«{plugin}» &fis already &#FB8808loaded &fon the server!"
+      - "[sound] BLOCK_ANVIL_LAND"
+    database-locked:
+      - "[message] &#FB8808▶ Oops! &fThe database of plugin &#FB8808«{plugin}» &fis locked by &#FB8808another &fprocess..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    port-in-use:
+      - "[message] &#FB8808▶ Oops! &fThe network port or web address of plugin &#FB8808«{plugin}» &fis already in use!"
+      - "[sound] BLOCK_ANVIL_LAND"
+    paper-bootstrapper:
+      - "[message] &#FB8808▶ Oops! &fPlugin &#FB8808«{plugin}» &fuses &#FB8808Paper Bootstrapper &fand &#FB8808cannot &fbe loaded on the fly..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    load-failed:
+      - "[message] &#FB8808▶ Oops! &fFailed to &#FB8808load &fplugin &#FB8808«{plugin}» &fdue to an internal &#FB8808initialization error&f..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    unload-failed:
+      - "[message] &#FB8808▶ Oops! &fFailed to &#FB8808properly &funload plugin &#FB8808«{plugin}» &ffrom server memory..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    delete-failed:
+      - "[message] &#FB8808▶ Oops! &fFailed to &#FB8808delete &fthe file of plugin &#FB8808«{plugin}» &ffrom the server disk..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    reload-failed:
+      - "[message] &#FB8808▶ Oops! &fFailed to &#FB8808reload &fplugin &#FB8808«{plugin}» &fdue to an internal plugin &#FB8808error&f..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    restart-left-unloaded:
+      - "[message] &#FB8808▶ Attention! &fPlugin &#FB8808«{plugin}» &fwas &#FB8808properly &funloaded&f, but reloading the same file &#FB8808failed&f twice in a row: {error}"
+      - "[message] &#FB8808▶ &fThe plugin is currently &#FB8808not running &fon the server, so &#FB8808load &fit manually with the command &#FB8808/plm load {plugin} &fonce you've fixed the error..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    enable-failed:
+      - "[message] &#FB8808▶ Oops! &fPlugin &#FB8808«{plugin}» &fdisabled itself or an &#FB8808error &foccurred while enabling it!"
+      - "[sound] BLOCK_ANVIL_LAND"
+    disable-failed:
+      - "[message] &#FB8808▶ Oops! &fAn unexpected &#FB8808error &foccurred while disabling plugin &#FB8808«{plugin}»&f..."
+      - "[sound] BLOCK_ANVIL_LAND"
+
+  help:
+    main:
+      - "[message] "
+      - "[message] &#FFFF00▶ &fList of available &#FFFF00PlugManReloaded &fcommands:"
+      - "[message] "
+      - "[message]   &#FFFF00◆ /plm list (-v/-j) &f— Show the server's plugin list (flag «-v» — with versions, «-j» — JAR names)"
+      - "[message]   &#FFFF00◆ /plm info <Plugin> &f— Detailed info about a plugin and its dependencies"
+      - "[message]   &#FFFF00◆ /plm load <Plugin> &f— Load and enable a plugin from the plugins folder"
+      - "[message]   &#FFFF00◆ /plm unload <Plugin> (-f) &f— Properly unload a plugin from server memory"
+      - "[message]   &#FFFF00◆ /plm reload <Plugin> (-c/-f) &f— Reload a plugin (flag «-c» — with dependencies, «-f» — this one only)"
+      - "[message]   &#FFFF00◆ /plm restart <Plugin> (-c/-f) &f— Fully restart a plugin from disk"
+      - "[message]   &#FFFF00◆ /plm enable <Plugin> &f— Enable a disabled plugin"
+      - "[message]   &#FFFF00◆ /plm disable <Plugin> &f— Disable a running plugin"
+      - "[message]   &#FFFF00◆ /plm usage <Command/Permission> &f— Find the plugin that registered a command or permission"
+      - "[message]   &#FFFF00◆ /plm dump &f— Create a file with a full dump of the server environment"
+      - "[message]   &#FFFF00◆ /plm update (Plugin/all) (-y/-r/-s) &f— Check for and install updates for server plugins"
+      - "[message]   &#FFFF00◆ /plm download <Plugin/URL> (-s/-y) &f— Find and automatically download a plugin with its dependencies"
+      - "[message]   &#FFFF00◆ /plm delete <Plugin> (-y/-d) &f— Fully unload and delete a plugin's .jar file from disk"
+      - "[message]   &#FFFF00◆ /plm hotswap <on/off/status> &f— Auto-watch plugin files (auto-load and auto-update)"
+      - "[message]   &#FFFF00◆ /plm config reload &f— Reload the plugin's configuration"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    download:
+      - "[message] "
+      - "[message]  &#FFFF00▶ &fCommand: &#FFFF00/plm download <Plugin/Link> (-y/-s/-w)"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fDescription: &#FFFF00Finds or directly downloads a plugin from Modrinth, Hangar, SpigotMC or GitHub, automatically picking a compatible version, checking and installing missing dependencies"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fAvailable flags:"
+      - "[message] "
+      - "[message]    &#FFFF00-y &for &#FFFF00--yes &f— Automatically install the plugin and its dependencies without confirmation"
+      - "[message]    &#FFFF00-s &for &#FFFF00--source <Site> &f— Search for the plugin only on the specified site (for example, Modrinth, Hangar, SpigotMC, GitHub and others)"
+      - "[message]    &#FFFF00-w &for &#FFFF00--with-soft-deps &f— Also download optional dependencies (soft-depend)"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fCommand examples:"
+      - "[message] "
+      - "[message]    &#FFFF00/plm download LuckPerms &f— Find a plugin by name"
+      - "[message]    &#FFFF00/plm download https://modrinth.com/plugin/luckperms &f— Download from a direct link"
+      - "[message]    &#FFFF00/plm download DecentHolograms -s modrinth &f— Search on a specific site"
+      - "[message]    &#FFFF00/plm download WorldGuard -y &f— Download with dependencies auto-confirmed"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    info:
+      - "[message] "
+      - "[message]  &#FFFF00▶ &fCommand: &#FFFF00/plm info <Plugin>"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fDescription: &#FFFF00Shows detailed info about a plugin: version, status, format, authors, file name on disk, size, dependencies and interactive management buttons in chat"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fCommand example: &#FFFF00/plm info LuckPerms"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    load:
+      - "[message] "
+      - "[message]  &#FFFF00▶ &fCommand: &#FFFF00/plm load <Plugin/-all>"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fDescription: &#FFFF00Loads a new or previously unloaded plugin from the plugins folder into server memory, runs an integrity check, registers and enables the plugin"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fAvailable flag:"
+      - "[message] "
+      - "[message]    &#FFFF00-all &for &#FFFF00-a &f— Load all unloaded plugins from the plugins folder at once"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fCommand example: &#FFFF00/plm load -all &for &#FFFF00/plm load EssentialsX"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    unload:
+      - "[message] "
+      - "[message]  &#FFFF00▶ &fCommand: &#FFFF00/plm unload <Plugin/-all> (-f)"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fDescription: &#FFFF00Safely unloads and disables a plugin from server memory"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fAvailable flags:"
+      - "[message] "
+      - "[message]    &#FFFF00-all &for &#FFFF00-a &f— Unload all server plugins from memory at once"
+      - "[message]    &#FFFF00-f &for &#FFFF00--force &f— Skip the confirmation dialog"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fCommand example: &#FFFF00/plm unload -all &for &#FFFF00/plm unload DecentHolograms -f"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    reload:
+      - "[message] "
+      - "[message]  &#FFFF00▶ &fCommand: &#FFFF00/plm reload <Plugin/-all> (-c/-f) &for &#FFFF00/plm reload -c"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fDescription: &#FFFF00Reloads a plugin, or reloads PlugManReloaded's own configuration"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fAvailable flags:"
+      - "[message] "
+      - "[message]    &#FFFF00-all &for &#FFFF00-a &f— Reload all active server plugins at once"
+      - "[message]    &#FFFF00-c &for &#FFFF00--cascade &f— Reload the plugin together with everything that depends on it"
+      - "[message]    &#FFFF00-f &for &#FFFF00--force &f— Reload only this plugin without its dependents"
+      - "[message]    &#FFFF00-c &for &#FFFF00--config &f— Quickly reload PlugManReloaded's own configuration"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fCommand example: &#FFFF00/plm reload -all &for &#FFFF00/plm reload Vault -c"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    restart:
+      - "[message] "
+      - "[message]  &#FFFF00▶ &fCommand: &#FFFF00/plm restart <Plugin/-all> (-c/-f)"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fDescription: &#FFFF00Performs a full plugin restart, re-reading the .jar file from disk"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fAvailable flags:"
+      - "[message] "
+      - "[message]    &#FFFF00-all &for &#FFFF00-a &f— Fully restart all server plugins from disk"
+      - "[message]    &#FFFF00-c &for &#FFFF00--cascade &f— Restart the plugin together with everything that depends on it"
+      - "[message]    &#FFFF00-f &for &#FFFF00--force &f— Restart only this plugin without its dependents"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fCommand example: &#FFFF00/plm restart -all &for &#FFFF00/plm restart WorldGuard -c"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    enable:
+      - "[message] "
+      - "[message]  &#FFFF00▶ &fCommand: &#FFFF00/plm enable <Plugin/-all>"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fDescription: &#FFFF00Enables a disabled plugin without reloading it from disk"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fAvailable flag:"
+      - "[message] "
+      - "[message]    &#FFFF00-all &for &#FFFF00-a &f— Enable all disabled plugins at once"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fCommand example: &#FFFF00/plm enable -all &for &#FFFF00/plm enable Chatty"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    disable:
+      - "[message] "
+      - "[message]  &#FFFF00▶ &fCommand: &#FFFF00/plm disable <Plugin/-all> (-f)"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fDescription: &#FFFF00Disables a running plugin without unloading its classes from server memory"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fAvailable flags:"
+      - "[message] "
+      - "[message]    &#FFFF00-all &for &#FFFF00-a &f— Disable all running server plugins at once"
+      - "[message]    &#FFFF00-f &for &#FFFF00--force &f— Skip the confirmation dialog"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fCommand example: &#FFFF00/plm disable -all &for &#FFFF00/plm disable Chatty -f"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    delete:
+      - "[message] "
+      - "[message]  &#FFFF00▶ &fCommand: &#FFFF00/plm delete <Plugin> (-y/-d)"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fDescription: &#FFFF00Fully unloads the plugin from memory and deletes its .jar file from the plugins folder (keeping a backup)"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fAvailable flags:"
+      - "[message] "
+      - "[message]    &#FFFF00-y &for &#FFFF00--yes &f— Confirm the deletion immediately without a confirmation dialog"
+      - "[message]    &#FFFF00-d &for &#FFFF00--data &f— Also delete the plugin's data folder and all its .yml files"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fCommand example: &#FFFF00/plm delete ProtocolLib -y -d"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    usage:
+      - "[message] "
+      - "[message]  &#FFFF00▶ &fCommand: &#FFFF00/plm usage <Command/Permission>"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fDescription: &#FFFF00Finds exactly which server plugin registered the given command, including command aliases, or a given permission"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fCommand examples: &#FFFF00/plm usage fly &for &#FFFF00/plm usage cmi.command.fly"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    hotswap:
+      - "[message] "
+      - "[message]  &#FFFF00▶ &fCommand: &#FFFF00/plm hotswap <on/off/status>"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fDescription: &#FFFF00Manages the system that automatically watches for plugin changes in the plugins folder"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fCommand parameters:"
+      - "[message] "
+      - "[message]    &#FFFF00on &f— Enable auto-loading of new plugins, auto-updating and auto-unloading"
+      - "[message]    &#FFFF00off &f— Turn off auto-watching for plugin changes"
+      - "[message]    &#FFFF00status &f— Check the current state of plugin auto-watching"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fCommand example: &#FFFF00/plm hotswap on"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    config:
+      - "[message] "
+      - "[message]  &#FFFF00▶ &fCommand: &#FFFF00/plm config reload"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fDescription: &#FFFF00Fully reloads the plugin's config.yml configuration file"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fCommand example: &#FFFF00/plm config reload"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    update:
+      - "[message] "
+      - "[message]  &#FFFF00▶ &fCommand: &#FFFF00/plm update (Plugin/-all) (-y/-r/-s)"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fDescription: &#FFFF00Checks for newer plugin versions on Modrinth, Hangar, GitHub, SpigotMC, Jenkins and SpigotMC.ru, with an option to install them automatically"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fAvailable flags:"
+      - "[message] "
+      - "[message]    &#FFFF00-all &for &#FFFF00-a &f— Check updates for all installed plugins at once"
+      - "[message]    &#FFFF00-y &for &#FFFF00--yes &f— Automatically download and install found updates without confirmation"
+      - "[message]    &#FFFF00-r &for &#FFFF00--refresh &f— Clear the version cache and request fresh data from the sites"
+      - "[message]    &#FFFF00-s &for &#FFFF00--single &f— Update the plugin without restarting its dependents"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fCommand example: &#FFFF00/plm update -all -r"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+
+  enable:
+    start:
+      - "[message] &#FFFF00◆ &fEnabling plugin &#FFFF00«{plugin}»&f..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    success:
+      - "[message] &#FFFF00◆ &fPlugin &#FFFF00«{plugin}» &f(&#FFFF00v{version}&f) &fwas successfully &#FFFF00enabled &fin &#FFFF00{time}ms."
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    all-start:
+      - "[message] &#FFFF00◆ &fEnabling &#FFFF00all disabled &fplugins on the server..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    all-partial:
+      - "[message] &#FB8808▶ Oops! &fSome plugins (&#FB8808{count}&f/&#FB8808{total}&f) were enabled in &#FFFF00{time}ms&f, but &#FB8808{failed-count} &ffailed: &#FB8808{failed-plugins}"
+      - "[sound] ENTITY_VILLAGER_NO"
+    all-failed:
+      - "[message] &#FB8808▶ Oops! &fNone of the plugins (&#FB88080&f/&#FB8808{total}&f) could be enabled! Check console."
+      - "[sound] BLOCK_ANVIL_LAND"
+    all-success:
+      - "[message] &#FFFF00◆ &fAll previously disabled plugins (&#FFFF00{count}&f/&#FFFF00{total}&f) were successfully &#FFFF00enabled &fin &#FFFF00{time}ms."
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    all-empty:
+      - "[message] &#FB8808▶ Oops! &fThere are &#FB8808no &fdisabled plugins on the server, all plugins are &#FB8808already &fenabled!"
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+
+  disable:
+    start:
+      - "[message] &#FFFF00◆ &fDisabling plugin &#FFFF00«{plugin}»&f..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    success:
+      - "[message] &#FFFF00◆ &fPlugin &#FFFF00«{plugin}» &f(&#FFFF00v{version}&f) &fwas successfully &#FFFF00disabled &fin &#FFFF00{time}ms."
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    all-start:
+      - "[message] &#FFFF00◆ &fDisabling &#FFFF00all plugins &fon the server..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    all-partial:
+      - "[message] &#FB8808▶ Oops! &fSome plugins (&#FB8808{count}&f/&#FB8808{total}&f) were disabled in &#FFFF00{time}ms&f, but &#FB8808{failed-count} &ffailed: &#FB8808{failed-plugins}"
+      - "[sound] ENTITY_VILLAGER_NO"
+    all-failed:
+      - "[message] &#FB8808▶ Oops! &fNone of the plugins (&#FB88080&f/&#FB8808{total}&f) could be disabled! Check console."
+      - "[sound] BLOCK_ANVIL_LAND"
+    all-success:
+      - "[message] &#FFFF00◆ &fAll plugins (&#FFFF00{count}&f/&#FFFF00{total}&f) were successfully &#FFFF00disabled &fin &#FFFF00{time}ms."
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    all-empty:
+      - "[message] &#FB8808▶ Oops! &fThere are &#FB8808no &factive plugins on the server to &#FB8808disable&f..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    confirm:
+      - "[message] "
+      - "[message]                   &#FB8808▶ Attention! Be careful!"
+      - "[message] "
+      - "[message]    &#FB8808◆ &fDisabling plugin &#FB8808«{plugin}» &fis risky, because:"
+      - "[message] "
+      - "[message]            &#FB8808{reason}"
+      - "[message]  "
+      - "[message]  &#FB8808◆ &fPlugins that depend on it: &#FB8808{dependents}"
+      - "[message] "
+      - "[message]         &#FFFF00◆ &fAre you &#FFFF00sure &fyou want to disable it?"
+      - "[message] "
+      - "[message]            {single-button}   {cancel-button}"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    cancelled:
+      - "[message] &#FFFF00◆ &fDisabling plugin &#FFFF00«{plugin}» &fwas cancelled!"
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    confirm-buttons:
+      single:
+        text: "&#FFFF00[Yes, disable it anyway]"
+        hover:
+          - ""
+          - " &#FFFF00◆ &fDisable plugin &#FFFF00«{plugin}» &f(&#FFFF00v{version}&f) despite the risks "
+          - ""
+      cancel:
+        text: "&#FB8808[Cancel]"
+        hover:
+          - ""
+          - " &#FB8808◆ &fClick to &#FB8808cancel &fdisabling the plugin "
+          - ""
+    reasons:
+      netty: "It intercepts network packets in the Netty pipeline"
+      api-provider: "It provides system API services to other plugins"
+      has-dependents: "Other plugins depend on it"
+    no-dependents: "none"
+
+  load:
+    start:
+      - "[message] &#FFFF00◆ &fLoading plugin &#FFFF00«{plugin}» &finto server memory..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    success:
+      - "[message] &#FFFF00◆ &fPlugin &#FFFF00«{plugin}» &f(&#FFFF00v{version}&f) &fwas successfully &#FFFF00loaded &fand &#FFFF00enabled &fin &#FFFF00{time}ms."
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    all-start:
+      - "[message] &#FFFF00◆ &fLoading &#FFFF00all unloaded &fplugins from the plugins folder..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    all-partial:
+      - "[message] &#FB8808▶ Oops! &fSome plugins (&#FB8808{count}&f/&#FB8808{total}&f) were loaded in &#FFFF00{time}ms&f, but &#FB8808{failed-count} &ffailed: &#FB8808{failed-plugins}"
+      - "[sound] ENTITY_VILLAGER_NO"
+    all-failed:
+      - "[message] &#FB8808▶ Oops! &fNone of the plugins (&#FB88080&f/&#FB8808{total}&f) could be loaded! Check console."
+      - "[sound] BLOCK_ANVIL_LAND"
+    all-success:
+      - "[message] &#FFFF00◆ &fAll unloaded plugins (&#FFFF00{count}&f/&#FFFF00{total}&f) were successfully &#FFFF00loaded &fin &#FFFF00{time}ms."
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    all-empty:
+      - "[message] &#FB8808▶ Oops! &fThere are &#FB8808no &fnew unloaded plugins in the plugins folder!"
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+
+  unload:
+    start:
+      - "[message] &#FFFF00◆ &fUnloading plugin &#FFFF00«{plugin}» &ffrom server memory..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    success:
+      - "[message] &#FFFF00◆ &fPlugin &#FFFF00«{plugin}» &f(&#FFFF00v{version}&f) &fwas successfully &#FFFF00unloaded &fin &#FFFF00{time}ms."
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    all-start:
+      - "[message] &#FFFF00◆ &fUnloading &#FFFF00all &fplugins from server memory..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    all-partial:
+      - "[message] &#FB8808▶ Oops! &fSome plugins (&#FB8808{count}&f/&#FB8808{total}&f) were unloaded from memory in &#FFFF00{time}ms&f, but &#FB8808{failed-count} &ffailed: &#FB8808{failed-plugins}"
+      - "[sound] ENTITY_VILLAGER_NO"
+    all-failed:
+      - "[message] &#FB8808▶ Oops! &fNone of the plugins (&#FB88080&f/&#FB8808{total}&f) could be unloaded! Check console."
+      - "[sound] BLOCK_ANVIL_LAND"
+    all-success:
+      - "[message] &#FFFF00◆ &fAll plugins (&#FFFF00{count}&f/&#FFFF00{total}&f) were successfully &#FFFF00unloaded &ffrom memory in &#FFFF00{time}ms."
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    all-empty:
+      - "[message] &#FB8808▶ Oops! &fThere are &#FB8808no &fplugins on the server available to unload..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    confirm:
+      - "[message] "
+      - "[message]                   &#FB8808▶ Attention! Be careful!"
+      - "[message] "
+      - "[message]    &#FB8808◆ &fUnloading plugin &#FB8808«{plugin}» &fis risky, because:"
+      - "[message] "
+      - "[message]            &#FB8808{reason}"
+      - "[message]  "
+      - "[message]  &#FB8808◆ &fPlugins that depend on it: &#FB8808{dependents}"
+      - "[message] "
+      - "[message]          &#FFFF00◆ &fAre you &#FFFF00sure &fyou want to unload it?"
+      - "[message] "
+      - "[message]            {single-button}   {cancel-button}"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    cancelled:
+      - "[message] &#FFFF00◆ &fUnloading plugin &#FFFF00«{plugin}» &fwas cancelled!"
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    confirm-buttons:
+      single:
+        text: "&#FFFF00[Yes, unload it anyway]"
+        hover:
+          - ""
+          - " &#FFFF00◆ &fUnload plugin &#FFFF00«{plugin}» &f(&#FFFF00v{version}&f) despite the risks "
+          - ""
+      cancel:
+        text: "&#FB8808[Cancel]"
+        hover:
+          - ""
+          - " &#FB8808◆ &fClick to &#FB8808cancel &funloading the plugin "
+          - ""
+    reasons:
+      hostile: "It hooks into the network stack and doesn't unload properly"
+      paper-bootstrapper: "It uses Paper Bootstrapper (can't be reloaded without a server restart)"
+      netty: "It intercepts network packets"
+      api-provider: "It provides system API services"
+      has-dependents: "Other plugins depend on it"
+    no-dependents: "none"
+
+  delete:
+    ambiguous:
+      - "[message] "
+      - "[message] &#FB8808▶ Oops! &fThe plugin name &#FB8808«{plugin}» &fmatches &#FB8808several &fplugins &#FB8808in &fthe plugins folder..."
+      - "[message] "
+      - "[message] &#FFFF00◆ &fThese match: &#FFFF00{files}&f, so specify the exact .jar plugin name, for example: &#FFFF00/plm delete {plugin}-1.0.jar"
+      - "[message] "
+      - "[sound] BLOCK_ANVIL_LAND"
+    start:
+      - "[message] &#FFFF00◆ &fFully deleting plugin &#FFFF00«{plugin}»&f..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    success:
+      - "[message] &#FFFF00◆ &fPlugin &#FFFF00«{plugin}» &f(&#FFFF00{file}&f) &fwas successfully &#FFFF00unloaded &fand &#FFFF00deleted &ffrom the server in &#FFFF00{time}ms."
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    confirm:
+      - "[message] "
+      - "[message]                               &#FB8808▶ Attention!"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fAre you sure you want to &#FFFF00completely &fdelete plugin &#FFFF00«{plugin}»&f?"
+      - "[message]   "
+      - "[message]     &#FFFF00◆ &fThis will &#FFFF00delete &fthe plugin's .jar file from the"
+      - "[message]   &fplugins folder and &#FFFF00keep &fa &#FFFF00backup &fof it for a day, just in case"
+      - "[message] "
+      - "[message]              {single-button}   {cancel-button}"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    confirm-dependents:
+      - "[message] "
+      - "[message]                   &#FB8808▶ Attention! Be careful!"
+      - "[message] "
+      - "[message]  &#FB8808◆ &fOther plugins depend on &#FB8808«{plugin}»&f:"
+      - "[message]  "
+      - "[message]              &#FB8808{dependents}"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fAre you sure you want to &#FFFF00delete &fplugin &#FFFF00«{plugin}»&f,"
+      - "[message]               &fsince after &#FFFF00deletion &fthe dependent"
+      - "[message]             &fplugins will &#FFFF00stop &fworking properly?"
+      - "[message] "
+      - "[message]                 {single-button}   {cancel-button}"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    confirm-buttons:
+      single:
+        text: "&#FFFF00[Yes, delete the plugin]"
+        hover:
+          - ""
+          - " &#FFFF00▶ &fClick to &#FFFF00completely delete &fplugin &#FFFF00«{plugin}» &ffrom the server forever "
+          - ""
+      cancel:
+        text: "&#FB8808[Cancel]"
+        hover:
+          - ""
+          - " &#FB8808◆ &fClick to &#FB8808cancel &fdeleting the plugin "
+          - ""
+    cancelled:
+      - "[message] &#FFFF00◆ &fDeleting plugin &#FFFF00«{plugin}» &fwas cancelled!"
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    failed-file:
+      - "[message] "
+      - "[message] &#FB8808▶ Oops! &fPlugin &#FB8808«{plugin}» &fwas unloaded, but the file &#FB8808«{file}» &fcouldn't be deleted after &#FB8808{attempts} attempt(s), because it's &#FB8808held &fby the server process..."
+      - "[message] "
+      - "[message] &#FFFF00◆ &fThe file is &#FFFF00still &fin place and will &#FFFF00load again &fon the next &#FFFF00server restart&f, so &#FFFF00delete &fit manually while the server is off"
+      - "[message] "
+      - "[sound] BLOCK_ANVIL_LAND"
+    pending-file:
+      - "[message] &#FB8808◆ &fPlugin file &#FFFF00«{file}» &fis still &#FB8808locked &fby the server, the deletion will &#FB8808automatically &fretry in &#FB88082 seconds&f..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    file-not-found:
+      - "[message] &#FB8808▶ Oops! &fCouldn't find the .jar file of plugin &#FB8808«{plugin}» &#FB8808on disk &fto delete it..."
+      - "[sound] BLOCK_ANVIL_LAND"
+
+  reload:
+    start:
+      - "[message] &#FFFF00◆ &fReloading plugin &#FFFF00«{plugin}»&f..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    success:
+      - "[message] &#FFFF00◆ &fPlugin &#FFFF00«{plugin}» &f(&#FFFF00v{version}&f) &fwas successfully &#FFFF00reloaded &fin &#FFFF00{time}ms."
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    all-start:
+      - "[message] &#FFFF00◆ &fReloading &#FFFF00all &fserver plugins..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    all-partial:
+      - "[message] &#FB8808▶ Oops! &fSome plugins (&#FB8808{count}&f/&#FB8808{total}&f) were reloaded in &#FFFF00{time}ms&f, but &#FB8808{failed-count} &ffailed: &#FB8808{failed-plugins}"
+      - "[sound] ENTITY_VILLAGER_NO"
+    all-failed:
+      - "[message] &#FB8808▶ Oops! &fNone of the plugins (&#FB88080&f/&#FB8808{total}&f) could be reloaded! Check console."
+      - "[sound] BLOCK_ANVIL_LAND"
+    all-success:
+      - "[message] &#FFFF00◆ &fAll plugins (&#FFFF00{count}&f/&#FFFF00{total}&f) were successfully &#FFFF00reloaded &fin &#FFFF00{time}ms."
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    all-empty:
+      - "[message] &#FB8808▶ Oops! &fThere are &#FB8808no &fplugins on the server available to reload..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    confirm:
+      - "[message] "
+      - "[message]                   &#FB8808▶ Attention! Be careful!"
+      - "[message] "
+      - "[message]  &#FB8808◆ &fOther plugins still depend on &#FB8808«{plugin}»&f:"
+      - "[message]  "
+      - "[message]       &#FB8808{dependents}"
+      - "[message] "
+      - "[message]         &#FFFF00◆ &fHow do you want to reload the plugin?"
+      - "[message] "
+      - "[message]   {deps-button}   {single-button}   {cancel-button}"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    confirm-buttons:
+      deps:
+        text: "&#22FF00[With dependencies]"
+        hover:
+          - ""
+          - " &#22FF00▶ &fClick to &#22FF00reload &fplugin &#22FF00«{plugin}» &fwith its dependencies "
+          - ""
+          - "       &#FFFF00◆ &fThis plugin and everything that &#FFFF00depends &fon it will be unloaded,"
+          - "       &fthen &#FFFF00started up &fagain in the correct order,"
+          - "       &fso that &#FFFF00placeholders&f, mechanics and integrations don't break"
+          - ""
+      single:
+        text: "&#FFFF00[This plugin only]"
+        hover:
+          - ""
+          - " &#FFFF00◆ &fClick to &#FFFF00reload &fonly plugin &#FFFF00«{plugin}» "
+          - ""
+          - " &#FFFF00◆ &fOnly &#FFFF00this &fplugin will be reloaded, but be"
+          - " &fcareful — its &#FFFF00dependent &fplugins won't restart,"
+          - " &fso their integrations and mechanics &#FFFF00might &fstop working "
+          - ""
+      cancel:
+        text: "&#FB8808[Cancel]"
+        hover:
+          - ""
+          - " &#FB8808◆ &fClick to &#FB8808cancel &freloading the plugin "
+          - ""
+    cancelled:
+      - "[message] &#FFFF00◆ &fReloading plugin &#FFFF00«{plugin}» &fwas cancelled!"
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+
+  restart:
+    start:
+      - "[message] &#FFFF00◆ &fFully restarting plugin &#FFFF00«{plugin}» &ffrom disk..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    success:
+      - "[message] &#FFFF00◆ &fPlugin &#FFFF00«{plugin}» &f(&#FFFF00v{version}&f) &fwas successfully &#FFFF00restarted &ffrom disk &fin &#FFFF00{time}ms."
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    all-start:
+      - "[message] &#FFFF00◆ &fFully restarting &#FFFF00all &fserver plugins from disk..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    all-partial:
+      - "[message] &#FB8808▶ Oops! &fSome plugins (&#FB8808{count}&f/&#FB8808{total}&f) were restarted from disk in &#FFFF00{time}ms&f, but &#FB8808{failed-count} &ffailed: &#FB8808{failed-plugins}"
+      - "[sound] ENTITY_VILLAGER_NO"
+    all-failed:
+      - "[message] &#FB8808▶ Oops! &fNone of the plugins (&#FB88080&f/&#FB8808{total}&f) could be restarted! Check console."
+      - "[sound] BLOCK_ANVIL_LAND"
+    all-success:
+      - "[message] &#FFFF00◆ &fAll plugins (&#FFFF00{count}&f/&#FFFF00{total}&f) were successfully &#FFFF00restarted &ffrom disk in &#FFFF00{time}ms."
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    all-empty:
+      - "[message] &#FB8808▶ Oops! &fThere are &#FB8808no &fplugins on the server available to restart..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    confirm:
+      - "[message] "
+      - "[message]                   &#FB8808▶ Attention! Be careful!"
+      - "[message] "
+      - "[message]  &#FB8808◆ &fOther plugins still depend on &#FB8808«{plugin}»&f:"
+      - "[message]  "
+      - "[message]       &#FB8808{dependents}"
+      - "[message] "
+      - "[message]        &#FFFF00◆ &fHow do you want to restart the plugin?"
+      - "[message] "
+      - "[message]   {deps-button}   {single-button}   {cancel-button}"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    confirm-buttons:
+      deps:
+        text: "&#22FF00[With dependencies]"
+        hover:
+          - ""
+          - " &#22FF00▶ &fClick to &#22FF00restart &fplugin &#22FF00«{plugin}» &fwith its dependencies "
+          - ""
+          - "       &#FFFF00◆ &fThis plugin and everything that &#FFFF00depends &fon it will be unloaded,"
+          - "       &fthen &#FFFF00loaded from disk &fagain in the correct order,"
+          - "       &fso that &#FFFF00placeholders&f, mechanics and integrations don't break"
+          - ""
+      single:
+        text: "&#FFFF00[This plugin only]"
+        hover:
+          - ""
+          - " &#FFFF00◆ &fClick to &#FFFF00restart &fonly plugin &#FFFF00«{plugin}» "
+          - ""
+          - " &#FFFF00◆ &fOnly &#FFFF00this &fplugin will be restarted from disk, but be"
+          - " &fcareful — its &#FFFF00dependent &fplugins won't restart,"
+          - " &fso their integrations and mechanics &#FFFF00might &fstop working "
+          - ""
+      cancel:
+        text: "&#FB8808[Cancel]"
+        hover:
+          - ""
+          - " &#FB8808◆ &fClick to &#FB8808cancel &frestarting the plugin "
+          - ""
+    cancelled:
+      - "[message] &#FFFF00◆ &fRestarting plugin &#FFFF00«{plugin}» &fwas cancelled!"
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+
+  cascade-reload:
+    start:
+      - "[message] &#FFFF00◆ &fStarting a reload of plugin &#FFFF00«{plugin}» &fwith its dependencies (total affected: &#FFFF00{count} &fplugin(s))..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    success:
+      - "[message] &#FFFF00◆ &fPlugin &#FFFF00«{plugin}» &f(&#FFFF00v{version}&f) and its dependencies were &#FFFF00successfully reloaded &fin &#FFFF00{time}ms."
+      - "[sound] ENTITY_PLAYER_LEVELUP"
+
+    details:
+      unload-failed: "failed to unload {plugin} ({error}), {note}"
+      no-jar: "no suitable .jar was found, the operation was cancelled, no plugin was unloaded"
+      no-jar-on-disk: "the plugin's .jar file was not found on disk"
+      dependency-failed: "{plugin} (a dependency failed to load)"
+      load-failed: "failed to load: {plugins}"
+      skipped: "skipped without a .jar and left loaded: {plugins}"
+      rollback-done: "the rollback of unloaded plugins was completed"
+      rollback-partial: "the rollback was not fully completed, still unloaded: {plugins}"
+
+  cascade-restart:
+    start:
+      - "[message] &#FFFF00◆ &fStarting a &#FFFF00full &frestart of plugin &#FFFF00«{plugin}» &ffrom disk with its dependencies (total affected: &#FFFF00{count} &fplugin(s))..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    success:
+      - "[message] &#FFFF00◆ &fPlugin &#FFFF00«{plugin}» &f(&#FFFF00v{version}&f) and its dependencies were &#FFFF00successfully restarted &ffrom disk in &#FFFF00{time}ms."
+      - "[sound] ENTITY_PLAYER_LEVELUP"
+
+
+  usage:
+    found:
+      - "[message] "
+      - "[message]  &#FFFF00▶ &fSearch results for &#FFFF00«{query}» &f(Found: &#FFFF00{count}&f):"
+      - "[message] "
+      - "[message] {results}"
+      - "[message] "
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    not-found:
+      - "[message] &#FB8808▶ &fNo plugin &#FB8808registers &fthe command or permission &#FB8808«{query}»&f..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    format:
+      command: "  &#FFFF00◆ &fCommand &#FFFF00{command} &ffrom plugin &#FFFF00«{plugin}» &f(Permission: &#FFFF00{permission}&f)"
+      command-no-perm: "  &#FFFF00◆ &fCommand &#FFFF00{command} &ffrom plugin &#FFFF00«{plugin}»"
+      permission: "  &#FFFF00◆ &fPermission &#FFFF00{permission} &ffrom plugin &#FFFF00«{plugin}» &f(Default: &#FFFF00{default}&f)"
+      more: "  &#FFFF00▶ &fAnd &#FFFF00{remaining} &fmore match(es)..."
+    no-default-value: "none"
+    owner:
+      core-server: "Core / Server"
+      server-system: "Server / System"
+
+  list:
+    format:
+      - "[message] "
+      - "[message] &#FFFF00▶ &fServer plugin list (&#FFFF00Total&f: &#FFFF00{total} &f| &#22FF00On&f: &#22FF00{enabled} &f| &#FB3908Off&f: &#FB3908{disabled}&f):"
+      - "[message] "
+      - "[message] {plugins}"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    plugin-enabled:
+      text: "&#22FF00{plugin}"
+      hover:
+        - ""
+        - " &#22FF00▶ &fPlugin &#22FF00«{plugin}» &f(&#22FF00v{version}&f) "
+        - ""
+        - " &#FFFF00◆ &fStatus: &#FFFF00Enabled "
+        - " &#FFFF00◆ &fAuthor(s): &#FFFF00{authors} "
+        - ""
+        - " &#FFFF00▶ &fClick to &#FFFF00get &fdetailed info "
+        - ""
+    plugin-disabled:
+      text: "&#FB3908{plugin}"
+      hover:
+        - ""
+        - " &#FB3908▶ &fPlugin &#FB3908«{plugin}» &f(&#FB3908v{version}&f) "
+        - ""
+        - " &#FFFF00◆ &fStatus: &#FB3908Disabled "
+        - " &#FFFF00◆ &fAuthor(s): &#FFFF00{authors} "
+        - ""
+        - " &#FFFF00▶ &fClick to &#FFFF00get &fdetailed info "
+        - ""
+    plugin-unloaded:
+      text: "&#FB7E08{plugin}"
+      hover:
+        - ""
+        - " &#FB7E08▶ &fUnloaded plugin &#FB7E08«{plugin}» &f(&#FB7E08v{version}&f) "
+        - ""
+        - " &#FFFF00◆ &fStatus: &#FB8808Unloaded (File in the plugins folder) "
+        - " &#FFFF00◆ &fAuthor(s): &#FFFF00{authors} "
+        - ""
+        - " &#FFFF00▶ &fClick to &#FFFF00load &for &#FFFF00view &finfo "
+        - ""
+    separator: "&f, "
+    empty:
+      - "[message] &#FB8808▶ Oops! &fThere are &#FB8808no &fplugins installed on the server!"
+      - "[sound] BLOCK_ANVIL_LAND"
+
+  info:
+    format:
+      - "[message] "
+      - "[message] &#FFFF00▶ &fInfo about plugin &#FFFF00«{plugin}» &f(&#FFFF00v{version}&f):"
+      - "[message] "
+      - "[message]   &#FFFF00◆ &fVersion: &#FFFF00v{version}"
+      - "[message]   &#FFFF00◆ &fStatus: {status}"
+      - "[message]   &#FFFF00◆ &fPlugin format: &#FFFF00{format}"
+      - "[message]   &#FFFF00◆ &fAuthors: &#FFFF00{authors}"
+      #- "[message]   &#FFFF00◆ &fMain class: &#FFFF00{main}"
+      - "[message]   &#FFFF00◆ &fFile name on disk: &#FFFF00{file}"
+      - "[message]   &#FFFF00◆ &fPlugin size: &#FFFF00{size}"
+      #- "[message]   &#FFFF00◆ &fWebsite: &#FFFF00{website}"
+      #- "[message]   &#FFFF00◆ &fDescription: &#FFFF00{description}"
+      - "[message]   &#FFFF00◆ &fDependencies (Depend): &#FFFF00{depends}"
+      - "[message]   &#FFFF00◆ &fSoft dependencies (SoftDepend): &#FFAA00{soft-depends}"
+      - "[message] "
+      - "[message]   {reload-button}  {toggle-button}  {unload-button}"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    format-disabled:
+      - "[message] "
+      - "[message] &#FFFF00▶ &fInfo about disabled plugin &#FFFF00«{plugin}» &f(&#FFFF00v{version}&f):"
+      - "[message] "
+      - "[message]   &#FFFF00◆ &fVersion: &#FFFF00v{version}"
+      - "[message]   &#FFFF00◆ &fStatus: {status}"
+      - "[message]   &#FFFF00◆ &fPlugin format: &#FFFF00{format}"
+      - "[message]   &#FFFF00◆ &fAuthors: &#FFFF00{authors}"
+      #- "[message]   &#FFFF00◆ &fMain class: &#FFFF00{main}"
+      - "[message]   &#FFFF00◆ &fFile name on disk: &#FFFF00{file}"
+      - "[message]   &#FFFF00◆ &fPlugin size: &#FFFF00{size}"
+      #- "[message]   &#FFFF00◆ &fWebsite: &#FFFF00{website}"
+      #- "[message]   &#FFFF00◆ &fDescription: &#FFFF00{description}"
+      - "[message]   &#FFFF00◆ &fDependencies (Depend): &#FFFF00{depends}"
+      - "[message]   &#FFFF00◆ &fSoft dependencies (SoftDepend): &#FFAA00{soft-depends}"
+      - "[message] "
+      - "[message]   {enable-button}  {unload-button}"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    format-unloaded:
+      - "[message] "
+      - "[message] &#FFFF00▶ &fInfo about unloaded plugin &#FFFF00«{plugin}» &f(&#FFFF00v{version}&f):"
+      - "[message] "
+      - "[message]   &#FFFF00◆ &fVersion: &#FFFF00v{version}"
+      - "[message]   &#FFFF00◆ &fStatus: {status}"
+      - "[message]   &#FFFF00◆ &fPlugin format: &#FFFF00{format}"
+      - "[message]   &#FFFF00◆ &fAuthors: &#FFFF00{authors}"
+      - "[message]   &#FFFF00◆ &fFile name on disk: &#FFFF00{file}"
+      - "[message]   &#FFFF00◆ &fPlugin size: &#FFFF00{size}"
+      - "[message]   &#FFFF00◆ &fDependencies (Depend): &#FFFF00{depends}"
+      - "[message]   &#FFFF00◆ &fSoft dependencies (SoftDepend): &#FFAA00{soft-depends}"
+      - "[message] "
+      - "[message]   {load-button}"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    format-unloaded-bootstrapper:
+      - "[message] "
+      - "[message] &#FFFF00▶ &fInfo about unloaded plugin &#FFFF00«{plugin}» &f(&#FFFF00v{version}&f):"
+      - "[message] "
+      - "[message]   &#FFFF00◆ &fVersion: &#FFFF00v{version}"
+      - "[message]   &#FFFF00◆ &fStatus: {status}"
+      - "[message]   &#FFFF00◆ &fPlugin format: &#FFFF00{format}"
+      - "[message]   &#FFFF00◆ &fAuthors: &#FFFF00{authors}"
+      - "[message]   &#FFFF00◆ &fFile name on disk: &#FFFF00{file}"
+      - "[message]   &#FFFF00◆ &fPlugin size: &#FFFF00{size}"
+      - "[message]   &#FFFF00◆ &fDependencies (Depend): &#FFFF00{depends}"
+      - "[message]   &#FFFF00◆ &fSoft dependencies (SoftDepend): &#FFAA00{soft-depends}"
+      - "[message] "
+      - "[message]   &#FB8808[Server restart required]"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    status-enabled: "&#22FF00Enabled"
+    status-disabled: "&#FB6108Disabled"
+    status-unloaded: "&#FB8808Unloaded (File on disk)"
+    status-unloaded-bootstrapper: "&#FB8808Unloaded (Requires a server restart)"
+    format-paper: "Paper Plugin"
+    format-spigot: "Spigot/Bukkit"
+    none-authors: "Not specified"
+    none-description: "None"
+    none-website: "None"
+    none-depends: "None"
+    none-soft-depends: "None"
+    none-main: "Not specified"
+    none-file: "Not found"
+    none-size: "Unknown"
+    buttons:
+      reload:
+        text: "&#22FF00[Reload]"
+        hover:
+          - ""
+          - " &#22FF00◆ &fClick to &#22FF00reload &fplugin &#22FF00«{plugin}» "
+          - ""
+      cascade:
+        text: "&#FFA500[With dependencies]"
+        hover:
+          - ""
+          - " &#FFA500◆ &fClick to &#FFA500reload &fplugin &#FFA500«{plugin}» &fwith its dependencies "
+          - ""
+      enable:
+        text: "&#FFFF00[Enable]"
+        hover:
+          - ""
+          - " &#FFFF00◆ &fClick to &#FFFF00enable &fplugin &#FFFF00«{plugin}» "
+          - ""
+      disable:
+        text: "&#FB7E08[Disable]"
+        hover:
+          - ""
+          - " &#FB7E08◆ &fClick to &#FB7E08disable &fplugin &#FB7E08«{plugin}» "
+          - ""
+      load:
+        text: "&#22FF00[Load]"
+        hover:
+          - ""
+          - " &#22FF00◆ &fClick to &#22FF00load &fplugin &#22FF00«{plugin}» &finto server memory "
+          - ""
+      unload:
+        text: "&#FB6108[Unload]"
+        hover:
+          - ""
+          - " &#FB6108◆ &fClick to &#FB6108unload &fplugin &#FB6108«{plugin}» &ffrom the server "
+          - ""
+
+  dump:
+    start:
+      - "[message] &#FFFF00◆ &fCreating a full &#FFFF00dump &fof the server environment..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    success:
+      - "[message] &#FFFF00◆ &fThe dump of plugins and the server environment was &#FFFF00successfully &fsaved to file: &#FFFF00{file}"
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    failed:
+      - "[message] &#FB8808▶ Oops! &fFailed to &#FB8808save &fthe server environment dump to disk..."
+      - "[sound] BLOCK_ANVIL_LAND"
+
+  hotswap:
+    enabled:
+      - "[message] &#FFFF00◆ &fAuto-watching plugin files: &#FFFF00Enabled"
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    start-failed:
+      - "[message] &#FB8808▶ &fFailed to &#FB8808start &fauto-watching plugin files, see &#FB8808details &fin the console..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    disabled:
+      - "[message] &#FFFF00◆ &fAuto-watching plugin files: &#FFFF00Disabled"
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    status-on:
+      - "[message] &#FFFF00◆ &fPlugin auto-watching: &#FFFF00Enabled"
+      - "[sound] BLOCK_LEVER_CLICK"
+    status-off:
+      - "[message] &#FFFF00◆ &fPlugin auto-watching: &#FFFF00Disabled"
+      - "[sound] BLOCK_LEVER_CLICK"
+    triggered:
+      - "[message] &#FFFF00◆ &fDetected a change in plugin &#FFFF00«{file}»&f, &#FFFF00automatically &freloading it so it keeps working..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    restart-success:
+      - "[message] &#FFFF00◆ &fPlugin &#FFFF00«{plugin}» &f(&#FFFF00v{version}&f) was successfully &#FFFF00restarted &fin &#FFFF00{time}ms."
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    update-triggered:
+      - "[message] &#FFFF00◆ &fDetected an update to plugin &#FFFF00«{plugin}» &f(&#FFFF00v{old-version} &f→ &#FFFF00v{new-version}&f)..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    update-success:
+      - "[message] &#FFFF00◆ &fPlugin &#FFFF00«{plugin}» &fwas successfully &#FFFF00updated &fto version &#FFFF00v{new-version} &fin &#FFFF00{time}ms."
+      - "[sound] ENTITY_PLAYER_LEVELUP"
+    update-failed:
+      - "[message] &#FB8808▶ &fFailed to unload plugin &#FFFF00«{plugin}» &ffor the update, the operation was &#FB8808aborted&f, files were left untouched"
+      - "[sound] BLOCK_ANVIL_LAND"
+    load-triggered:
+      - "[message] &#FFFF00◆ &fDetected a new unloaded plugin &#FFFF00«{file}»&f, &#FFFF00automatically &floading it..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    load-success:
+      - "[message] &#FFFF00◆ &fNew plugin &#FFFF00«{plugin}» &f(&#FFFF00v{version}&f) was successfully &#FFFF00loaded &fand &#FFFF00enabled &fin &#FFFF00{time}ms."
+      - "[sound] ENTITY_PLAYER_LEVELUP"
+    delete-triggered:
+      - "[message] &#FFFF00▶ &fDetected the deletion of plugin &#FFFF00«{plugin}»&f, &#FFFF00unloading &fit from server memory..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    delete-success:
+      - "[message] &#FFFF00◆ &fPlugin &#FFFF00«{plugin}» &fwas successfully &#FFFF00unloaded &ffrom server memory in &#FFFF00{time}ms."
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    delete-failed:
+      - "[message] &#FB8808▶ &fFailed to &#FB8808unload &fplugin &#FFFF00«{plugin}» &ffrom server memory..."
+      - "[sound] BLOCK_ANVIL_LAND"
+
+  config-reload:
+    success:
+      - "[message] <gradient:#ffff00:#ffa500>◆ PlugManReloaded</gradient> &f| The plugin's configuration was &#FFFF00successfully &freloaded in &#FFFF00{time}ms."
+      - "[sound] ENTITY_PLAYER_LEVELUP"
+    failed:
+      - "[message] &#FB8808▶ Oops! &fThe plugin's configuration &#FB8808could not &fbe reloaded, check the console for &#FB8808details&f..."
+      - "[sound] BLOCK_ANVIL_LAND"
+
+  update:
+    no-dependents: "none"
+    available:
+      - "[message] "
+      - "[message] <gradient:#ffff00:#ffa500>▶ PlugManReloaded</gradient> &f| &fSo, I wanted to let you know that a &#FFFF00new version &fof me is out — &#FFFF00v{latest}&f, while you're on &#FFFF00v{current}&f, so I'd recommend updating me)"
+      - "[message] "
+      - "[message] &#FFFF00◆ &fYou can &#FFFF00download &fthe new version right here — &#FFFF00{url}"
+      - "[message] "
+      - "[message-console] &#FFFF00◆ PlugManReloaded &f| A new version &#FFFF00v{latest} &fis available, you're on &#FFFF00v{current}&f, so you can update here: &#FFFF00https://github.com/MilkyWayTop16/PlugManReloaded/releases"
+      - "[sound] ENTITY_PLAYER_LEVELUP"
+    plugins-notify:
+      - "[message] <gradient:#ffff00:#ffa500>◆ PlugManReloaded</gradient> &f| Updates are available for &#FFFF00{count} server plugin(s)&f, use the command &#FFFF00/plm update &fto view and install them"
+      - "[sound] BLOCK_LEVER_CLICK"
+    plugins-notify-console:
+      - "[message-console] &#FFFF00◆ PlugManReloaded &f| Updates are available for &#FFFF00{count} server plugin(s)&f, details: &#FFFF00/plm update"
+    up-to-date:
+      - "[message] &#FFFF00◆ &fYou already have the &#FFFF00latest &fversion &#FFFF00v{current}&f installed, no need to update)"
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    check-start:
+      - "[message] &#FFFF00◆ &fChecking for updates for plugin &#FFFF00«{plugin}»&f..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    check-start-all:
+      - "[message] &#FFFF00◆ &fChecking for updates for &#FFFF00all &fplugin(s), this will take &#FFFF00a while&f, please wait..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    all-install-start:
+      - "[message] &#FFFF00◆ &fStarting a bulk &#FFFF00download &fand &#FFFF00installation &fof updates for &#FFFF00{count} &fplugin(s)..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    all-install-progress:
+      - "[message] &#FFFF00◆ &f&#FFFF00Downloading &fthe latest version &#FFFF00v{latest} &fof plugin &#FFFF00«{plugin}» &ffrom &#FFFF00{source}&f... (&#FFFF00{index}&f/&#FFFF00{total}&f)"
+      - "[sound] BLOCK_LEVER_CLICK"
+    all-install-item-success:
+      - "[message] &#FFFF00◆ &fPlugin &#FFFF00«{plugin}» &fwas successfully &#FFFF00updated &ffrom &#FFFF00v{from} &fto &#FFFF00v{to} &f(&#FFFF00{index}&f/&#FFFF00{total}&f)"
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    all-install-item-pending:
+      - "[message] &#FFFF00◆ &fPlugin &#FFFF00«{plugin}» &fwas successfully &#FFFF00updated &ffrom &#FFFF00v{from} &fto &#FFFF00v{to} &f(&#FFFF00{index}&f/&#FFFF00{total}&f)"
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    all-install-item-failed:
+      - "[message] &#FB8808▶ Oops! Failed to &#FB8808update &fplugin &#FB8808«{plugin}»&f: &#FB8808{detail} &f(&#FB8808{index}&f/&#FB8808{total}&f)"
+      - "[sound] BLOCK_ANVIL_LAND"
+    all-install-partial:
+      - "[message] &#FB8808▶ Oops! &fPart of the updates (&#FB8808{count}&f/&#FB8808{total}&f) installed in &#FFFF00{time}ms&f, but some couldn't be installed! Check the console."
+      - "[sound] ENTITY_VILLAGER_NO"
+    all-install-failed:
+      - "[message] &#FB8808▶ Oops! &fNone of the updates (&#FB88080&f/&#FB8808{total}&f) could be installed! Check the console."
+      - "[sound] BLOCK_ANVIL_LAND"
+    all-install-success:
+      - "[message] &#FFFF00◆ Done! &fThe bulk plugin update &#FFFF00finished successfully&f! Updated &#FFFF00{count} plugin(s) &fout of &#FFFF00{total} &fin &#FFFF00{time}ms."
+      - "[sound] ENTITY_PLAYER_LEVELUP"
+    all-install-empty:
+      - "[message] &#FFFF00◆ &fAll plugins on the server are &#FFFF00already &fup to date, there's &#FFFF00nothing &fto update)"
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    all-install-skipped:
+      - "[message] &#FB8808▶ Heads up! &fSome plugin(s) (for example, &#FB8808{plugins}&f) were &#FB8808skipped&f, because they're either &#FB8808paid&f, or they &#FB8808don't support &fautomatic downloading..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    all-pending-restart: []
+    summary:
+      - "[message] "
+      - "[message]   &#FFFF00▶ &fCheck results:"
+      - "[message] "
+      - "[message]  {updates}"
+      - "[message] "
+      - "[message]   &#FFFF00◆ &fPlugins checked: &#FFFF00{total} &f| Updates available: &#FFFF00{available}"
+      - "[message] "
+      - "[message]   &#FFFF00◆ &fUp to date: &#FFFF00{up-to-date} &f| Source not found: &#FFA500{no-source} &f| Errors: &#FF5555{problems}"
+      - "[message] "
+      - "[message]                      {update-all-button}"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    summary-buttons:
+      update-all:
+        text: "&#22FF00[Update everything at once]"
+        hover:
+          - ""
+          - " &#22FF00◆ &fClick to &#22FF00download &fand &#22FF00install &fall available updates "
+          - ""
+    summary-up-to-date:
+      - "[message] "
+      - "[message]   &#FFFF00▶ &fCheck results:"
+      - "[message] "
+      - "[message]   &#FFFF00◆ Great news! &fAll checked plugins are &#FFFF00already &fon their latest versions, so there's &#FFFF00nothing &fto update)"
+      - "[message] "
+      - "[message]   &#FFFF00◆ &fPlugins checked: &#FFFF00{total} &f| Updates available: &#00FF5A{available}"
+      - "[message] "
+      - "[message]   &#FFFF00◆ &fUp to date: &#FFFF00{up-to-date} &f| Source not found: &#FFA500{no-source} &f| Errors: &#FF5555{problems}"
+      - "[message] "
+      - "[sound] ENTITY_PLAYER_LEVELUP"
+    none-available: "  &#FFFF00◆ &fAll plugins are on their &#FFFF00latest &fversions, &#FFFF00no &fupdates needed)"
+    summary-entry:
+      text: "&#FFFF00- &fPlugin &#FFFF00«{plugin}» &f| Yours: &#FFFF00v{current}&f, new: &#FFFF00v{latest} &f(&#FFFF00{source}&f, &#FFFF00{channel}&f)"
+      hover:
+        - ""
+        - " &#FFFF00▶ &fPlugin &#FFFF00«{plugin}»&f: "
+        - ""
+        - "  &#FFFF00◆ &fCurrent version: &#FFFF00v{current} "
+        - "  &#FFFF00◆ &fNew version: &#FFFF00v{latest} "
+        - "  &#FFFF00◆ &fSource: &#FFFF00{source} &f(&#FFFF00{channel}&f) "
+        - ""
+        - " &#FFFF00▶ &fClick to &#FFFF00update &fthe plugin "
+        - ""
+    sources:
+      modrinth: "Modrinth"
+      hangar: "Hangar"
+      github: "Github"
+      spigot: "Spigot"
+      spigot-premium: "Spigot (Paid plugin)"
+      ruspigot: "RuSpigot"
+      ruspigot-premium: "RuSpigot (Paid plugin)"
+      direct: "Direct"
+      jenkins: "Jenkins"
+      unknown: "Unknown"
+    details:
+      no-download-link: "this version has no download link"
+      locked: "an install or update is already in progress"
+      download-failed: "the file failed to download"
+      backup-failed: "failed to create a backup"
+      init-error: "an initialization error"
+      rolled-back: "the new version failed to load, the previous one was restored"
+      sha1-mismatch: "the SHA-1 checksum did not match"
+      sha256-mismatch: "the SHA-256 checksum did not match"
+      update-folder-write-failed: "failed to save the file into the update/ folder for the restart"
+    match-reasons:
+      hash: "file hash match"
+      main-class: "main class match"
+      plugin-yml: "plugin.yml match"
+      catalog: "listed in the source catalog"
+      jar-reference: "reference inside the plugin .jar"
+      name: "name match"
+      not-found: "source not found"
+    channels:
+      release: "Release"
+      beta: "Beta"
+      alpha: "Alpha"
+      unknown: "Unknown"
+    link:
+      hover:
+        - ""
+        - " &#FFFF00◆ &fClick to &#FFFF00open &fthe link "
+        - ""
+    summary-empty:
+      - "[message] &#FB8808▶ Oops! &fCouldn't &#FB8808gather &fdata for &#FB8808any &fplugin..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    github-rate-limited:
+      - "[message] &#FB8808▶ &fVersion &#FB8808{latest} &fis available for &#FB8808«{plugin}»&f, but the &#FB8808GitHub &frequest limit is exhausted — installation will be available once the limit resets"
+      - "[message] &#FFFF00◆ &fTo avoid this, set a &#FFFF00github-token &fin the config — the limit will grow from &#FFFF0060 &fto &#FFFF005000 &frequests per hour"
+      - "[sound] BLOCK_ANVIL_LAND"
+    not-downloadable:
+      - "[message] &#FB8808▶ Oops! &fVersion &#FB8808{latest} &fis available for &#FB8808«{plugin}»&f, but it &#FB8808can't &fbe downloaded automatically — get it manually here: &#FB8808{url}"
+      - "[sound] BLOCK_ANVIL_LAND"
+    paid:
+      - "[message] "
+      - "[message] &#FB8808▶ Oops! &fPlugin &#FB8808«{plugin}» &fis paid, version &#FB8808v{latest}&f was found, but I &#FB8808can't &fdownload it automatically..."
+      - "[message] "
+      - "[message] &#FFFF00◆ &fIf you're able to, &#FFFF00please &fupdate the plugin yourself — &#FFFF00{url}"
+      - "[message] "
+      - "[sound] BLOCK_ANVIL_LAND"
+    no-source:
+      - "[message] &#FB8808▶ &fNo update source &#FB8808was found &ffor plugin &#FB8808«{plugin}»&f, couldn't check for updates..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    rate-limited:
+      - "[message] &#FB8808▶ Oops! &fYou've hit the &#FB8808GitHub request limit&f, &#FB8808try again later &for &#FB8808set &fa personal &#FB8808token &fin the config..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    network-error:
+      - "[message] &#FB8808▶ Oops! &fCouldn't &#FB8808reach &fthe plugin's update server, the check &#FB8808wasn't performed&f..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    install-start:
+      - "[message] &#FFFF00◆ &f&#FFFF00Downloading &fthe latest version &#FFFF00v{latest} &fof plugin &#FFFF00«{plugin}» &ffrom &#FFFF00{source}&f..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    installed:
+      - "[message] &#FFFF00◆ Done! &fPlugin &#FFFF00«{plugin}» &fwas successfully &#FFFF00updated &ffrom &#FFFF00v{from} &fto &#FFFF00v{to}"
+      - "[sound] ENTITY_PLAYER_LEVELUP"
+    download-failed:
+      - "[message] &#FB8808▶ Oops! &fFailed to download the update for plugin &#FB8808«{plugin}»&f: &#FB8808{detail}"
+      - "[sound] BLOCK_ANVIL_LAND"
+    hash-mismatch:
+      - "[message] &#FB8808▶ Oops! &fPlugin &#FB8808«{plugin}» &fis corrupted or its checksum didn't match (&#FB8808{detail}&f), the installation was &#FB8808cancelled&f..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    wrong-plugin:
+      - "[message] &#FB8808▶ Oops! &fThe downloaded file &#FB8808doesn't belong &fto plugin &#FB8808«{plugin}» &f(&#FB8808{detail}&f), the installation was &#FB8808cancelled&f..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    missing-dependency:
+      - "[message] &#FB8808▶ Oops! &fTo install the &#FB8808update &ffor plugin &#FB8808«{plugin}» &fyou need to &#FB8808install &fplugin(s): &#FB8808{dependencies}"
+      - "[sound] BLOCK_ANVIL_LAND"
+    pending-restart:
+      - "[message] &#FFFF00◆ Done! &fPlugin &#FFFF00«{plugin}» &fwas successfully &#FFFF00updated &ffrom &#FFFF00v{from} &fto &#FFFF00v{to}&f, but it will only take effect on the next &#FFFF00server restart&f..."
+      - "[sound] ENTITY_PLAYER_LEVELUP"
+    rolled-back:
+      - "[message] "
+      - "[message] &#FB8808▶ Attention! &fDownloading the &#FB8808new &fversion of plugin &#FB8808«{plugin}» &fcouldn't be finished: &#FB8808{detail}"
+      - "[message] "
+      - "[message] &#FFFF00◆ &fThe previous &#FFFF00working &fversion and its settings were &#FFFF00successfully &frestored from the backup!"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    not-installable:
+      - "[message] &#FB8808▶ Oops! &fThe update for plugin &#FB8808«{plugin}» &fcan't be installed: &#FB8808{detail}"
+      - "[sound] BLOCK_ANVIL_LAND"
+    cancelled:
+      - "[message] &#FFFF00◆ &fUpdating plugin &#FFFF00«{plugin}» &fwas successfully cancelled!"
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    cancelled-all:
+      - "[message] &#FFFF00◆ &fThe bulk plugin update was &#FFFF00successfully &fcancelled!"
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    confirm-all:
+      - "[message] "
+      - "[message]                             &#FB8808▶ Attention!"
+      - "[message] "
+      - "[message]            &#FFFF00◆ &fAre you sure you want to &#FFFF00update all "
+      - "[message]                   &#FFFF00{count} plugin(s) &fon this server?"
+      - "[message] "
+      - "[message]    &#FFFF00◆ &fAll updates &#FFFF00will &fbe safely downloaded and applied"
+      - "[message]         &fon the fly&f, in the correct dependency order"
+      - "[message] "
+      - "[message]              {all-button}   {cancel-button}"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    confirm-all-buttons:
+      all:
+        text: "&#22FF00[Update all plugins]"
+        hover:
+          - ""
+          - " &#22FF00◆ &fClick to &#22FF00download &fand &#22FF00install &fall available updates (&#22FF00{count} &ftotal) "
+          - ""
+      cancel:
+        text: "&#FB8808[Cancel]"
+        hover:
+          - ""
+          - " &#FB8808◆ &fClick to &#FB8808cancel &fthe bulk update "
+          - ""
+    confirm:
+      - "[message] "
+      - "[message]    &#FFFF00◆ &fAre you sure you want to &#FFFF00update &fplugin &#FFFF00«{plugin}» "
+      - "[message]           &ffrom &#FFFF00v{current} &fto the new &#FFFF00v{latest} &fon &#FFFF00{source}&f?"
+      - "[message] "
+      - "[message]                 &#FFFF00◆ &fThe plugin was &#FFFF00found &fhere:"
+      - "[message] "
+      - "[message]          &#FFFF00{url}"
+      - "[message] "
+      - "[message]             {single-button}   {cancel-button}"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    confirm-buttons:
+      single:
+        text: "&#22FF00[Download and install]"
+        hover:
+          - ""
+          - " &#22FF00◆ &fClick to &#22FF00download &fand &#22FF00install &fversion &#22FF00v{latest} "
+          - ""
+      cancel:
+        text: "&#FB8808[Cancel]"
+        hover:
+          - ""
+          - " &#FB8808◆ &fClick to &#FB8808cancel &finstalling the update "
+          - ""
+    confirm-dependents:
+      - "[message] "
+      - "[message]                             &#FB8808▶ Attention!"
+      - "[message] "
+      - "[message]   &#FFFF00◆ &fAre you sure you want to &#FFFF00update &fplugin &#FFFF00«{plugin}»"
+      - "[message]               &ffrom &#FFFF00v{current} &fto &#FFFF00v{latest} &fon &#FFFF00{source}&f, "
+      - "[message]         &fgiven that &#FFFF00{dependents-count} &fplugin(s) still depend on it?"
+      - "[message] "
+      - "[message]                    &#FFFF00◆ &fThe plugin was &#FFFF00found &fhere:"
+      - "[message] "
+      - "[message]          &#FFFF00{url}"
+      - "[message] "
+      - "[message]     {deps-button}    {single-button}"
+      - "[message] "
+      - "[message]                               {cancel-button}"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    confirm-dependents-buttons:
+      deps:
+        text: "&#22FF00[Update with dependencies]"
+        hover:
+          - ""
+          - " &#22FF00◆ &fClick to &#22FF00update &fplugin &#22FF00«{plugin}» &fand restart its dependents "
+          - ""
+      single:
+        text: "&#FFFF00[This plugin only]"
+        hover:
+          - ""
+          - " &#FFFF00◆ &fClick to &#FFFF00update &fonly plugin &#FFFF00«{plugin}» "
+          - ""
+      cancel:
+        text: "&#FB8808[Cancel]"
+        hover:
+          - ""
+          - " &#FB8808◆ &fClick to &#FB8808cancel &fupdating plugin &#FB8808«{plugin}» "
+          - ""
+    skipped-dependents:
+      - "[message] &#FB8808▶ Attention! &fThe bulk update skipped &#FB8808{count} &fplugins that have dependents:"
+      - "[message]   &7{plugins}"
+      - "[message]   &#00FF5A◆ &fUpdate them one by one: &#00FF5A/plm update <plugin>"
+      - "[sound] BLOCK_LEVER_CLICK"
+
+    confirm-prerelease:
+      - "[message] "
+      - "[message]                             &#FB8808▶ Attention!"
+      - "[message] "
+      - "[message]    &#FFFF00◆ &fAre you sure you want to &#FFFF00update &fplugin &#FFFF00«{plugin}» "
+      - "[message]    &ffrom &#FFFF00v{current} &fto pre-release &#FFFF00v{latest} &f(&#FFFF00{channel}&f) "
+      - "[message]                    &fon &#FFFF00{source}&f?"
+      - "[message] "
+      - "[message]                    &#FFFF00◆ &fThe plugin was &#FFFF00found &fhere:"
+      - "[message] "
+      - "[message]          &#FFFF00{url}"
+      - "[message] "
+      - "[message]           {single-button}   {cancel-button}"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    confirm-prerelease-buttons:
+      single:
+        text: "&#22FF00[Install it anyway]"
+        hover:
+          - ""
+          - " &#22FF00◆ &fClick to &#22FF00install &fpre-release version &#22FF00v{latest} "
+          - ""
+      url:
+        hover:
+          - ""
+          - " &#FFFF00▶ &fClick to &#FFFF00open the link &fin your browser: "
+          - ""
+          - " &#FFFF00{url} "
+          - ""
+      cancel:
+        text: "&#FB8808[Cancel]"
+        hover:
+          - ""
+          - " &#FB8808◆ &fClick to &#FB8808cancel &fthe installation "
+          - ""
+
+    confirm-compat-unknown:
+      - "[message] "
+      - "[message]                             &#FB8808▶ Attention!"
+      - "[message] "
+      - "[message]    &#FFFF00◆ &fAre you sure you want to &#FFFF00update &fplugin &#FFFF00«{plugin}» "
+      - "[message]    &ffrom &#FFFF00v{current} &fto the new version &#FFFF00v{latest} &fon &#FFFF00{source}&f, "
+      - "[message]   &fgiven that the author &#FFFF00didn't specify &fa supported server version?"
+      - "[message] "
+      - "[message]                    &#FFFF00◆ &fThe plugin was &#FFFF00found &fhere:"
+      - "[message] "
+      - "[message]          &#FFFF00{url}"
+      - "[message] "
+      - "[message]           {single-button}   {cancel-button}"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    confirm-compat-unknown-buttons:
+      single:
+        text: "&#22FF00[Try installing it]"
+        hover:
+          - ""
+          - " &#22FF00◆ &fClick to &#22FF00download &fand &#22FF00check &fversion &#22FF00v{latest} "
+          - ""
+      url:
+        hover:
+          - ""
+          - " &#FFFF00▶ &fClick to &#FFFF00open the link &fin your browser: "
+          - ""
+          - " &#FFFF00{url} "
+          - ""
+      cancel:
+        text: "&#FB8808[Cancel]"
+        hover:
+          - ""
+          - " &#FB8808◆ &fClick to &#FB8808cancel &fthe installation "
+          - ""
+
+    confirm-ambiguous:
+      - "[message] "
+      - "[message]                             &#FB8808▶ Attention!"
+      - "[message] "
+      - "[message]    &#FFFF00◆ &fAre you sure you want to &#FFFF00update &fplugin &#FFFF00«{plugin}» "
+      - "[message]    &ffrom &#FFFF00v{current} &fto the new version &#FFFF00v{latest} &fon &#FFFF00{source}&f, "
+      - "[message]        &fgiven that a similar project was found for it"
+      - "[message]                 &fwith the name &#FFFF00«{reason}»&f?"
+      - "[message] "
+      - "[message]                    &#FFFF00◆ &fThe plugin was &#FFFF00found &fhere:"
+      - "[message] "
+      - "[message]          &#FFFF00{url}"
+      - "[message] "
+      - "[message]    {single-button}   {cancel-button}"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    confirm-ambiguous-buttons:
+      single:
+        text: "&#22FF00[Install it anyway]"
+        hover:
+          - ""
+          - " &#22FF00◆ &fClick to &#22FF00install &fthe found version &#22FF00v{latest} &ffor &#22FF00«{plugin}» "
+          - ""
+      url:
+        hover:
+          - ""
+          - " &#FFFF00▶ &fClick to &#FFFF00open the link &fin your browser: "
+          - ""
+          - " &#FFFF00{url} "
+          - ""
+      cancel:
+        text: "&#FB8808[Cancel]"
+        hover:
+          - ""
+          - " &#FB8808◆ &fClick to &#FB8808cancel &fthe installation "
+          - ""
+
+    manual-source:
+      errors:
+        empty-link: "the link cannot be empty"
+        bad-url: "invalid URL format"
+        no-host: "failed to determine the domain name"
+        direct-jar: "direct .jar file links are not supported - provide a link to the project page instead"
+        host-not-allowed: "only links to GitHub, Modrinth, Hangar, SpigotMC, Ruspigot, or Jenkins servers are allowed"
+        github-format: "GitHub requires the format: github.com/Owner/Repository"
+        modrinth-profile: "this is a link to an author profile, not a plugin page: modrinth.com/plugin/slug"
+        modrinth-format: "Modrinth requires the format: modrinth.com/plugin/slug"
+        hangar-format: "Hangar requires the format: hangar.papermc.io/Owner/Project"
+        spigot-format: "SpigotMC requires a resource link, for example: spigotmc.org/resources/name.12345"
+        ruspigot-format: "Ruspigot requires a resource link, for example: spigotmc.ru/resources/name.12345"
+        jenkins-format: "invalid Jenkins job link"
+        unknown-source: "failed to recognize the source type from the link"
+        unsupported-source: "unsupported source type: {source}"
+      notices:
+        spigot: "SpigotMC notifications only support version checking, direct download is not possible"
+        ruspigot: "if the resource page has a Source code field set, updates will be pulled from that repository"
+      ask:
+        - "[message] "
+        - "[message]                   &#FB8808▶ Update source not found!"
+        - "[message] "
+        - "[message]         &#FB8808◆ &fUnfortunately, I &#FB8808couldn't &fautomatically"
+        - "[message]        &ffind a source for plugin &#FB8808«{plugin}» &f(&#FB8808v{current}&f) &fto"
+        - "[message]            &fdownload from and check for updates..."
+        - "[message] "
+        - "[message]          &#FFFF00◆ &fBut, you can always &#FFFF00enter &fa plugin link"
+        - "[message]     &fmanually, right &#FFFF00in chat&f, and I'll be able to &#FFFF00download"
+        - "[message]             &fand &#FFFF00check &ffor updates for this plugin)"
+        - "[message] "
+        - "[message]                {set-source-button}   {cancel-button}"
+        - "[message] "
+        - "[sound] BLOCK_ANVIL_LAND"
+      waiting:
+        - "[message] "
+        - "[message]                         &#FFFF00▶ Source input mode:"
+        - "[message] "
+        - "[message]          &#FFFF00◆ &fYou can &#FFFF00send &fme a link to any page of"
+        - "[message]       &fplugin &#FFFF00«{plugin}» &fright here, and from there I'll"
+        - "[message]       &fstart &#FFFF00checking &ffor updates and &#FFFF00downloading &fthem "
+        - "[message] "
+        - "[message]                       &#FFFF00◆ &fSupported sources: "
+        - "[message] "
+        - "[message]            &#FFFF00SpigotMC&f, &#FFFF00Modrinth&f, &#FFFF00GitHub&f, &#FFFF00Hangar&f, and &#FFFF00Jenkins"
+        - "[message] "
+        - "[message]                                 {cancel-button}"
+        - "[message] "
+        - "[sound] BLOCK_LEVER_CLICK"
+      cancelled:
+        - "[message] &#FFFF00◆ &fEntering a source for plugin &#FFFF00«{plugin}» &fwas successfully cancelled!"
+        - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+      timeout:
+        - "[message] &#FB8808▶ Oops! &fYour &#FB8808time &fto enter a source for &#FB8808«{plugin}» &fhas run out..."
+        - "[sound] BLOCK_ANVIL_LAND"
+      bad-url:
+        - "[message] &#FB8808▶ Oops! I &#FB8808couldn't &fparse this link: &#FB8808{reason}"
+        - "[sound] BLOCK_ANVIL_LAND"
+      project-not-found:
+        - "[message] &#FB8808▶ Oops! &fI &#FB8808couldn't &ffind project &#FB8808«{ref}» &fon &#FB8808{source}&f..."
+        - "[sound] BLOCK_ANVIL_LAND"
+      no-versions:
+        - "[message] &#FB8808▶ Oops! &fProject &#FB8808«{ref}» &fon &#FB8808{source} &fhas &#FB8808no &fpublished plugin releases..."
+        - "[sound] BLOCK_ANVIL_LAND"
+      rate-limited:
+        - "[message] &#FB8808▶ Oops! &fSite &#FB8808{source} &ftemporarily &#FB8808limited &frequests due to a rate limit, so &#FB8808try again &flater..."
+        - "[sound] BLOCK_ANVIL_LAND"
+      save-failed:
+        - "[message] &#FB8808▶ Oops! &fFailed to &#FB8808save &fthe source to file &#FB8808sources-custom.yml"
+        - "[sound] BLOCK_ANVIL_LAND"
+      not-found:
+        - "[message] &#FB8808▶ Oops! &fThe link you gave for &#FB8808«{plugin}» &fdoesn't have any plugin versions..."
+        - "[sound] BLOCK_ANVIL_LAND"
+      saved:
+        - "[message] "
+        - "[message] &#FFFF00▶ Done! &fThe source for plugin &#FFFF00«{plugin}» &fon &#FFFF00{source} &fwas successfully added!"
+        - "[message] "
+        - "[message] &#FFFF00◆ &fNow, whenever the plugin gets a new update, I'll notice it and let you know)"
+        - "[message] "
+        - "[sound] ENTITY_PLAYER_LEVELUP"
+      console-hint:
+        - "[message] &#FB8808▶ Oops! &fManual input through &#FB8808chat &fis &#FB8808only &favailable to in-game players!"
+        - "[sound] BLOCK_ANVIL_LAND"
+      buttons:
+        set:
+          text: "&#22FF00[Set a source]"
+          hover:
+            - ""
+            - " &#22FF00▶ &fClick to &#22FF00enter a link &fto the &#22FF00«{plugin}» &fpage in chat "
+            - ""
+        source:
+          text: "&#FFFF00{source}"
+          hover:
+            - ""
+            - " &#FFFF00▶ &fClick to &#FFFF00open &fthe plugin's page in your browser:"
+            - ""
+            - " &#FFFF00{url} "
+            - ""
+        cancel:
+          text: "&#FB8808[Cancel]"
+          hover:
+            - ""
+            - " &#FB8808◆ &fClick to &#FB8808cancel &fentering the source "
+            - ""
+  download:
+    version-latest: "Latest"
+    default-license: "Open Source"
+    author-unknown: "Unknown"
+    searching:
+      - "[message] &#FFFF00◆ &fSearching for plugin &#FFFF00«{query}» &fon trusted sites..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    searching-source:
+      - "[message] &#FFFF00◆ &fSearching for plugin &#FFFF00«{query}» &fon &#FFFF00{source}&f..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    search-results-header:
+      - "[message] "
+      - "[message]  &#FFFF00▶ &fResults for plugin query &#FFFF00«{query}»&f:"
+      - "[message] "
+      - "[message] {cards}"
+      - "[sound] BLOCK_LEVER_CLICK"
+    search-card:
+      - "  &#FFFF00{index}. &fPlugin &#FFFF00«{title}» &f(&#FFFF00v{version}&f) by &#FFFF00{author}&f:"
+      - ""
+      - "     &#FFFF00◆ &fSite: &#FFFF00{source} &f| Downloads: &#FFFF00{downloads} &f| Stars: &#FFFF00{stars}"
+      - ""
+      - "     {download-button}   {info-button}   {web-button}"
+      - ""
+    count-units:
+      thousand: "k"
+      million: "M"
+    not-found:
+      - "[message] &#FB8808▶ Oops! &fI &#FB8808couldn't &ffind a matching plugin for &#FB8808«{query}»&f..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    confirm-single:
+      - "[message] "
+      - "[message]   &#FFFF00◆ &fAre you sure you want to &#FFFF00download &fplugin &#FFFF00«{plugin}» &f(&#FFFF00v{version}&f)"
+      - "[message]       &fby &#FFFF00{author} &ffrom the &#FFFF00{source} &fsite, which has "
+      - "[message]               &#FFFF00{downloads} &fdownloads and &#FFFF00{stars} &fstars?"
+      - "[message] "
+      - "[message]                    &#FFFF00◆ &fThe plugin was &#FFFF00found &fhere:"
+      - "[message] "
+      - "[message]          &#FFFF00{url}"
+      - "[message] "
+      - "[message]             {confirm-download-button}   {cancel-button}"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    confirm-dependencies:
+      - "[message] "
+      - "[message]                 &#FB8808▶ Attention! Dependencies required!"
+      - "[message] "
+      - "[message]   &#FFFF00◆ &fFor plugin &#FFFF00«{plugin}» &fto work properly, you need"
+      - "[message]   &fto download and enable the following dependencies:"
+      - "[message] "
+      - "[message] {dependency-list}"
+      - "[message] "
+      - "[message]       &#FFFF00◆ &fDo you want to download it with all its dependencies?"
+      - "[message] "
+      - "[message]          {confirm-download-deps-button}   {cancel-button}"
+      - "[message] "
+      - "[sound] BLOCK_NOTE_BLOCK_PLING"
+    cancelled:
+      - "[message] &#FFFF00◆ &fInstalling plugin &#FFFF00«{plugin}» &fwas successfully cancelled!"
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    timeout:
+      - "[message] &#FB8808▶ Oops! &fThe &#FB8808confirmation time &ffor installing plugin &#FB8808«{plugin}» &fhas run out..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    installing:
+      - "[message] &#FFFF00◆ &f&#FFFF00Downloading &fand &#FFFF00preparing &fplugin &#FFFF00«{plugin}» &f(&#FFFF00{current}/{total}&f)..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    bootstrapper-installed:
+      - "[message] &#FFFF00▶ Done! &fPlugin &#FFFF00«{plugin}» &f(&#FFFF00v{version}&f) was saved to the &#FFFF00update/ &ffolder and will load on the next &#FFFF00server restart&f!"
+      - "[sound] ENTITY_PLAYER_LEVELUP"
+    installed:
+      - "[message] &#FFFF00▶ Done! &fPlugin &#FFFF00«{plugin}» &f(&#FFFF00v{version}&f) was successfully &#FFFF00downloaded &ffrom &#FFFF00{source} &fand &#FFFF00enabled &fon the server!"
+      - "[sound] ENTITY_PLAYER_LEVELUP"
+    failed:
+      - "[message] &#FB8808▶ Oops! &fI &#FB8808couldn't &finstall plugin &#FB8808«{plugin}»&f: &#FB8808{reason}"
+      - "[sound] BLOCK_ANVIL_LAND"
+    details:
+      unknown-plugin: "the plugin"
+      cycle-unknown: "the exact chain could not be determined"
+      stage-failed: "failed to download or verify the file"
+      no-direct-link: "failed to obtain a direct download link"
+      network: "network error or timeout while downloading"
+      not-a-jar: "the downloaded file is not a .jar archive"
+      sha512-mismatch: "the SHA-512 checksum did not match the one declared by the site"
+      sha256-mismatch: "the SHA-256 checksum did not match the one declared by the site"
+      github-no-releases: "no published releases found in the GitHub repository"
+      github-no-jar: "no suitable .jar files found in the GitHub release"
+      github-no-assets: "the GitHub release has no downloadable files"
+      update-folder-write-failed: "failed to save the file to the update/ folder"
+      disk-write-failed: "disk write error"
+      load-failed-rolled-back: "the plugin failed to load, all changes were rolled back"
+      load-failed-dirty: "the plugin failed to load, the rollback was not fully completed - see console for details"
+      locked: "an installation is already in progress"
+      deps-check-failed: "failed to download the file to check its dependencies"
+    reasons:
+      incompatible-java: "The plugin requires Java {required-java}+, but the server is running Java {current-java}"
+      invalid-jar: "The downloaded file is corrupted or isn't a valid .jar archive"
+      invalid-manifest: "The plugin archive is missing or has a corrupted plugin.yml manifest"
+      hash-mismatch: "The file's checksum didn't match the one declared by the site (the download may have been interrupted)"
+      download-failed: "Couldn't download the file from {source} due to a network error or timeout"
+      missing-deps: "Couldn't find or resolve required dependencies: {deps}"
+      circular-deps: "A circular dependency chain was found: {chain}"
+      locked: "This plugin is already being installed by another task"
+      rolled-back: "The plugin failed to initialize, all changes and dependencies were safely rolled back"
+      activation-failed: "Couldn't activate the plugin on the server: {detail}"
+      write-failed: "Couldn't save the plugin to the plugins folder (disk permission error)"
+      rate-limited: "Site {source} temporarily limited access due to a rate limit"
+    buttons:
+      download:
+        text: "&#22FF00[Download and install]"
+        hover:
+          - ""
+          - " &#22FF00▶ &fClick to &#22FF00download &fand &#22FF00activate &fplugin &#22FF00«{title}» "
+          - ""
+      confirm-single:
+        text: "&#22FF00[Download and install]"
+        hover:
+          - ""
+          - " &#22FF00▶ &fClick to &#22FF00download &fand &#22FF00activate &fplugin &#22FF00«{plugin}» "
+          - ""
+      info:
+        text: "&#FFFF00[More info]"
+        hover:
+          - ""
+          - " &#FFFF00▶ &fInfo about plugin &#FFFF00«{title}» &f(&#FFFF00v{version}&f): "
+          - ""
+          - "  &#FFFF00◆ &fAuthor: &#FFFF00{author} "
+          - "  &#FFFF00◆ &fSite: &#FFFF00{source} "
+          - "  &#FFFF00◆ &fDownloads: &#00FF5A{downloads} "
+          - "  &#FFFF00◆ &fVersions: &#FFFF00{game-versions} "
+          - "  &#FFFF00◆ &fLicense: &#FFFF00{license} "
+          - ""
+          - " &#FFFF00◆ &fDescription: "
+          - ""
+          - "  &#FFFF00{description} "
+          - ""
+          - " &#FFFF00▶ &fClick to &#FFFF00open &fthe plugin's page in your browser "
+          - ""
+      web:
+        text: "&#62CCFF[Page]"
+        hover:
+          - ""
+          - " &#62CCFF▶ &fClick to &#62CCFFgo to &fthe plugin's page in your browser: "
+          - ""
+          - " &#62CCFF{url} "
+          - ""
+      url:
+        hover:
+          - ""
+          - " &#62CCFF▶ &fClick to &#62CCFFopen the link &fin your browser: "
+          - ""
+          - " &#62CCFF{url} "
+          - ""
+      confirm-deps:
+        text: "&#22FF00[Download everything with dependencies]"
+        hover:
+          - ""
+          - " &#22FF00▶ &fClick to automatically &#22FF00download the dependencies &fand &#22FF00enable &fthe plugin "
+          - ""
+      cancel:
+        text: "&#FB8808[Cancel]"
+        hover:
+          - ""
+          - " &#FB8808◆ &fClick to &#FB8808cancel &finstalling the plugin "
+          - ""

@@ -1,0 +1,239 @@
+#
+#
+#         █▀█ █░░ █░█ █▀▀ █▀▄▀█ ▄▀█ █▄░█ █▀█ █▀▀ █░░ █▀█ ▄▀█ █▀▄ █▀▀ █▀▄
+#         █▀▀ █▄▄ █▄█ █▄█ █░▀░█ █▀█ █░▀█ █▀▄ ██▄ █▄▄ █▄█ █▀█ █▄▀ ██▄ █▄▀
+#
+#                             (By MilkyWay for everyone)
+#
+#       ◆ Found a bug or an issue? Message me about it on Telegram - @vkusniy_milkyway
+#                ◆ If you find the plugin useful, you can always leave
+#              a review for it and subscribe to my channel - @GornaSqd
+#                            It would mean a lot to me :)
+#
+
+# Plugin config version
+# (Never touch this parameter under any circumstances!)
+config-version: 1.0
+
+# Settings for all parameters
+settings:
+
+  # Language of the plugin's messages and interface
+  # Available languages:
+  #   ru — Russian (file messages/ru-messages.yml)
+  #   en — English (file messages/en-messages.yml)
+  # (You can also create your own message file in the "messages" folder and point to it here)
+  language: en
+
+  # Logging settings
+  logs-in-console:
+    # Print all of the plugin's detailed logs to the console? (true/false)
+    # (Recommended while debugging and monitoring)
+    enable: false
+    # Enable extended diagnostic debug logs? (true/false)
+    # (Shows the details of internal memory cleanup, reflection and injections)
+    debug: false
+
+  # Plugin update checker
+  update-checker:
+    # Check for updates automatically? (true/false)
+    enabled: true
+    # How to deliver update notifications
+    # Available options:
+    #   on-start — notify only when the server starts (in the console and to admins)
+    #   on-join — notify only when an admin joins
+    #   periodic — notify every set number of hours (in the console and to admins)
+    #   both — on start, on join, and periodically
+    notify-mode: both
+    # Interval of the periodic check, only for the "periodic" and "both" modes (in hours)
+    periodic-interval-hours: 6
+
+  # Anonymous bStats statistics
+  bstats:
+    # Enable anonymous bStats statistics? (true/false)
+    # (bStats automatically collects anonymous stats about plugin usage across servers)
+    enabled: true
+
+  # Safe mode
+  # (Dynamically protects system services, API providers, Netty hooks and dependent plugins)
+  safe-mode:
+    # Enable safe mode? (true/false)
+    #   true — show an interactive message with a choice of action whenever there are risks
+    #   false — run immediately in one click, without a confirmation message
+    enabled: true
+
+  # Reloading related dependencies
+  cascade-reload:
+    # Reload with dependencies by default on /plm reload <plugin>? (true/false)
+    #   true — automatically reload every dependent plugin without passing the "-c" flag
+    #   false — show the interactive choice menu or reload only the plugin itself
+    by-default: false
+
+  # Automatic sync of the client command tree
+  # (Instantly refreshes command hints and autocomplete in chat for players on load/unload)
+  auto-sync-commands:
+    # Enable automatic command syncing? (true/false)
+    enabled: true
+
+  # Overriding the vanilla /plugins and /pl commands
+  # (When enabled, PlugManReloaded shows its own neat plugin list instead of the default one)
+  override-plugins-command:
+    # Enable overriding of the /plugins and /pl commands? (true/false)
+    enabled: true
+
+  # Using .jar file names in command hints
+  # (Lets you pick a specific file when there are duplicate versions in the plugins folder)
+  use-jar-file-names:
+    # Show .jar file names in tab completion? (true/false)
+    #   true — hints suggest only .jar file names (for example, EssentialsX-2.22.0.jar)
+    #   false — hints suggest regular plugin names (for example, Essentials)
+    enabled: true
+
+  # Automatic hot reloading
+  # (Watches for .jar file changes in the plugins folder and instantly reloads them on the fly)
+  hot-swap:
+    # Enable automatic Hot-Swap by default when the server starts? (true/false)
+    # (You can also turn the mode on or off in-game with /plm hotswap on/off)
+    enabled: false
+    # Delay before reloading (in milliseconds)
+    # (Maven / Gradle builders need it to finish writing the file to disk before it is read)
+    debounce-ms: 500
+    # Automatically load new plugins if their .jar file appears in the folder, but the plugin is not yet on the server? (true/false)
+    # (Recommended false to protect against unauthorized loading of malicious files that land on the disk)
+    allow-untrusted-loads: false
+    # Automatically unload a plugin from memory when its .jar file is deleted from disk? (true/false)
+    auto-unload-on-delete: true
+    # Automatically rename the old version to .jar.old when a new version is installed? (true/false)
+    # (Protects the server from clashes between identical plugins on the next restart)
+    backup-old-version: true
+    # Reload dependent plugins on a hot update? (true/false)
+    cascade-reload: true
+
+  # List of plugins protected from accidental unloading, reloading and other actions
+  # (Plugins from this list cannot be accidentally disabled or unloaded by commands)
+  ignored-plugins:
+    - "PlugManReloaded"
+
+  # List of plugins that technically cannot be unloaded cleanly
+  #
+  # (These plugins embed themselves into the server's network stack or patch its internals
+  # at startup. Their state cannot be restored after unloading, a server restart will be needed)
+  #
+  # (With "safe-mode: true" such plugins require a confirmation or the "-f" flag.
+  # On top of that the plugin finds such libraries on its own by marker classes,
+  # even if they were renamed or it is a fork)
+  unsafe-to-unload:
+    - "ProtocolLib"
+    - "ViaVersion"
+    - "ViaBackwards"
+    - "PacketEvents"
+
+  # Updating installed plugins
+  updates:
+    # Check for updates of installed plugins when the server starts? (true/false)
+    check-on-start: true
+    # How to deliver notifications about found plugin updates
+    # Available options:
+    #   on-start — notify only when the server starts
+    #   on-join — notify only when an admin joins
+    #   both — notify both on start and when an admin joins
+    #   disabled — turn off automatic notifications
+    notify-mode: both
+    # Where to send notifications about available plugin updates
+    # Available options:
+    #   all — send both to the console and to admins with the "plugmanreloaded.admin" permission
+    #   players — send only to admins in chat
+    #   console — send only to the server console
+    notify-target: all
+    # Allow offering alpha and beta versions of plugins when they exist? (true/false)
+    # (Such versions always require a separate confirmation)
+    allow-prerelease: false
+    # Look for a link to the plugin's page inside its own .jar file? (true/false)
+    #
+    # (Almost every plugin has its own built-in update checker, and inside it there is
+    # a link to GitHub, SpigotMC or Modrinth. This plugin reads string constants
+    # from .class files and pulls the project link out of them)
+    #
+    # (Runs only for the plugins that neither the hash nor the catalog could help with,
+    # and before the regular search by name: a link from the file itself is more reliable
+    # than a search engine's guess. The result is cached by file size and date, so
+    # repeated checks are free)
+    #
+    # (The address that is found is never used for downloading directly — it only
+    # hints at what to look for on the already known sites, and must pass validation)
+    scan-jar-references: true
+    # Token for the GitHub API
+    #
+    # Why is it needed?
+    #
+    #   Without a token GitHub itself allows only 60 requests per hour per server IP address.
+    #   With frequent update checks or a bulk search that limit can run out very quickly.
+    #   With a token the limit grows to 5000 requests per hour, so checking for updates
+    #   and downloading plugins from GitHub will always work almost instantly and without delays)
+    #
+    # How to get your own personal token for free?
+    #
+    #   1. First open this link: https://github.com/settings/tokens
+    #   2. Click «Generate new token», then «Generate new token (classic)»
+    #   3. In the «Note» field enter any name (for example, PlugManReloaded)
+    #   4. In the «Expiration» field choose the token's lifetime (for example: No expiration, which means forever)
+    #   5. You don't have to tick any permissions (access to public plugins is already open)
+    #   6. At the very bottom click the green «Generate token» button, copy the token and paste it here
+    github-token: ""
+    # How many hours to keep the sites' responses in the memory cache
+    # (For an instant forced re-check use the -r / --refresh flag)
+    cache-ttl-hours: 1
+    # Setting the update source manually through chat
+    manual-source:
+      # Allow admins to type a link right in the chat when the plugin found nothing? (true/false)
+      enabled: true
+      # How many seconds the plugin waits for a link before leaving input mode
+      timeout-seconds: 60
+
+  # Settings for downloading plugins from the sites
+  download:
+    # How many levels deep to allow recursion when resolving dependencies of dependencies?
+    # (For example, plugin A needs plugin B, and B needs plugin C, and so on)
+    max-dependency-depth: 3
+    # Tab completion settings for the command
+    suggestions:
+      # Show hints with popular plugins? (true/false)
+      enabled: true
+      # Hide the plugins that are already installed on the server from the hints? (true/false)
+      hide-downloaded: true
+      # List of popular plugins offered in autocompletion
+      plugins:
+        - "LuckPerms"
+        - "Vault"
+        - "PlaceholderAPI"
+        - "DecentHolograms"
+        - "EssentialsX"
+        - "WorldGuard"
+        - "WorldEdit"
+        - "ProtocolLib"
+        - "CoreProtect"
+        - "ViaVersion"
+        - "ViaBackwards"
+        - "Chunky"
+        - "DeluxeMenus"
+        - "Citizens"
+        - "Multiverse-Core"
+        - "FastAsyncWorldEdit"
+        - "Spark"
+        - "TAB"
+        - "PacketEvents"
+        - "SkinsRestorer"
+
+  # Plugin backup settings
+  # (Backup copies of .jar files are kept in the hidden "plugmanreloaded-backups" folder inside plugins)
+  backups:
+    # How many days to keep plugin backups? (1 day by default)
+    # (Backup files older than that are deleted automatically)
+    keep-days: 1
+    # Maximum number of backups for each plugin
+    max-backups-per-plugin: 3
+
+  # Plugin deletion settings (/plm delete)
+  delete:
+    # Delete the folder with the config and other .yml files when a plugin is removed via /plm delete? (true/false)
+    delete-data-folder: false
