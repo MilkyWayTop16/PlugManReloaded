@@ -1,0 +1,133 @@
+#
+#
+#         █▀█ █░░ █░█ █▀▀ █▀▄▀█ ▄▀█ █▄░█ █▀█ █▀▀ █░░ █▀█ ▄▀█ █▀▄ █▀▀ █▀▄
+#         █▀▀ █▄▄ █▄█ █▄█ █░▀░█ █▀█ █░▀█ █▀▄ ██▄ █▄▄ █▄█ █▀█ █▄▀ ██▄ █▄▀
+#
+#                             (By MilkyWay for everyone)
+#
+#       ◆ Found a bug or an issue? Message me about it on Telegram - @vkusniy_milkyway
+#                ◆ If you find the plugin useful, you can always leave
+#              a review for it and subscribe to my channel - @GornaSqd
+#                            It would mean a lot to me :)
+#
+
+# Custom plugin update sources
+#
+# The plugin's built-in catalog contains only official and verified entries
+#
+# Entries from this file take highest priority over the built-in catalog
+# (If a plugin is detected incorrectly, or you want to use a different source,
+# you can override it here)
+#
+# After making changes, run the command: /plm config reload
+
+# Format for adding a plugin
+#
+# The entry key is the plugin name exactly as shown by /plm list
+# (That is, the system name from plugin.yml, not the .jar file name)
+#
+# Example structure:
+#
+# plugins:
+#   <Plugin name>:
+#     sources:
+#       - id: github
+#         ref: "Owner/Repository"
+
+# Available source types (id):
+#
+#   modrinth — project slug from the link modrinth.com/plugin/<Slug> (Reports supported Minecraft versions and installs automatically)
+#
+#   hangar — author/project from hangar.papermc.io (Reports supported Minecraft versions and installs automatically)
+#
+#   github — owner/repository on GitHub (for example, "Author/Repo") (Always fetches the latest release from GitHub)
+#
+#   spigot — numeric resource id from the link spigotmc.org/resources/<Id> (Notifications only, since SpigotMC blocks direct downloads)
+#
+#   ruspigot — direct link to a resource on spigotmc.ru/resources/name.<Id> (If a GitHub repository is listed on the page, the plugin can be downloaded; otherwise it can't, since downloading requires logging into an account)
+#
+#   jenkins — build job URL on the CI server (without a trailing slash) (Provides builds/artifacts, marked as alpha versions)
+#
+#   direct — your own website or REST API with a JSON response (Supports flexible JSON path configuration via versionPath and downloadPath)
+
+# Optional entry parameters:
+#
+#   main — the plugin's main class from plugin.yml (Useful for forks sharing the same name, prevents accidentally matching another plugin)
+#
+#   aliases — a list of alternative or previous plugin names
+#
+#   url — a web link to the project page (shown in chat and tooltips)
+#
+#   loaders — a comma-separated list of supported server platforms (e.g. paper, purpur, folia)
+#
+#   gameVersions — a comma-separated list of supported game versions (e.g. 1.20.4, 1.21)
+
+# Security and file verification
+#
+# (The plugin automatically downloads files from the specified links and replaces the running plugin,
+# so only ever specify repositories and links that you trust)
+#
+
+# List of custom sources
+plugins: {}
+
+# Configuration examples (remove "{}" from "plugins:" above and use the ones you need):
+#
+# plugins:
+#
+#   # A regular plugin from GitHub
+#   MyPlugin:
+#     sources:
+#       - id: github
+#         ref: "MyName/MyPlugin"
+#         url: "https://github.com/MyName/MyPlugin"
+#
+#   # A fork with the original main class (protects against a false match)
+#   VaultSlim:
+#     main: "net.milkbowl.vault.Vault"
+#     sources:
+#       - id: github
+#         ref: "Owner/VaultSlim"
+#
+#   # A Jenkins CI build server
+#   MyPluginCI:
+#     sources:
+#       - id: jenkins
+#         ref: "myplugin"
+#         endpoint: "https://ci.example.com/job/MyPlugin"
+#         url: "https://example.com/download"
+#
+#   # A plugin served from its own API site (JSON response)
+#   # (versionPath and downloadPath — dot-separated paths to the fields in the JSON)
+#   # (loaders and gameVersions — explicitly state the supported platforms and game versions)
+#   MyPluginAPI:
+#     sources:
+#       - id: direct
+#         ref: "myplugin"
+#         endpoint: "https://example.com/api/latest.json"
+#         versionPath: "version"
+#         downloadPath: "downloads.bukkit"
+#         loaders: "paper, purpur, folia"
+#         gameVersions: "1.20.4, 1.21"
+#         url: "https://example.com/download"
+#
+#   # A renamed plugin (old name from plugin.yml)
+#   AuraSkills:
+#     aliases:
+#       - "AureliumSkills"
+#     sources:
+#       - id: modrinth
+#         ref: "auraskills"
+#
+#   # A plugin from SpigotMC.ru
+#   nnTNTs:
+#     sources:
+#       - id: ruspigot
+#         ref: "https://spigotmc.ru/resources/nntnts.2206/"
+#
+#   # A plugin from Modrinth with a strict main class check
+#   WGExtender:
+#     main: "ru.zznty.wgextender.WGExtender"
+#     sources:
+#       - id: modrinth
+#         ref: "wgextender"

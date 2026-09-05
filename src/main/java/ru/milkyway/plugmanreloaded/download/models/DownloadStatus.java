@@ -1,0 +1,19 @@
+package ru.milkyway.plugmanreloaded.download.models;
+
+public enum DownloadStatus {
+    INSTALLED,
+    BOOTSTRAPPER_RESTART_REQUIRED,
+    DEPENDENCIES_REQUIRED,
+    CIRCULAR_DEPENDENCIES,
+    DOWNLOAD_FAILED,
+    HASH_MISMATCH,
+    INVALID_PLUGIN,
+    INVALID_MANIFEST,
+    INCOMPATIBLE_JAVA,
+    ACTIVATION_FAILED,
+    ROLLED_BACK,
+    WRITE_FAILED,
+    RATE_LIMITED,
+    LOCKED
+}
+

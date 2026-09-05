@@ -1,0 +1,1679 @@
+#
+#
+#         █▀█ █░░ █░█ █▀▀ █▀▄▀█ ▄▀█ █▄░█ █▀█ █▀▀ █░░ █▀█ ▄▀█ █▀▄ █▀▀ █▀▄
+#         █▀▀ █▄▄ █▄█ █▄█ █░▀░█ █▀█ █░▀█ █▀▄ ██▄ █▄▄ █▄█ █▀█ █▄▀ ██▄ █▄▀
+#
+#                             (By MilkyWay for everyone)
+#
+#     ◆ Нашёл баг/ошибку/недочёт? Напиши мне о проблеме в Телеграмме - @vkusniy_milkyway
+#            ◆ Если плагин для тебя очень интересный, то ты всегда можешь
+#          оставить отзыв плагину, ну и подписаться на мой Тгк - @GornaSqd
+#                             Мне будет очень приятно :)
+#
+
+# Версия файла локализации
+# (Ни в коем случае не трогать данный параметр!)
+config-version: 1.0
+
+# Разные события
+#
+# Доступные действия для любого списка:
+#
+#   [message] <Текст> — Отправляет сообщение игроку
+#   [message-console] <Текст> — Отправляет сообщение только в консоль
+#   [broadcast] <Текст> — Отправляет объявление всем игрокам на сервере
+#   [sound] <Айди звука> [Громкость] [Питч] — Проигрывает звук игроку
+#   [title] <Текст>;<Подзаголовок>;<Угасает через>;<Остаётся сколько>;<Пропадает через> — Показывает тайтл игроку
+#   [actionbar] <Текст> — Показывает текст в строке действия игроку
+#   [console-command] <Команда> — Выполняет команду от имени консоли
+#   [player-command] <Команда> — Выполняет команду от имени игрока
+#
+# (Можно полностью удалить определённый акшон, если вы не хотите, чтобы он срабатывал со всеми его командами)
+
+actions:
+  errors:
+    details:
+      unload-failed: "не удалось выгрузить"
+      load-failed: "не удалось загрузить"
+      enable-failed: "не удалось включить"
+      disable-failed: "не удалось выключить"
+      dependency-failed: "не загрузилась зависимость"
+      unknown: "неизвестная ошибка"
+      self-disabled: "плагин отключил себя при запуске или упал при инициализации"
+      self-disabled-on-enable: "плагин отключил себя при запуске или упал в onEnable()"
+      empty-load-result: "ядро сервера вернуло пустой результат при загрузке плагина"
+      loaded-from-memory: "память сервера"
+      file-not-found: "«{file}» не найден в папке с плагинами — укажите имя плагина или имя .jar-файла"
+    no-permission:
+      - "[message] &#FB8808▶ &fНедостаточно &#FB8808прав на использование &fданной команды!"
+      - "[sound] BLOCK_ANVIL_LAND"
+    console-not-allowed:
+      - "[message] &#FB8808▶ Ошибочка! &fТолько &#FB8808игроки &fмогут использовать эту команду!"
+      - "[sound] BLOCK_ANVIL_LAND"
+    invalid-plugin:
+      - "[message] &#FB8808▶ Стоп! &fУкажите &#FB8808корректное &fназвание плагина!"
+      - "[sound] BLOCK_ANVIL_LAND"
+    plugin-not-found:
+      - "[message] &#FB8808▶ Стоп! &fПлагин &#FB8808«{plugin}» &fне найден среди установленных на сервере!"
+      - "[sound] BLOCK_ANVIL_LAND"
+    has-dependents:
+      - "[message] &#FB8808▶ Стоп! &fОт плагина &#FB8808«{plugin}» &fзависят другие плагины: &#FB8808{dependents}&f — выгрузка отменена, чтобы их не сломать"
+      - "[sound] BLOCK_ANVIL_LAND"
+    plugin-ignored:
+      - "[message] &#FB8808▶ Стоп! &fПлагин &#FB8808«{plugin}» &fнаходится в &#FB8808списке &fзащищённых и &#FB8808не может &fбыть выгружен!"
+      - "[sound] BLOCK_ANVIL_LAND"
+    critical-protected:
+      - "[message] &#FB8808▶ Стоп! &fПлагин &#FB8808«{plugin}» &fявляется &#FB8808защищённым &fядром сервера и &#FB8808не может &fбыть выгружен!"
+      - "[sound] BLOCK_ANVIL_LAND"
+    self-protected:
+      - "[message] &#FB8808▶ Стоп! &fПлагин &#FB8808«{plugin}» &fне может управлять &#FB8808сам &fсобой, так что &#FB8808ничего &fне получиться..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    already-enabled:
+      - "[message] &#FB8808▶ &fПлагин &#FB8808«{plugin}» &fуже включен!"
+      - "[sound] BLOCK_ANVIL_LAND"
+    already-disabled:
+      - "[message] &#FB8808▶ &fПлагин &#FB8808«{plugin}» &fуже выключен!"
+      - "[sound] BLOCK_ANVIL_LAND"
+    reload-disabled:
+      - "[message] &#FB8808▶ Стоп! &fПлагин &#FB8808«{plugin}» &fвыключен, используйте команду &#FB8808/plm enable {plugin} &fдля его включения!"
+      - "[sound] BLOCK_ANVIL_LAND"
+    confirm-expired:
+      - "[message] &#FB8808▶ Ошибочка! &fСрок действия подтверждения &#FB8808истёк &fили оно &#FB8808уже было &fиспользовано!"
+      - "[sound] BLOCK_ANVIL_LAND"
+    operation-cancelled:
+      - "[message] &#FB8808▶ Стоп! &fОперацию над плагином &#FB8808«{plugin}» &fотменил &#FB8808другой плагин &fчерез Api-событие PlugManReloaded..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    internal-error:
+      - "[message] &#FB8808▶ Ошибочка! &fПри выполнении операции произошла &#FB8808внутренняя ошибка&f: {error}"
+      - "[sound] BLOCK_ANVIL_LAND"
+    timeout:
+      - "[message] &#FB8808▶ Ошибочка! &fОперация &#FB8808не завершилась &fза отведённое время и была &#FB8808прервана&f..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    file-not-found:
+      - "[message] &#FB8808▶ Ошибочка! &fФайл плагина &#FB8808«{file}» &fне найден в &#FB8808папке &fс плагинами..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    unsupported-java:
+      - "[message] &#FB8808▶ Ошибочка! &fПлагин &#FB8808«{plugin}» &fтребует &#FB8808Java {required-java}+&f, а сервер работает на &#FB8808Java {current-java}&f..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    unsupported-api:
+      - "[message] &#FB8808▶ Ошибочка! &fПлагин &#FB8808«{plugin}» &fтребует неподдерживаемую версию API &#FB8808{api} &fядра!"
+      - "[sound] BLOCK_ANVIL_LAND"
+    missing-deps:
+      - "[message] &#FB8808▶ Ошибочка! &fДля работы плагина &#FB8808«{plugin}» &fотсутствуют нужные зависимости: &#FB8808{deps}"
+      - "[sound] BLOCK_ANVIL_LAND"
+
+    circular-deps:
+      - "[message] &#FB8808▶ Ошибочка! &fОбнаружена &#FB8808циклическая &fзависимость между плагином &#FB8808«{plugin}» &fи другими плагинами..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    invalid-description:
+      - "[message] &#FB8808▶ Ошибочка! &fВ файле &#FB8808«{file}» &fповреждён или отсутствует манифест &#FB8808plugin.yml&f..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    jar-corrupted:
+      - "[message] &#FB8808▶ Ошибочка! &fФайл &#FB8808«{file}» &fповреждён или &#FB8808не является &f.jar-плагином...."
+      - "[sound] BLOCK_ANVIL_LAND"
+    class-not-found:
+      - "[message] &#FB8808▶ Ошибочка! &fВ плагине &#FB8808«{plugin}» &fне найден обязательный класс &#FB8808{class}&f..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    incompatible-core:
+      - "[message] &#FB8808▶ Ошибочка! &fПлагин &#FB8808«{plugin}» &fнесовместим с ядром (отсутствует метод/поле &#FB8808{member}&f)"
+      - "[sound] BLOCK_ANVIL_LAND"
+    incompatible-class-change:
+      - "[message] &#FB8808▶ Ошибочка! &fПлагин &#FB8808«{plugin}» &fскомпилирован под &#FB8808несовместимую &fверсию интерфейсов ядра..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    duplicate-plugin:
+      - "[message] &#FB8808▶ Ошибочка! &fПлагин с именем &#FB8808«{plugin}» &fуже &#FB8808загружен &fна сервере!"
+      - "[sound] BLOCK_ANVIL_LAND"
+    database-locked:
+      - "[message] &#FB8808▶ Ошибочка! &fБаза данных плагина &#FB8808«{plugin}» &fзаблокирована &#FB8808другим &fпроцессом..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    port-in-use:
+      - "[message] &#FB8808▶ Ошибочка! &fСетевой порт или веб-адрес плагина &#FB8808«{plugin}» &fуже занят!"
+      - "[sound] BLOCK_ANVIL_LAND"
+    paper-bootstrapper:
+      - "[message] &#FB8808▶ Ошибочка! &fПлагин &#FB8808«{plugin}» &fиспользует &#FB8808Paper Bootstrapper &fи &#FB8808не может &fзагружаться на лету..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    load-failed:
+      - "[message] &#FB8808▶ Ошибочка! &fНе удалось &#FB8808загрузить &fплагин &#FB8808«{plugin}» &fиз-за внутренней &#FB8808ошибки &fинициализации..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    unload-failed:
+      - "[message] &#FB8808▶ Ошибочка! &fНе удалось &#FB8808корректно &fвыгрузить плагин &#FB8808«{plugin}» &fиз памяти сервера..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    delete-failed:
+      - "[message] &#FB8808▶ Ошибочка! &fНе удалось &#FB8808удалить &fфайл плагина &#FB8808«{plugin}» &fс диска сервера..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    reload-failed:
+      - "[message] &#FB8808▶ Ошибочка! &fНе удалось &#FB8808перезагрузить &fплагин &#FB8808«{plugin}» &fиз-за внутренней &#FB8808ошибки &fплагина..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    restart-left-unloaded:
+      - "[message] &#FB8808▶ Внимание! &fПлагин &#FB8808«{plugin}» &fбыл &#FB8808корректно &fвыгружен&f, но повторная загрузка того же файла &#FB8808не удалась&f дважды подряд: {error}"
+      - "[message] &#FB8808▶ &fПлагин сейчас &#FB8808не работает &fна сервере, так что снова &#FB8808загрузите &fего вручную командой &#FB8808/plm load {plugin} &fпосле устранения ошибки..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    enable-failed:
+      - "[message] &#FB8808▶ Ошибочка! &fПлагин &#FB8808«{plugin}» &fотключил себя или произошла &#FB8808ошибка &fпри включении!"
+      - "[sound] BLOCK_ANVIL_LAND"
+    disable-failed:
+      - "[message] &#FB8808▶ Ошибочка! &fПроизошла непредвиденная &#FB8808ошибка &fпри выключении плагина &#FB8808«{plugin}»&f..."
+      - "[sound] BLOCK_ANVIL_LAND"
+
+  help:
+    main:
+      - "[message] "
+      - "[message] &#FFFF00▶ &fСписок доступных команд плагина &#FFFF00PlugManReloaded&f:"
+      - "[message] "
+      - "[message]   &#FFFF00◆ /plm list (-v/-j) &f— Показать список плагинов сервера (флаг «-v» — с версиями, «-j» — имена JAR)"
+      - "[message]   &#FFFF00◆ /plm info <Плагин> &f— Подробная информация о плагине и зависимостях"
+      - "[message]   &#FFFF00◆ /plm load <Плагин> &f— Загрузить и включить плагин из папки с плагинами"
+      - "[message]   &#FFFF00◆ /plm unload <Плагин> (-f) &f— Корректно выгрузить плагин из памяти сервера"
+      - "[message]   &#FFFF00◆ /plm reload <Плагин> (-c/-f) &f— Перезагрузить плагин (флаг «-c» — с зависимостями, «-f» — только этот)"
+      - "[message]   &#FFFF00◆ /plm restart <Плагин> (-c/-f) &f— Полностью перезапустить плагин с диска"
+      - "[message]   &#FFFF00◆ /plm enable <Плагин> &f— Включить отключенный плагин"
+      - "[message]   &#FFFF00◆ /plm disable <Плагин> &f— Отключить работающий плагин"
+      - "[message]   &#FFFF00◆ /plm usage <Команда/Пермишен> &f— Найти плагин, зарегистрировавший команду или пермишен"
+      - "[message]   &#FFFF00◆ /plm dump &f— Создать файл с полным дампом серверного окружения"
+      - "[message]   &#FFFF00◆ /plm update (Плагин/all) (-y/-r/-s) &f— Проверить и установить обновления для плагинов сервера"
+      - "[message]   &#FFFF00◆ /plm download <Плагин/URL> (-s/-y) &f— Найти и автоматически скачать плагин с зависимостями"
+      - "[message]   &#FFFF00◆ /plm delete <Плагин> (-y/-d) &f— Полностью выгрузить и удалить .jar-файл плагина с диска"
+      - "[message]   &#FFFF00◆ /plm hotswap <on/off/status> &f— Авто-слежение за файлами плагинов (авто-загрузка и обновление)"
+      - "[message]   &#FFFF00◆ /plm config reload &f— Перезагрузить конфигурацию плагина"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    download:
+      - "[message] "
+      - "[message]  &#FFFF00▶ &fКоманда: &#FFFF00/plm download <Плагин/Ссылка> (-y/-s/-w)"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fОписание: &#FFFF00Позволяет найти или напрямую скачать плагин с Modrinth, Hangar, SpigotMC или GitHub, автоматически подбирая совместимую версию, проверяя и устанавливая недостающие зависимости"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fДоступные флаги:"
+      - "[message] "
+      - "[message]    &#FFFF00-y &fили &#FFFF00--yes &f— Автоматически установить плагин и зависимости без подтверждения"
+      - "[message]    &#FFFF00-s &fили &#FFFF00--source <Площадка> &f— Искать плагин только на указанной площадке (например, Modrinth, Hangar, SpigotMC, GitHub и другие)"
+      - "[message]    &#FFFF00-w &fили &#FFFF00--with-soft-deps &f— Скачивать также и необязательные зависимости (soft-depend)"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fПримеры команд:"
+      - "[message] "
+      - "[message]    &#FFFF00/plm download LuckPerms &f— Найти плагин по названию"
+      - "[message]    &#FFFF00/plm download https://modrinth.com/plugin/luckperms &f— Скачать по прямой ссылке"
+      - "[message]    &#FFFF00/plm download DecentHolograms -s modrinth &f— Поиск на конкретной площадке"
+      - "[message]    &#FFFF00/plm download WorldGuard -y &f— Скачать с авто-подтверждением зависимостей"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    info:
+      - "[message] "
+      - "[message]  &#FFFF00▶ &fКоманда: &#FFFF00/plm info <Плагин>"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fОписание: &#FFFF00Отображает подробную информацию о плагине: версию, статус, формат, авторов, имя файла на диске, размер, зависимости и интерактивные кнопки управления плагином в чате"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fПример команды: &#FFFF00/plm info LuckPerms"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    load:
+      - "[message] "
+      - "[message]  &#FFFF00▶ &fКоманда: &#FFFF00/plm load <Плагин/-all>"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fОписание: &#FFFF00Загружает новый или выгруженный плагин из папки с плагинами в память сервера, выполняет проверку целостности, регистрирует и включает плагин"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fДоступный флаг:"
+      - "[message] "
+      - "[message]    &#FFFF00-all &fили &#FFFF00-a &f— Загрузить сразу все незагруженные плагины из папки с плагинами"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fПример команды: &#FFFF00/plm load -all &fили &#FFFF00/plm load EssentialsX"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    unload:
+      - "[message] "
+      - "[message]  &#FFFF00▶ &fКоманда: &#FFFF00/plm unload <Плагин/-all> (-f)"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fОписание: &#FFFF00Безопасно выгружает и выключает плагин из памяти сервера"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fДоступные флаги:"
+      - "[message] "
+      - "[message]    &#FFFF00-all &fили &#FFFF00-a &f— Выгрузить сразу все плагины сервера из памяти"
+      - "[message]    &#FFFF00-f &fили &#FFFF00--force &f— Пропустить диалог подтверждения"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fПример команды: &#FFFF00/plm unload -all &fили &#FFFF00/plm unload DecentHolograms -f"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    reload:
+      - "[message] "
+      - "[message]  &#FFFF00▶ &fКоманда: &#FFFF00/plm reload <Плагин/-all> (-c/-f) &fили &#FFFF00/plm reload -c"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fОписание: &#FFFF00Перезагружает плагин или перезагружает конфигурацию самого PlugManReloaded"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fДоступные флаги:"
+      - "[message] "
+      - "[message]    &#FFFF00-all &fили &#FFFF00-a &f— Перезагрузить сразу все активные плагины сервера"
+      - "[message]    &#FFFF00-c &fили &#FFFF00--cascade &f— Перезагрузить плагин вместе со всеми зависимыми от него"
+      - "[message]    &#FFFF00-f &fили &#FFFF00--force &f— Перезагрузить только этот плагин без зависимостей"
+      - "[message]    &#FFFF00-c &fили &#FFFF00--config &f— Быстро перезагрузить конфигурацию PlugManReloaded"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fПример команды: &#FFFF00/plm reload -all &fили &#FFFF00/plm reload Vault -c"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    restart:
+      - "[message] "
+      - "[message]  &#FFFF00▶ &fКоманда: &#FFFF00/plm restart <Плагин/-all> (-c/-f)"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fОписание: &#FFFF00Выполняет полный перезапуск плагина с повторным считыванием .jar-файла с диска"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fДоступные флаги:"
+      - "[message] "
+      - "[message]    &#FFFF00-all &fили &#FFFF00-a &f— Выполнить полный перезапуск всех плагинов сервера с диска"
+      - "[message]    &#FFFF00-c &fили &#FFFF00--cascade &f— Перезапустить плагин вместе со всеми зависимыми от него"
+      - "[message]    &#FFFF00-f &fили &#FFFF00--force &f— Перезапустить только этот плагин без зависимостей"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fПример команды: &#FFFF00/plm restart -all &fили &#FFFF00/plm restart WorldGuard -c"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    enable:
+      - "[message] "
+      - "[message]  &#FFFF00▶ &fКоманда: &#FFFF00/plm enable <Плагин/-all>"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fОписание: &#FFFF00Включает отключенный плагин без его повторной загрузки с диска"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fДоступный флаг:"
+      - "[message] "
+      - "[message]    &#FFFF00-all &fили &#FFFF00-a &f— Включить сразу все отключенные плагины"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fПример команды: &#FFFF00/plm enable -all &fили &#FFFF00/plm enable Chatty"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    disable:
+      - "[message] "
+      - "[message]  &#FFFF00▶ &fКоманда: &#FFFF00/plm disable <Плагин/-all> (-f)"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fОписание: &#FFFF00Отключает работающий плагин без выгрузки его классов из памяти сервера"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fДоступные флаги:"
+      - "[message] "
+      - "[message]    &#FFFF00-all &fили &#FFFF00-a &f— Выключить сразу все работающие плагины сервера"
+      - "[message]    &#FFFF00-f &fили &#FFFF00--force &f— Пропустить диалог подтверждения"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fПример команды: &#FFFF00/plm disable -all &fили &#FFFF00/plm disable Chatty -f"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    delete:
+      - "[message] "
+      - "[message]  &#FFFF00▶ &fКоманда: &#FFFF00/plm delete <Плагин> (-y/-d)"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fОписание: &#FFFF00Полностью выгружает плагин из памяти и удаляет его .jar-файл из папки с плагинами (с сохранением бэкапа)"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fДоступные флаги:"
+      - "[message] "
+      - "[message]    &#FFFF00-y &fили &#FFFF00--yes &f— Подтвердить удаление сразу без диалога подтверждения"
+      - "[message]    &#FFFF00-d &fили &#FFFF00--data &f— Удалить также папку с данными и со всеми .yml-файлами плагина"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fПример команды: &#FFFF00/plm delete ProtocolLib -y -d"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    usage:
+      - "[message] "
+      - "[message]  &#FFFF00▶ &fКоманда: &#FFFF00/plm usage <Команда/Пермишен>"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fОписание: &#FFFF00Находит, какой именно плагин сервера зарегистрировал указанную команду, включая алиасы команд, или определённый пермишен"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fПример команд: &#FFFF00/plm usage fly &fили &#FFFF00/plm usage cmi.command.fly"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    hotswap:
+      - "[message] "
+      - "[message]  &#FFFF00▶ &fКоманда: &#FFFF00/plm hotswap <on/off/status>"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fОписание: &#FFFF00Управление системой автоматического отслеживания изменений плагинов в папке с плагинами"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fПараметры команды:"
+      - "[message] "
+      - "[message]    &#FFFF00on &f— Включить авто-загрузку новых, авто-обновление и авто-выгрузку плагинов"
+      - "[message]    &#FFFF00off &f— Выключить авто-слежение изменения плагинов"
+      - "[message]    &#FFFF00status &f— Проверить текущее состояние авто-загрузки плагинов"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fПример команды: &#FFFF00/plm hotswap on"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    config:
+      - "[message] "
+      - "[message]  &#FFFF00▶ &fКоманда: &#FFFF00/plm config reload"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fОписание: &#FFFF00Полностью перезагружает конфигурационный файл config.yml плагина"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fПример команды: &#FFFF00/plm config reload"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    update:
+      - "[message] "
+      - "[message]  &#FFFF00▶ &fКоманда: &#FFFF00/plm update (Плагин/-all) (-y/-r/-s)"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fОписание: &#FFFF00Проверяет наличие свежих версий плагинов на Modrinth, Hangar, GitHub, SpigotMC, Jenkins и SpigotMC.ru с возможностью автоматической установки"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fДоступные флаги:"
+      - "[message] "
+      - "[message]    &#FFFF00-all &fили &#FFFF00-a &f— Проверить обновления сразу для всех установленных плагинов"
+      - "[message]    &#FFFF00-y &fили &#FFFF00--yes &f— Автоматически скачать и установить найденные обновления без подтверждения"
+      - "[message]    &#FFFF00-r &fили &#FFFF00--refresh &f— Очистить кэш версий и запросить свежие данные с сайтов"
+      - "[message]    &#FFFF00-s &fили &#FFFF00--single &f— Обновить плагин без перезапуска зависимых плагинов"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fПример команды: &#FFFF00/plm update -all -r"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+
+  enable:
+    start:
+      - "[message] &#FFFF00◆ &fВключение плагина &#FFFF00«{plugin}»&f..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    success:
+      - "[message] &#FFFF00◆ &fПлагин &#FFFF00«{plugin}» &f(&#FFFF00v{version}&f) &fуспешно &#FFFF00включен &fза &#FFFF00{time}мс."
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    all-start:
+      - "[message] &#FFFF00◆ &fВключение &#FFFF00всех выключенных &fплагинов на сервере..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    all-partial:
+      - "[message] &#FB8808▶ Ошибочка! &fЧасть плагинов (&#FB8808{count}&f/&#FB8808{total}&f) включена за &#FFFF00{time}мс&f, но &#FB8808{failed-count} &fшт. не удалось: &#FB8808{failed-plugins}"
+      - "[sound] ENTITY_VILLAGER_NO"
+    all-failed:
+      - "[message] &#FB8808▶ Ошибочка! &fНи один из плагинов (&#FB88080&f/&#FB8808{total}&f) не удалось включить! См. консоль."
+      - "[sound] BLOCK_ANVIL_LAND"
+    all-success:
+      - "[message] &#FFFF00◆ &fВсе ранее выключенные плагины (&#FFFF00{count}&f/&#FFFF00{total}&f) успешно &#FFFF00включены &fза &#FFFF00{time}мс."
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    all-empty:
+      - "[message] &#FB8808▶ Ошибочка! &fНа сервере &#FB8808нет &fотключенных плагинов, все плагины &#FB8808уже &fвключены!"
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+
+  disable:
+    start:
+      - "[message] &#FFFF00◆ &fВыключение плагина &#FFFF00«{plugin}»&f..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    success:
+      - "[message] &#FFFF00◆ &fПлагин &#FFFF00«{plugin}» &f(&#FFFF00v{version}&f) &fуспешно &#FFFF00выключен &fза &#FFFF00{time}мс."
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    all-start:
+      - "[message] &#FFFF00◆ &fВыключение &#FFFF00всех плагинов &fна сервере..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    all-partial:
+      - "[message] &#FB8808▶ Ошибочка! &fЧасть плагинов (&#FB8808{count}&f/&#FB8808{total}&f) выключена за &#FFFF00{time}мс&f, но &#FB8808{failed-count} &fшт. не удалось: &#FB8808{failed-plugins}"
+      - "[sound] ENTITY_VILLAGER_NO"
+    all-failed:
+      - "[message] &#FB8808▶ Ошибочка! &fНи один из плагинов (&#FB88080&f/&#FB8808{total}&f) не удалось выключить! См. консоль."
+      - "[sound] BLOCK_ANVIL_LAND"
+    all-success:
+      - "[message] &#FFFF00◆ &fВсе плагины (&#FFFF00{count}&f/&#FFFF00{total}&f) успешно &#FFFF00выключены &fза &#FFFF00{time}мс."
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    all-empty:
+      - "[message] &#FB8808▶ Ошибочка! &fНа сервере &#FB8808нет &fактивных плагинов для &#FB8808включения &fвсех сразу..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    confirm:
+      - "[message] "
+      - "[message]                 &#FB8808▶ Внимание! Будьте осторожны!"
+      - "[message] "
+      - "[message]    &#FB8808◆ &fПлагин &#FB8808«{plugin}» &fрискованно выключать, так как:"
+      - "[message] "
+      - "[message]            &#FB8808{reason}"
+      - "[message]  "
+      - "[message]  &#FB8808◆ &fЗависимые плагины от него: &#FB8808{dependents}"
+      - "[message] "
+      - "[message]      &#FFFF00◆ &fВы точно &#FFFF00уверены&f, что хотите его выключить?"
+      - "[message] "
+      - "[message]            {single-button}   {cancel-button}"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    cancelled:
+      - "[message] &#FFFF00◆ &fВыключение плагина &#FFFF00«{plugin}» &fотменено!"
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    confirm-buttons:
+      single:
+        text: "&#FFFF00[Да, точно выключить]"
+        hover:
+          - ""
+          - " &#FFFF00◆ &fВыключить плагин &#FFFF00«{plugin}» &f(&#FFFF00v{version}&f) несмотря на риски "
+          - ""
+      cancel:
+        text: "&#FB8808[Отменить]"
+        hover:
+          - ""
+          - " &#FB8808◆ &fНажмите, чтобы &#FB8808отменить &fвыключение плагина "
+          - ""
+    reasons:
+      netty: "Он перехватывает сетевые пакеты в Netty pipeline"
+      api-provider: "Он предоставляет системные Api-сервисы другим плагинам"
+      has-dependents: "От него зависят другие плагины"
+    no-dependents: "нет"
+
+  load:
+    start:
+      - "[message] &#FFFF00◆ &fЗагрузка плагина &#FFFF00«{plugin}» &fв память сервера..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    success:
+      - "[message] &#FFFF00◆ &fПлагин &#FFFF00«{plugin}» &f(&#FFFF00v{version}&f) &fуспешно &#FFFF00загружен &fи &#FFFF00включен &fза &#FFFF00{time}мс."
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    all-start:
+      - "[message] &#FFFF00◆ &fЗагрузка &#FFFF00всех незагруженных &fплагинов из папки с плагинами..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    all-partial:
+      - "[message] &#FB8808▶ Ошибочка! &fЧасть плагинов (&#FB8808{count}&f/&#FB8808{total}&f) загружена за &#FFFF00{time}мс&f, но &#FB8808{failed-count} &fшт. не удалось: &#FB8808{failed-plugins}"
+      - "[sound] ENTITY_VILLAGER_NO"
+    all-failed:
+      - "[message] &#FB8808▶ Ошибочка! &fНи один из плагинов (&#FB88080&f/&#FB8808{total}&f) не удалось загрузить! См. консоль."
+      - "[sound] BLOCK_ANVIL_LAND"
+    all-success:
+      - "[message] &#FFFF00◆ &fВсе незагруженные плагины (&#FFFF00{count}&f/&#FFFF00{total}&f) успешно &#FFFF00загружены &fза &#FFFF00{time}мс."
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    all-empty:
+      - "[message] &#FB8808▶ Ошибочка! &fВ папке с плагинами &#FB8808нет &fновых незагруженных плагинов!"
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+
+  unload:
+    start:
+      - "[message] &#FFFF00◆ &fВыгрузка плагина &#FFFF00«{plugin}» &fиз памяти сервера..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    success:
+      - "[message] &#FFFF00◆ &fПлагин &#FFFF00«{plugin}» &f(&#FFFF00v{version}&f) &fуспешно &#FFFF00выгружен &fза &#FFFF00{time}мс."
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    all-start:
+      - "[message] &#FFFF00◆ &fВыгрузка из памяти &#FFFF00всех &fплагинов с сервера..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    all-partial:
+      - "[message] &#FB8808▶ Ошибочка! &fЧасть плагинов (&#FB8808{count}&f/&#FB8808{total}&f) выгружена из памяти за &#FFFF00{time}мс&f, но &#FB8808{failed-count} &fшт. не удалось: &#FB8808{failed-plugins}"
+      - "[sound] ENTITY_VILLAGER_NO"
+    all-failed:
+      - "[message] &#FB8808▶ Ошибочка! &fНи один из плагинов (&#FB88080&f/&#FB8808{total}&f) не удалось выгрузить! См. консоль."
+      - "[sound] BLOCK_ANVIL_LAND"
+    all-success:
+      - "[message] &#FFFF00◆ &fВсе плагины (&#FFFF00{count}&f/&#FFFF00{total}&f) успешно &#FFFF00выгружены &fиз памяти за &#FFFF00{time}мс."
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    all-empty:
+      - "[message] &#FB8808▶ Ошибочка! &fНа сервере &#FB8808нет &fдоступных плагинов для выгрузки..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    confirm:
+      - "[message] "
+      - "[message]                 &#FB8808▶ Внимание! Будьте осторожны!"
+      - "[message] "
+      - "[message]    &#FB8808◆ &fПлагин &#FB8808«{plugin}» &fрискованно выгружать, так как:"
+      - "[message] "
+      - "[message]            &#FB8808{reason}"
+      - "[message]  "
+      - "[message]  &#FB8808◆ &fЗависимые плагины от него: &#FB8808{dependents}"
+      - "[message] "
+      - "[message]      &#FFFF00◆ &fВы точно &#FFFF00уверены&f, что хотите его выгрузить?"
+      - "[message] "
+      - "[message]            {single-button}   {cancel-button}"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    cancelled:
+      - "[message] &#FFFF00◆ &fВыгрузка плагина &#FFFF00«{plugin}» &fотменена!"
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    confirm-buttons:
+      single:
+        text: "&#FFFF00[Да, точно выгрузить]"
+        hover:
+          - ""
+          - " &#FFFF00◆ &fВыгрузить плагин &#FFFF00«{plugin}» &f(&#FFFF00v{version}&f) несмотря на риски "
+          - ""
+      cancel:
+        text: "&#FB8808[Отменить]"
+        hover:
+          - ""
+          - " &#FB8808◆ &fНажмите, чтобы &#FB8808отменить &fвыгрузку плагина "
+          - ""
+    reasons:
+      hostile: "Он встраивается в сетевой стек и корректно не выгружается"
+      paper-bootstrapper: "Он использует Paper Bootstrapper (не может быть загружен заново без рестарта сервера)"
+      netty: "Он перехватывает сетевые пакеты"
+      api-provider: "Он предоставляет системные Api-сервисы"
+      has-dependents: "От него зависят другие плагины"
+    no-dependents: "нет"
+
+  delete:
+    ambiguous:
+      - "[message] "
+      - "[message] &#FB8808▶ Ошибочка! &fПлагин с названием &#FB8808«{plugin}» &fсоответствует сразу &#FB8808нескольким &fплагинам, которые &#FB8808лежат &fв папке с плагинами..."
+      - "[message] "
+      - "[message] &#FFFF00◆ &fА именно подходят &#FFFF00{files}&f, так что укажите точное название .jar-плагина, например: &#FFFF00/plm delete {plugin}-1.0.jar"
+      - "[message] "
+      - "[sound] BLOCK_ANVIL_LAND"
+    start:
+      - "[message] &#FFFF00◆ &fПолное удаление плагина &#FFFF00«{plugin}»&f..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    success:
+      - "[message] &#FFFF00◆ &fПлагин &#FFFF00«{plugin}» &f(&#FFFF00{file}&f) &fуспешно &#FFFF00выгружен &fи &#FFFF00удалён &fс сервера за &#FFFF00{time}мс."
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    confirm:
+      - "[message] "
+      - "[message]                               &#FB8808▶ Внимание!"
+      - "[message] "
+      - "[message]  &#FFFF00◆ &fВы точно хотите &#FFFF00полностью &fудалить плагин &#FFFF00«{plugin}»&f?"
+      - "[message]   "
+      - "[message]     &#FFFF00◆ &fЭто действие &#FFFF00удалит &f.jar-файл плагина из &#FFFF00папки &fс"
+      - "[message]   &fплагинами и &#FFFF00сохранит &fна всякий случай его &#FFFF00бэкап &fна день"
+      - "[message] "
+      - "[message]              {single-button}   {cancel-button}"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    confirm-dependents:
+      - "[message] "
+      - "[message]                 &#FB8808▶ Внимание! Будьте осторожны!"
+      - "[message] "
+      - "[message]  &#FB8808◆ &fОт плагина &#FB8808«{plugin}» &fзависят другие плагины:"
+      - "[message]  "
+      - "[message]              &#FB8808{dependents}"
+      - "[message] "
+      - "[message]      &#FFFF00◆ &fВы точно хотите &#FFFF00удалить &fплагин &#FFFF00«{plugin}»&f,"
+      - "[message]                &fтак как &#FFFF00после &fудаления зависимые"
+      - "[message]           &fплагины &#FFFF00перестанут &fкорректно работать?"
+      - "[message] "
+      - "[message]                 {single-button}   {cancel-button}"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    confirm-buttons:
+      single:
+        text: "&#FFFF00[Да, удалить плагин]"
+        hover:
+          - ""
+          - " &#FFFF00▶ &fНажмите, чтобы &#FFFF00полностью удалить &fплагин &#FFFF00«{plugin}» &fс сервера навсегда "
+          - ""
+      cancel:
+        text: "&#FB8808[Отменить]"
+        hover:
+          - ""
+          - " &#FB8808◆ &fНажмите, чтобы &#FB8808отменить &fудаление плагина "
+          - ""
+    cancelled:
+      - "[message] &#FFFF00◆ &fУдаление плагина &#FFFF00«{plugin}» &fотменено!"
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    failed-file:
+      - "[message] "
+      - "[message] &#FB8808▶ Ошибочка! &fПлагин &#FB8808«{plugin}» &fвыгружен, но файл &#FB8808«{file}» &fудалить не вышло за &#FB8808{attempts} попытки(ок), так как его &#FB8808держит &fпроцесс сервера..."
+      - "[message] "
+      - "[message] &#FFFF00◆ &fФайл &#FFFF00остался &fна месте и снова &#FFFF00загрузится &fпри &#FFFF00перезапуске &fсервера, так что &#FFFF00удалите &fего вручную при выключенном сервере"
+      - "[message] "
+      - "[sound] BLOCK_ANVIL_LAND"
+    pending-file:
+      - "[message] &#FB8808◆ &fФайл плагина &#FFFF00«{file}» &fещё &#FB8808заблокирован &fсервером, повтор &#FB8808удаления &fбудет выполнен &#FB8808автоматически &fчерез &#FB88082 секунды&f..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    file-not-found:
+      - "[message] &#FB8808▶ Ошибочка! &fНе удалось найти &#FB8808.jar-файл &fплагина &#FB8808«{plugin}» &fна диске для удаления..."
+      - "[sound] BLOCK_ANVIL_LAND"
+
+  reload:
+    start:
+      - "[message] &#FFFF00◆ &fПерезагрузка плагина &#FFFF00«{plugin}»&f..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    success:
+      - "[message] &#FFFF00◆ &fПлагин &#FFFF00«{plugin}» &f(&#FFFF00v{version}&f) &fуспешно &#FFFF00перезагружен &fза &#FFFF00{time}мс."
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    all-start:
+      - "[message] &#FFFF00◆ &fПерезагрузка &#FFFF00всех &fплагинов сервера..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    all-partial:
+      - "[message] &#FB8808▶ Ошибочка! &fЧасть плагинов (&#FB8808{count}&f/&#FB8808{total}&f) перезагружена за &#FFFF00{time}мс&f, но &#FB8808{failed-count} &fшт. не удалось: &#FB8808{failed-plugins}"
+      - "[sound] ENTITY_VILLAGER_NO"
+    all-failed:
+      - "[message] &#FB8808▶ Ошибочка! &fНи один из плагинов (&#FB88080&f/&#FB8808{total}&f) не удалось перезагрузить! См. консоль."
+      - "[sound] BLOCK_ANVIL_LAND"
+    all-success:
+      - "[message] &#FFFF00◆ &fВсе плагины (&#FFFF00{count}&f/&#FFFF00{total}&f) успешно &#FFFF00перезагружены &fза &#FFFF00{time}мс."
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    all-empty:
+      - "[message] &#FB8808▶ Ошибочка! &fНа сервере &#FB8808нет доступных &fдля перезагрузки плагинов..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    confirm:
+      - "[message] "
+      - "[message]                 &#FB8808▶ Внимание! Будьте осторожны!"
+      - "[message] "
+      - "[message]  &#FB8808◆ &fОт плагина &#FB8808«{plugin}» &fзависят ещё другие плагины:"
+      - "[message]  "
+      - "[message]       &#FB8808{dependents}"
+      - "[message] "
+      - "[message]      &#FFFF00◆ &fКак вы именно хотите перезагрузить плагин?"
+      - "[message] "
+      - "[message]   {deps-button}   {single-button}   {cancel-button}"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    confirm-buttons:
+      deps:
+        text: "&#22FF00[С зависимостями]"
+        hover:
+          - ""
+          - " &#22FF00▶ &fНажмите, чтобы &#22FF00перезагрузить &fплагин &#22FF00«{plugin}» &fс зависимостями "
+          - ""
+          - "       &#FFFF00◆ &fБудет выгружен &#FFFF00данный &fплагин и все &#FFFF00зависимые &fот него,"
+          - "       &fпосле чего они &#FFFF00запустятся &fзаново в правильном порядке,"
+          - "       &fчтобы &#FFFF00не сломались &fплейсхолдеры, механики и интеграции"
+          - ""
+      single:
+        text: "&#FFFF00[Только этот плагин]"
+        hover:
+          - ""
+          - " &#FFFF00◆ &fНажмите, чтобы &#FFFF00перезагрузить &fтолько плагин &#FFFF00«{plugin}» "
+          - ""
+          - " &#FFFF00◆ &fБудет перезагружен исключительно &#FFFF00этот &fплагин, но будьте"
+          - " &fвнимательны, что &#FFFF00зависимые &fплагины не перезапустятся,"
+          - " &fиз-за чего их интеграции и механики &#FFFF00могут &fперестать работать "
+          - ""
+      cancel:
+        text: "&#FB8808[Отменить]"
+        hover:
+          - ""
+          - " &#FB8808◆ &fНажмите, чтобы &#FB8808отменить &fперезагрузку плагина "
+          - ""
+    cancelled:
+      - "[message] &#FFFF00◆ &fПерезагрузка плагина &#FFFF00«{plugin}» &fотменена!"
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+
+  restart:
+    start:
+      - "[message] &#FFFF00◆ &fПолный перезапуск плагина &#FFFF00«{plugin}» &fс диска..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    success:
+      - "[message] &#FFFF00◆ &fПлагин &#FFFF00«{plugin}» &f(&#FFFF00v{version}&f) &fуспешно &#FFFF00перезапущен &fс диска &fза &#FFFF00{time}мс."
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    all-start:
+      - "[message] &#FFFF00◆ &fПолный перезапуск с диска &#FFFF00всех плагинов &fсервера..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    all-partial:
+      - "[message] &#FB8808▶ Ошибочка! &fЧасть плагинов (&#FB8808{count}&f/&#FB8808{total}&f) перезапущена с диска за &#FFFF00{time}мс&f, но &#FB8808{failed-count} &fшт. не удалось: &#FB8808{failed-plugins}"
+      - "[sound] ENTITY_VILLAGER_NO"
+    all-failed:
+      - "[message] &#FB8808▶ Ошибочка! &fНи один из плагинов (&#FB88080&f/&#FB8808{total}&f) не удалось перезапустить! См. консоль."
+      - "[sound] BLOCK_ANVIL_LAND"
+    all-success:
+      - "[message] &#FFFF00◆ &fВсе плагины (&#FFFF00{count}&f/&#FFFF00{total}&f) успешно &#FFFF00перезапущены &fс диска за &#FFFF00{time}мс."
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    all-empty:
+      - "[message] &#FB8808▶ Ошибочка! &fНа сервере &#FB8808нет доступных &fдля перезапуска плагинов..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    confirm:
+      - "[message] "
+      - "[message]                 &#FB8808▶ Внимание! Будьте осторожны!"
+      - "[message] "
+      - "[message]  &#FB8808◆ &fОт плагина &#FB8808«{plugin}» &fзависят ещё другие плагины:"
+      - "[message]  "
+      - "[message]       &#FB8808{dependents}"
+      - "[message] "
+      - "[message]      &#FFFF00◆ &fКак вы именно хотите перезапустить плагин?"
+      - "[message] "
+      - "[message]   {deps-button}   {single-button}   {cancel-button}"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    confirm-buttons:
+      deps:
+        text: "&#22FF00[С зависимостями]"
+        hover:
+          - ""
+          - " &#22FF00▶ &fНажмите, чтобы &#22FF00перезапустить &fплагин &#22FF00«{plugin}» &fс зависимостями "
+          - ""
+          - "       &#FFFF00◆ &fБудет выгружен &#FFFF00данный &fплагин и все &#FFFF00зависимые &fот него,"
+          - "       &fпосле чего они &#FFFF00загрузятся с диска &fзаново в правильном порядке,"
+          - "       &fчтобы &#FFFF00не сломались &fплейсхолдеры, механики и интеграции"
+          - ""
+      single:
+        text: "&#FFFF00[Только этот плагин]"
+        hover:
+          - ""
+          - " &#FFFF00◆ &fНажмите, чтобы &#FFFF00перезапустить &fтолько плагин &#FFFF00«{plugin}» "
+          - ""
+          - " &#FFFF00◆ &fБудет перезапущен с диска исключительно &#FFFF00этот &fплагин, но будьте"
+          - " &fвнимательны, что &#FFFF00зависимые &fплагины не перезапустятся,"
+          - " &fиз-за чего их интеграции и механики &#FFFF00могут &fперестать работать "
+          - ""
+      cancel:
+        text: "&#FB8808[Отменить]"
+        hover:
+          - ""
+          - " &#FB8808◆ &fНажмите, чтобы &#FB8808отменить &fперезапуск плагина "
+          - ""
+    cancelled:
+      - "[message] &#FFFF00◆ &fПерезапуск плагина &#FFFF00«{plugin}» &fотменен!"
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+
+  cascade-reload:
+    start:
+      - "[message] &#FFFF00◆ &fЗапуск перезагрузки плагина &#FFFF00«{plugin}» &fс зависимостями (всего затронуто: &#FFFF00{count} &fплагина(ов))..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    success:
+      - "[message] &#FFFF00◆ &fПерезагрузка плагина &#FFFF00«{plugin}» &f(&#FFFF00v{version}&f) с зависимостями &#FFFF00успешно завершена &fза &#FFFF00{time}мс."
+      - "[sound] ENTITY_PLAYER_LEVELUP"
+
+    details:
+      unload-failed: "не удалось выгрузить {plugin} ({error}), {note}"
+      no-jar: "подходящий .jar не найден, операция отменена, ни один плагин не выгружен"
+      no-jar-on-disk: ".jar-файл плагина не найден на диске"
+      dependency-failed: "{plugin} (не загрузилась зависимость)"
+      load-failed: "не удалось загрузить: {plugins}"
+      skipped: "пропущены без .jar и оставлены загруженными: {plugins}"
+      rollback-done: "откат выгруженных плагинов выполнен"
+      rollback-partial: "откат выполнен не полностью, остались выгруженными: {plugins}"
+
+  cascade-restart:
+    start:
+      - "[message] &#FFFF00◆ &fЗапуск &#FFFF00полного &fперезапуска плагина &#FFFF00«{plugin}» &fс диска с зависимостями (всего затронуто: &#FFFF00{count} &fплагина(ов))..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    success:
+      - "[message] &#FFFF00◆ &fПолный перезапуск плагина &#FFFF00«{plugin}» &f(&#FFFF00v{version}&f) с диска с зависимостями &#FFFF00успешно завершен &fза &#FFFF00{time}мс."
+      - "[sound] ENTITY_PLAYER_LEVELUP"
+
+
+  usage:
+    found:
+      - "[message] "
+      - "[message]  &#FFFF00▶ &fРезультаты поиска для &#FFFF00«{query}» &f(Найдено: &#FFFF00{count}&f):"
+      - "[message] "
+      - "[message] {results}"
+      - "[message] "
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    not-found:
+      - "[message] &#FB8808▶ &fНи один плагин &#FB8808не регистрирует &fкоманду или право &#FB8808«{query}»&f..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    format:
+      command: "  &#FFFF00◆ &fКоманда &#FFFF00{command} &fот плагина &#FFFF00«{plugin}» &f(Право: &#FFFF00{permission}&f)"
+      command-no-perm: "  &#FFFF00◆ &fКоманда &#FFFF00{command} &fот плагина &#FFFF00«{plugin}»"
+      permission: "  &#FFFF00◆ &fПраво &#FFFF00{permission} &fот плагина &#FFFF00«{plugin}» &f(По умолчанию: &#FFFF00{default}&f)"
+      more: "  &#FFFF00▶ &fИ ещё &#FFFF00{remaining} &fсовпадений..."
+    no-default-value: "нет"
+    owner:
+      core-server: "Ядро / Сервер"
+      server-system: "Сервер / Система"
+
+  list:
+    format:
+      - "[message] "
+      - "[message] &#FFFF00▶ &fСписок плагинов сервера (&#FFFF00Всего&f: &#FFFF00{total} &f| &#22FF00Вкл.&f: &#22FF00{enabled} &f| &#FB3908Выкл.&f: &#FB3908{disabled}&f):"
+      - "[message] "
+      - "[message] {plugins}"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    plugin-enabled:
+      text: "&#22FF00{plugin}"
+      hover:
+        - ""
+        - " &#22FF00▶ &fПлагин &#22FF00«{plugin}» &f(&#22FF00v{version}&f) "
+        - ""
+        - " &#FFFF00◆ &fСтатус: &#FFFF00Включен "
+        - " &#FFFF00◆ &fАвтор(ы): &#FFFF00{authors} "
+        - ""
+        - " &#FFFF00▶ &fНажмите, чтобы &#FFFF00получить &fподробную информацию "
+        - ""
+    plugin-disabled:
+      text: "&#FB3908{plugin}"
+      hover:
+        - ""
+        - " &#FB3908▶ &fПлагин &#FB3908«{plugin}» &f(&#FB3908v{version}&f) "
+        - ""
+        - " &#FFFF00◆ &fСтатус: &#FB3908Выключен "
+        - " &#FFFF00◆ &fАвтор(ы): &#FFFF00{authors} "
+        - ""
+        - " &#FFFF00▶ &fНажмите, чтобы &#FFFF00получить &fподробную информацию "
+        - ""
+    plugin-unloaded:
+      text: "&#FB7E08{plugin}"
+      hover:
+        - ""
+        - " &#FB7E08▶ &fВыгруженный плагин &#FB7E08«{plugin}» &f(&#FB7E08v{version}&f) "
+        - ""
+        - " &#FFFF00◆ &fСтатус: &#FB8808Выгружен (Файл в папке с плагинами) "
+        - " &#FFFF00◆ &fАвтор(ы): &#FFFF00{authors} "
+        - ""
+        - " &#FFFF00▶ &fНажмите, чтобы &#FFFF00загрузить &fили &#FFFF00узнать &fинформацию "
+        - ""
+    separator: "&f, "
+    empty:
+      - "[message] &#FB8808▶ Ошибочка! &fНа сервере &#FB8808нет &fустановленных плагинов!"
+      - "[sound] BLOCK_ANVIL_LAND"
+
+  info:
+    format:
+      - "[message] "
+      - "[message] &#FFFF00▶ &fИнформация о плагине &#FFFF00«{plugin}» &f(&#FFFF00v{version}&f):"
+      - "[message] "
+      - "[message]   &#FFFF00◆ &fВерсия: &#FFFF00v{version}"
+      - "[message]   &#FFFF00◆ &fСтатус: {status}"
+      - "[message]   &#FFFF00◆ &fФормат плагина: &#FFFF00{format}"
+      - "[message]   &#FFFF00◆ &fАвторы: &#FFFF00{authors}"
+      #- "[message]   &#FFFF00◆ &fГлавный класс: &#FFFF00{main}"
+      - "[message]   &#FFFF00◆ &fНазвание на диске: &#FFFF00{file}"
+      - "[message]   &#FFFF00◆ &fРазмер плагина: &#FFFF00{size}"
+      #- "[message]   &#FFFF00◆ &fСайт: &#FFFF00{website}"
+      #- "[message]   &#FFFF00◆ &fОписание: &#FFFF00{description}"
+      - "[message]   &#FFFF00◆ &fЗависимости (Depend): &#FFFF00{depends}"
+      - "[message]   &#FFFF00◆ &fМягкие зависимости (SoftDepend): &#FFAA00{soft-depends}"
+      - "[message] "
+      - "[message]   {reload-button}  {toggle-button}  {unload-button}"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    format-disabled:
+      - "[message] "
+      - "[message] &#FFFF00▶ &fИнформация о выключенном плагине &#FFFF00«{plugin}» &f(&#FFFF00v{version}&f):"
+      - "[message] "
+      - "[message]   &#FFFF00◆ &fВерсия: &#FFFF00v{version}"
+      - "[message]   &#FFFF00◆ &fСтатус: {status}"
+      - "[message]   &#FFFF00◆ &fФормат плагина: &#FFFF00{format}"
+      - "[message]   &#FFFF00◆ &fАвторы: &#FFFF00{authors}"
+      #- "[message]   &#FFFF00◆ &fГлавный класс: &#FFFF00{main}"
+      - "[message]   &#FFFF00◆ &fНазвание на диске: &#FFFF00{file}"
+      - "[message]   &#FFFF00◆ &fРазмер плагина: &#FFFF00{size}"
+      #- "[message]   &#FFFF00◆ &fСайт: &#FFFF00{website}"
+      #- "[message]   &#FFFF00◆ &fОписание: &#FFFF00{description}"
+      - "[message]   &#FFFF00◆ &fЗависимости (Depend): &#FFFF00{depends}"
+      - "[message]   &#FFFF00◆ &fМягкие зависимости (SoftDepend): &#FFAA00{soft-depends}"
+      - "[message] "
+      - "[message]   {enable-button}  {unload-button}"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    format-unloaded:
+      - "[message] "
+      - "[message] &#FFFF00▶ &fИнформация о выгруженном плагине &#FFFF00«{plugin}» &f(&#FFFF00v{version}&f):"
+      - "[message] "
+      - "[message]   &#FFFF00◆ &fВерсия: &#FFFF00v{version}"
+      - "[message]   &#FFFF00◆ &fСтатус: {status}"
+      - "[message]   &#FFFF00◆ &fФормат плагина: &#FFFF00{format}"
+      - "[message]   &#FFFF00◆ &fАвторы: &#FFFF00{authors}"
+      - "[message]   &#FFFF00◆ &fНазвание на диске: &#FFFF00{file}"
+      - "[message]   &#FFFF00◆ &fРазмер плагина: &#FFFF00{size}"
+      - "[message]   &#FFFF00◆ &fЗависимости (Depend): &#FFFF00{depends}"
+      - "[message]   &#FFFF00◆ &fМягкие зависимости (SoftDepend): &#FFAA00{soft-depends}"
+      - "[message] "
+      - "[message]   {load-button}"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    format-unloaded-bootstrapper:
+      - "[message] "
+      - "[message] &#FFFF00▶ &fИнформация о выгруженном плагине &#FFFF00«{plugin}» &f(&#FFFF00v{version}&f):"
+      - "[message] "
+      - "[message]   &#FFFF00◆ &fВерсия: &#FFFF00v{version}"
+      - "[message]   &#FFFF00◆ &fСтатус: {status}"
+      - "[message]   &#FFFF00◆ &fФормат плагина: &#FFFF00{format}"
+      - "[message]   &#FFFF00◆ &fАвторы: &#FFFF00{authors}"
+      - "[message]   &#FFFF00◆ &fНазвание на диске: &#FFFF00{file}"
+      - "[message]   &#FFFF00◆ &fРазмер плагина: &#FFFF00{size}"
+      - "[message]   &#FFFF00◆ &fЗависимости (Depend): &#FFFF00{depends}"
+      - "[message]   &#FFFF00◆ &fМягкие зависимости (SoftDepend): &#FFAA00{soft-depends}"
+      - "[message] "
+      - "[message]   &#FB8808[Требуется перезапуск сервера]"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    status-enabled: "&#22FF00Включен"
+    status-disabled: "&#FB6108Выключен"
+    status-unloaded: "&#FB8808Выгружен (Файл на диске)"
+    status-unloaded-bootstrapper: "&#FB8808Выгружен (Требует рестарта сервера)"
+    format-paper: "Paper Plugin"
+    format-spigot: "Spigot/Bukkit"
+    none-authors: "Не указан(ы)"
+    none-description: "Отсутствует"
+    none-website: "Отсутствует"
+    none-depends: "Отсутствуют"
+    none-soft-depends: "Отсутствуют"
+    none-main: "Не указан"
+    none-file: "Не найден"
+    none-size: "Неизвестно"
+    buttons:
+      reload:
+        text: "&#22FF00[Перезагрузить]"
+        hover:
+          - ""
+          - " &#22FF00◆ &fНажмите, чтобы &#22FF00перезагрузить &fплагин &#22FF00«{plugin}» "
+          - ""
+      cascade:
+        text: "&#FFA500[С зависимостями]"
+        hover:
+          - ""
+          - " &#FFA500◆ &fНажмите, чтобы &#FFA500перезагрузить &fплагин &#FFA500«{plugin}» &fс зависимостями "
+          - ""
+      enable:
+        text: "&#FFFF00[Включить]"
+        hover:
+          - ""
+          - " &#FFFF00◆ &fНажмите, чтобы &#FFFF00включить &fплагин &#FFFF00«{plugin}» "
+          - ""
+      disable:
+        text: "&#FB7E08[Выключить]"
+        hover:
+          - ""
+          - " &#FB7E08◆ &fНажмите, чтобы &#FB7E08выключить &fплагин &#FB7E08«{plugin}» "
+          - ""
+      load:
+        text: "&#22FF00[Загрузить]"
+        hover:
+          - ""
+          - " &#22FF00◆ &fНажмите, чтобы &#22FF00загрузить &fплагин &#22FF00«{plugin}» &fв память сервера "
+          - ""
+      unload:
+        text: "&#FB6108[Выгрузить]"
+        hover:
+          - ""
+          - " &#FB6108◆ &fНажмите, чтобы &#FB6108выгрузить &fплагин &#FB6108«{plugin}» &fиз сервера "
+          - ""
+
+  dump:
+    start:
+      - "[message] &#FFFF00◆ &fСоздание полного &#FFFF00дампа &fсерверного окружения..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    success:
+      - "[message] &#FFFF00◆ &fДамп плагинов и серверного окружения &#FFFF00успешно &fсохранён в файл: &#FFFF00{file}"
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    failed:
+      - "[message] &#FB8808▶ Ошибочка! &fНе удалось &#FB8808сохранить &fдамп серверного окружения на диск..."
+      - "[sound] BLOCK_ANVIL_LAND"
+
+  hotswap:
+    enabled:
+      - "[message] &#FFFF00◆ &fАвто-слежение за файлами плагинов: &#FFFF00Включено"
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    start-failed:
+      - "[message] &#FB8808▶ &fНе удалось &#FB8808запустить &fавто-слежение за файлами плагинов, &#FB8808подробности &fв консоли..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    disabled:
+      - "[message] &#FFFF00◆ &fАвто-слежение за файлами плагинов: &#FFFF00Выключено"
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    status-on:
+      - "[message] &#FFFF00◆ &fАвто-слежение за плагинами: &#FFFF00Включено"
+      - "[sound] BLOCK_LEVER_CLICK"
+    status-off:
+      - "[message] &#FFFF00◆ &fАвто-слежение за плагинами: &#FFFF00Выключено"
+      - "[sound] BLOCK_LEVER_CLICK"
+    triggered:
+      - "[message] &#FFFF00◆ &fОбнаружено изменение плагина &#FFFF00«{file}», выполняется &#FFFF00автоматическая &fперезагрузка плагина для его работы..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    restart-success:
+      - "[message] &#FFFF00◆ &fПлагин &#FFFF00«{plugin}» &f(&#FFFF00v{version}&f) успешно &#FFFF00перезапущен &fза &#FFFF00{time}мс."
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    update-triggered:
+      - "[message] &#FFFF00◆ &fОбнаружено обновление плагина &#FFFF00«{plugin}» &f(&#FFFF00v{old-version} &fв &#FFFF00v{new-version}&f)..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    update-success:
+      - "[message] &#FFFF00◆ &fПлагин &#FFFF00«{plugin}» &fуспешно &#FFFF00обновлен &fдо версии &#FFFF00v{new-version} &fза &#FFFF00{time}мс."
+      - "[sound] ENTITY_PLAYER_LEVELUP"
+    update-failed:
+      - "[message] &#FB8808▶ &fНе удалось выгрузить плагин &#FFFF00«{plugin}» &fдля обновления, операция &#FB8808прервана&f, файлы не тронуты"
+      - "[sound] BLOCK_ANVIL_LAND"
+    load-triggered:
+      - "[message] &#FFFF00◆ &fОбнаружен новый незагруженный плагин &#FFFF00«{file}»&f, выполняется &#FFFF00автоматическая &fзагрузка плагина..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    load-success:
+      - "[message] &#FFFF00◆ &fНовый плагин &#FFFF00«{plugin}» &f(&#FFFF00v{version}&f) успешно &#FFFF00загружен &fи &#FFFF00включен &fза &#FFFF00{time}мс."
+      - "[sound] ENTITY_PLAYER_LEVELUP"
+    delete-triggered:
+      - "[message] &#FFFF00▶ &fОбнаружено удаление плагина &#FFFF00«{plugin}»&f, выполняется &#FFFF00выгрузка &fего из памяти сервера..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    delete-success:
+      - "[message] &#FFFF00◆ &fПлагин &#FFFF00«{plugin}» &fуспешно &#FFFF00выгружен &fиз памяти сервера за &#FFFF00{time}мс."
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    delete-failed:
+      - "[message] &#FB8808▶ &fНе удалось &#FB8808выгрузить &fплагин &#FFFF00«{plugin}» &fиз памяти сервера..."
+      - "[sound] BLOCK_ANVIL_LAND"
+
+  config-reload:
+    success:
+      - "[message] <gradient:#ffff00:#ffa500>◆ PlugManReloaded</gradient> &f| Конфигурация плагина &#FFFF00успешно &fперезагружена за &#FFFF00{time}мс."
+      - "[sound] ENTITY_PLAYER_LEVELUP"
+    failed:
+      - "[message] &#FB8808▶ Ошибочка! &fКонфигурацию плагина &#FB8808не удалось &fперезагрузить, &#FB8808подробности &fв консоли..."
+      - "[sound] BLOCK_ANVIL_LAND"
+
+  update:
+    no-dependents: "нет"
+    available:
+      - "[message] "
+      - "[message] <gradient:#ffff00:#ffa500>▶ PlugManReloaded</gradient> &f| &fИтак, хочу сказать, что у меня &#FFFF00появилась новая &fверсия &#FFFF00v{latest}&f, а текущая — &#FFFF00v{current}&f, так что советую обновить меня)"
+      - "[message] "
+      - "[message] &#FFFF00◆ &fТак что &#FFFF00скачать &fновую версию можно тут — &#FFFF00{url}"
+      - "[message] "
+      - "[message-console] &#FFFF00◆ PlugManReloaded &f| Доступна новая версия &#FFFF00v{latest}&f, а текущая — &#FFFF00v{current}&f, так что можно обновить тут: &#FFFF00https://github.com/MilkyWayTop16/PlugManReloaded/releases"
+      - "[sound] ENTITY_PLAYER_LEVELUP"
+    plugins-notify:
+      - "[message] <gradient:#ffff00:#ffa500>◆ PlugManReloaded</gradient> &f| Обнаружены обновления для &#FFFF00{count} плагина(ов) &fсервера, используйте команду &#FFFF00/plm update &fдля просмотра и их установки"
+      - "[sound] BLOCK_LEVER_CLICK"
+    plugins-notify-console:
+      - "[message-console] &#FFFF00◆ PlugManReloaded &f| Доступны обновления для &#FFFF00{count} плагина(ов) &fсервера, подробности: &#FFFF00/plm update"
+    up-to-date:
+      - "[message] &#FFFF00◆ &fУ вас установлена &#FFFF00актуальная &fверсия &#FFFF00v{current}&f, обновляться не нужно)"
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    check-start:
+      - "[message] &#FFFF00◆ &fПроверяю обновления для плагина &#FFFF00«{plugin}»&f..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    check-start-all:
+      - "[message] &#FFFF00◆ &fПроверяю обновления для &#FFFF00всех &fплагина(ов), это займёт &#FFFF00некоторое &fвремя, подождите..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    all-install-start:
+      - "[message] &#FFFF00◆ &fНачинается массовое &#FFFF00скачивание &fи &#FFFF00установка &fобновлений для &#FFFF00{count} &fплагина(ов)..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    all-install-progress:
+      - "[message] &#FFFF00◆ &fНачинается &#FFFF00скачивание &fпоследней версии &#FFFF00v{latest} &fплагина &#FFFF00«{plugin}» &fс площадки &#FFFF00{source}&f... (&#FFFF00{index}&f/&#FFFF00{total}&f)"
+      - "[sound] BLOCK_LEVER_CLICK"
+    all-install-item-success:
+      - "[message] &#FFFF00◆ &fПлагин &#FFFF00«{plugin}» &fуспешно &#FFFF00обновлён &fс версии &#FFFF00v{from} &fна &#FFFF00v{to} &f(&#FFFF00{index}&f/&#FFFF00{total}&f)"
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    all-install-item-pending:
+      - "[message] &#FFFF00◆ &fПлагин &#FFFF00«{plugin}» &fуспешно &#FFFF00обновлён &fс версии &#FFFF00v{from} &fна &#FFFF00v{to} &f(&#FFFF00{index}&f/&#FFFF00{total}&f)"
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    all-install-item-failed:
+      - "[message] &#FB8808▶ Ошибочка! Не удалось &#FB8808обновить &fплагин &#FB8808«{plugin}»&f: &#FB8808{detail} &f(&#FB8808{index}&f/&#FB8808{total}&f)"
+      - "[sound] BLOCK_ANVIL_LAND"
+    all-install-partial:
+      - "[message] &#FB8808▶ Ошибочка! &fЧасть обновлений (&#FB8808{count}&f/&#FB8808{total}&f) установлена за &#FFFF00{time}мс&f, но некоторые не удалось установить! См. консоль."
+      - "[sound] ENTITY_VILLAGER_NO"
+    all-install-failed:
+      - "[message] &#FB8808▶ Ошибочка! &fНи одно обновление (&#FB88080&f/&#FB8808{total}&f) не удалось установить! См. консоль."
+      - "[sound] BLOCK_ANVIL_LAND"
+    all-install-success:
+      - "[message] &#FFFF00◆ Готово! &fМассовое обновление плагинов &#FFFF00успешно &fзавершено! Обновлено &#FFFF00{count} плагина(ов) &fиз &#FFFF00{total} &fза &#FFFF00{time}мс."
+      - "[sound] ENTITY_PLAYER_LEVELUP"
+    all-install-empty:
+      - "[message] &#FFFF00◆ &fВсе плагины, стоящие на сервере &#FFFF00уже &fактуальны, обновлять &#FFFF00ничего &fне нужно)"
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    all-install-skipped:
+      - "[message] &#FB8808▶ Важно знать! &fНекоторые плагин(ы) (например, &#FB8808{plugins}&f) были &#FB8808пропущены&f, так как либо они &#FB8808платные&f, либо &#FB8808не поддерживают &fавтоматическое скачивание..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    all-pending-restart: []
+    summary:
+      - "[message] "
+      - "[message]   &#FFFF00▶ &fРезультат проверок:"
+      - "[message] "
+      - "[message]  {updates}"
+      - "[message] "
+      - "[message]   &#FFFF00◆ &fПроверено плагинов: &#FFFF00{total} &f| Доступно обновлений: &#FFFF00{available}"
+      - "[message] "
+      - "[message]   &#FFFF00◆ &fАктуальны: &#FFFF00{up-to-date} &f| Источник не найден: &#FFA500{no-source} &f| Ошибки: &#FF5555{problems}"
+      - "[message] "
+      - "[message]                      {update-all-button}"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    summary-buttons:
+      update-all:
+        text: "&#22FF00[Обновить всё сразу]"
+        hover:
+          - ""
+          - " &#22FF00◆ &fНажмите, чтобы &#22FF00скачать &fи &#22FF00установить &fвсе доступные обновления "
+          - ""
+    summary-up-to-date:
+      - "[message] "
+      - "[message]   &#FFFF00▶ &fРезультат проверок:"
+      - "[message] "
+      - "[message]   &#FFFF00◆ Отличные новости! &fВсе проверенные плагины &#FFFF00уже обновлены &fдо самых последних версий, так что &#FFFF00обновлять &fничего &#FFFF00не &fнужно)"
+      - "[message] "
+      - "[message]   &#FFFF00◆ &fПроверено плагинов: &#FFFF00{total} &f| Доступно обновлений: &#00FF5A{available}"
+      - "[message] "
+      - "[message]   &#FFFF00◆ &fАктуальны: &#FFFF00{up-to-date} &f| Источник не найден: &#FFA500{no-source} &f| Ошибки: &#FF5555{problems}"
+      - "[message] "
+      - "[sound] ENTITY_PLAYER_LEVELUP"
+    none-available: "  &#FFFF00◆ &fВсе плагины находятся на &#FFFF00актуальных &fверсиях, обновлений &#FFFF00не &fтребуется)"
+    summary-entry:
+      text: "&#FFFF00- &fПлагин &#FFFF00«{plugin}» &f| Ваша: &#FFFF00v{current}&f, новая: &#FFFF00v{latest} &f(&#FFFF00{source}&f, &#FFFF00{channel}&f)"
+      hover:
+        - ""
+        - " &#FFFF00▶ &fПлагин &#FFFF00«{plugin}»&f: "
+        - ""
+        - "  &#FFFF00◆ &fТекущая версия: &#FFFF00v{current} "
+        - "  &#FFFF00◆ &fНовая версия: &#FFFF00v{latest} "
+        - "  &#FFFF00◆ &fИсточник: &#FFFF00{source} &f(&#FFFF00{channel}&f) "
+        - ""
+        - " &#FFFF00▶ &fНажмите, чтобы &#FFFF00обновить &fплагин "
+        - ""
+    sources:
+      modrinth: "Modrinth"
+      hangar: "Hangar"
+      github: "Github"
+      spigot: "Spigot"
+      spigot-premium: "Spigot (Платный плагин)"
+      ruspigot: "RuSpigot"
+      ruspigot-premium: "RuSpigot (Платный плагин)"
+      direct: "Direct"
+      jenkins: "Jenkins"
+      unknown: "Неизвестно"
+    details:
+      no-download-link: "у этой версии нет ссылки на скачивание"
+      locked: "установка или обновление этого плагина уже выполняется"
+      download-failed: "файл не удалось скачать"
+      backup-failed: "не удалось создать резервную копию"
+      init-error: "ошибка инициализации"
+      rolled-back: "новая версия не загрузилась, восстановлена прежняя"
+      sha1-mismatch: "контрольная сумма SHA-1 не совпала"
+      sha256-mismatch: "контрольная сумма SHA-256 не совпала"
+      update-folder-write-failed: "не удалось сохранить файл в папку update/ для перезапуска"
+    match-reasons:
+      hash: "совпадение по хешу файла"
+      main-class: "совпадение по главному классу"
+      plugin-yml: "совпадение по plugin.yml"
+      catalog: "плагин есть в каталоге источников"
+      jar-reference: "ссылка внутри .jar плагина"
+      name: "совпадение по названию"
+      not-found: "источник не найден"
+    channels:
+      release: "Релиз"
+      beta: "Бета"
+      alpha: "Альфа"
+      unknown: "Неизвестно"
+    link:
+      hover:
+        - ""
+        - " &#FFFF00◆ &fНажмите, чтобы &#FFFF00перейти &fпо ссылке "
+        - ""
+    summary-empty:
+      - "[message] &#FB8808▶ Ошибочка! &fНе удалось &#FB8808собрать &fданные &#FB8808ни по одному &fплагину..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    github-rate-limited:
+      - "[message] &#FB8808▶ &fДля &#FB8808«{plugin}» &fесть версия &#FB8808{latest}&f, но лимит запросов к &#FB8808GitHub &fисчерпан — установка будет доступна после сброса лимита"
+      - "[message] &#FFFF00◆ &fЧтобы такого не было, укажите &#FFFF00github-token &fв конфиге — лимит вырастет с &#FFFF0060 &fдо &#FFFF005000 &fзапросов в час"
+      - "[sound] BLOCK_ANVIL_LAND"
+    not-downloadable:
+      - "[message] &#FB8808▶ Ошибочка! &fДля &#FB8808«{plugin}» &fесть версия &#FB8808{latest}&f, но скачать её автоматически &#FB8808нельзя&f, но можно скачать вручную — &#FB8808{url}"
+      - "[sound] BLOCK_ANVIL_LAND"
+    paid:
+      - "[message] "
+      - "[message] &#FB8808▶ Ошибочка! &fПлагин &#FB8808«{plugin}» &f— платный, версия &#FB8808v{latest}&f найдена, но автоматически &#FB8808скачать &fя не смогу..."
+      - "[message] "
+      - "[message] &#FFFF00◆ &fЕсли есть такая &#FFFF00возможность&f, обновите плагин самостоятельно — &#FFFF00{url}"
+      - "[message] "
+      - "[sound] BLOCK_ANVIL_LAND"
+    no-source:
+      - "[message] &#FB8808▶ &fДля плагина &#FB8808«{plugin}» &fисточник &#FB8808не найден&f, проверить обновления &#FB8808не удалось&f..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    rate-limited:
+      - "[message] &#FB8808▶ Ошибочка! &fПревышен &#FB8808лимит запросов &fк GitHub, &#FB8808попробуйте позже &fили &#FB8808укажите &fперсональный &#FB8808токен &fв конфиге..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    network-error:
+      - "[message] &#FB8808▶ Ошибочка! &fНе удалось &#FB8808связаться &fс сервером обновлений плагина, проверка &#FB8808не выполнена&f..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    install-start:
+      - "[message] &#FFFF00◆ &fНачинается &#FFFF00скачивание &fпоследней версии &#FFFF00v{latest} &fплагина &#FFFF00«{plugin}» &fс площадки &#FFFF00{source}&f..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    installed:
+      - "[message] &#FFFF00◆ Готово! &fПлагин &#FFFF00«{plugin}» &fуспешно &#FFFF00обновлён &fс версии &#FFFF00v{from} &fна &#FFFF00v{to}"
+      - "[sound] ENTITY_PLAYER_LEVELUP"
+    download-failed:
+      - "[message] &#FB8808▶ Ошибочка! &fНе удалось скачать обновление для плагина &#FB8808«{plugin}»&f: &#FB8808{detail}"
+      - "[sound] BLOCK_ANVIL_LAND"
+    hash-mismatch:
+      - "[message] &#FB8808▶ Ошибочка! &fПлагин &#FB8808«{plugin}» &fповреждён или не сошёлся по контрольной сумме (&#FB8808{detail}&f), установка &#FB8808отменена&f..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    wrong-plugin:
+      - "[message] &#FB8808▶ Ошибочка! &fСкачанный файл &#FB8808не принадлежит &fплагину &#FB8808«{plugin}» &f(&#FB8808{detail}&f), установка &#FB8808отменена&f..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    missing-dependency:
+      - "[message] &#FB8808▶ Ошибочка! &fДля установки &#FB8808обновления &fплагина &#FB8808«{plugin}» &fтребуется &#FB8808становить &fплагин(ы): &#FB8808{dependencies}"
+      - "[sound] BLOCK_ANVIL_LAND"
+    pending-restart:
+      - "[message] &#FFFF00◆ Готово! &fПлагин &#FFFF00«{plugin}» &fуспешно &#FFFF00обновлён &fс версии &#FFFF00v{from} &fна &#FFFF00v{to}&f, но применится только при &#FFFF00перезапуске &fсервера..."
+      - "[sound] ENTITY_PLAYER_LEVELUP"
+    rolled-back:
+      - "[message] "
+      - "[message] &#FB8808▶ Внимание! &fЗагрузку &#FB8808новой &fверсии плагина &#FB8808«{plugin}» &fне удалось завершить: &#FB8808{detail}"
+      - "[message] "
+      - "[message] &#FFFF00◆ &fПрежняя &#FFFF00рабочая &fверсия и её настройки &#FFFF00успешно &fвосстановлены из резервной копии!"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    not-installable:
+      - "[message] &#FB8808▶ Ошибочка! &fОбновление для плагина &#FB8808«{plugin}» &fневозможно установить: &#FB8808{detail}"
+      - "[sound] BLOCK_ANVIL_LAND"
+    cancelled:
+      - "[message] &#FFFF00◆ &fОбновление плагина &#FFFF00«{plugin}» &fуспешно отменено!"
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    cancelled-all:
+      - "[message] &#FFFF00◆ &fМассовое обновление плагинов &#FFFF00успешно &fотменено!"
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    confirm-all:
+      - "[message] "
+      - "[message]                             &#FB8808▶ Внимание!"
+      - "[message] "
+      - "[message]             &#FFFF00◆ &fТочно ли вы хотите &#FFFF00обновить &fсразу "
+      - "[message]                  &fже &#FFFF00{count} плагина(ов) &fна сервере?"
+      - "[message] "
+      - "[message]    &#FFFF00◆ &fВсе обновления &#FFFF00будут &fбезопасно скачаны и применены"
+      - "[message]         &fпрямо &#FFFF00на лету &fв порядке всех их зависимостей"
+      - "[message] "
+      - "[message]              {all-button}   {cancel-button}"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    confirm-all-buttons:
+      all:
+        text: "&#22FF00[Обновить все плагины]"
+        hover:
+          - ""
+          - " &#22FF00◆ &fНажмите, чтобы &#22FF00скачать &fи &#22FF00установить &fвсе доступные обновления (&#22FF00{count} &fшт.) "
+          - ""
+      cancel:
+        text: "&#FB8808[Отменить]"
+        hover:
+          - ""
+          - " &#FB8808◆ &fНажмите, чтобы &#FB8808отменить &fмассовое обновление "
+          - ""
+    confirm:
+      - "[message] "
+      - "[message]      &#FFFF00◆ &fТочно ли вы хотите &#FFFF00обновить &fплагин &#FFFF00«{plugin}» "
+      - "[message]        &fстарой версии &#FFFF00v{current} &fна новую &#FFFF00v{latest} &fс &#FFFF00{source}&f?"
+      - "[message] "
+      - "[message]                   &#FFFF00◆ &fПлагин был &#FFFF00найден &fтут:"
+      - "[message] "
+      - "[message]          &#FFFF00{url}"
+      - "[message] "
+      - "[message]             {single-button}   {cancel-button}"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    confirm-buttons:
+      single:
+        text: "&#22FF00[Скачать и установить]"
+        hover:
+          - ""
+          - " &#22FF00◆ &fНажмите, чтобы &#22FF00скачать &fи &#22FF00установить &fверсию &#22FF00v{latest} "
+          - ""
+      cancel:
+        text: "&#FB8808[Отменить]"
+        hover:
+          - ""
+          - " &#FB8808◆ &fНажмите, чтобы &#FB8808отменить &fустановку обновления "
+          - ""
+    confirm-dependents:
+      - "[message] "
+      - "[message]                              &#FB8808▶ Внимание!"
+      - "[message] "
+      - "[message]     &#FFFF00◆ &fТочно ли вы хотите &#FFFF00обновить &fплагин &#FFFF00«{plugin}»"
+      - "[message]        &fс версии &#FFFF00v{current} &fна &#FFFF00v{latest} &fс источника &#FFFF00{source}&f, "
+      - "[message]           &fесли от него &#FFFF00ещё &fзависят &#FFFF00{dependents-count} &fплагина(ов)?"
+      - "[message] "
+      - "[message]                      &#FFFF00◆ &fПлагин был &#FFFF00найден &fтут:"
+      - "[message] "
+      - "[message]          &#FFFF00{url}"
+      - "[message] "
+      - "[message]     {deps-button}    {single-button}"
+      - "[message] "
+      - "[message]                               {cancel-button}"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    confirm-dependents-buttons:
+      deps:
+        text: "&#22FF00[Обновить с зависимостями]"
+        hover:
+          - ""
+          - " &#22FF00◆ &fНажмите, чтобы &#22FF00обновить &fплагин &#22FF00«{plugin}» &fс перезапуском зависимостями "
+          - ""
+      single:
+        text: "&#FFFF00[Только этот плагин]"
+        hover:
+          - ""
+          - " &#FFFF00◆ &fНажмите, чтобы &#FFFF00обновить &fтолько плагин &#FFFF00«{plugin}» "
+          - ""
+      cancel:
+        text: "&#FB8808[Отменить]"
+        hover:
+          - ""
+          - " &#FB8808◆ &fНажмите, чтобы &#FB8808отменить &fобновление плагина &#FB8808«{plugin}» "
+          - ""
+    skipped-dependents:
+      - "[message] &#FB8808▶ Внимание! &fПри массовом обновлении пропущено &#FB8808{count} &fплагинов с зависимостями:"
+      - "[message]   &7{plugins}"
+      - "[message]   &#00FF5A◆ &fОбновите их по отдельности: &#00FF5A/plm update <плагин>"
+      - "[sound] BLOCK_LEVER_CLICK"
+
+    confirm-prerelease:
+      - "[message] "
+      - "[message]                              &#FB8808▶ Внимание!"
+      - "[message] "
+      - "[message]      &#FFFF00◆ &fТочно ли вы хотите &#FFFF00обновить &fплагин &#FFFF00«{plugin}» "
+      - "[message]    &fс версии &#FFFF00v{current} &fна нерелизную версию &#FFFF00v{latest} &f(&#FFFF00{channel}&f) "
+      - "[message]                &fс источника &#FFFF00{source}&f?"
+      - "[message] "
+      - "[message]                      &#FFFF00◆ &fПлагин был &#FFFF00найден &fтут:"
+      - "[message] "
+      - "[message]          &#FFFF00{url}"
+      - "[message] "
+      - "[message]           {single-button}   {cancel-button}"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    confirm-prerelease-buttons:
+      single:
+        text: "&#22FF00[Всё равно установить]"
+        hover:
+          - ""
+          - " &#22FF00◆ &fНажмите, чтобы &#22FF00установить &fнерелизную версию &#22FF00v{latest} "
+          - ""
+      url:
+        hover:
+          - ""
+          - " &#FFFF00▶ &fНажмите, чтобы &#FFFF00открыть ссылку &fв браузере: "
+          - ""
+          - " &#FFFF00{url} "
+          - ""
+      cancel:
+        text: "&#FB8808[Отменить]"
+        hover:
+          - ""
+          - " &#FB8808◆ &fНажмите, чтобы &#FB8808отменить &fустановку "
+          - ""
+
+    confirm-compat-unknown:
+      - "[message] "
+      - "[message]                              &#FB8808▶ Внимание!"
+      - "[message] "
+      - "[message]      &#FFFF00◆ &fТочно ли вы хотите &#FFFF00обновить &fплагин &#FFFF00«{plugin}» "
+      - "[message]    &fс версии &#FFFF00v{current} &fна новую версию &#FFFF00v{latest} &fс источника &#FFFF00{source}&f, "
+      - "[message]   &fесли автор &#FFFF00не указал &fподдерживаемую версию сервера?"
+      - "[message] "
+      - "[message]                      &#FFFF00◆ &fПлагин был &#FFFF00найден &fтут:"
+      - "[message] "
+      - "[message]          &#FFFF00{url}"
+      - "[message] "
+      - "[message]           {single-button}   {cancel-button}"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    confirm-compat-unknown-buttons:
+      single:
+        text: "&#22FF00[Попробовать установить]"
+        hover:
+          - ""
+          - " &#22FF00◆ &fНажмите, чтобы &#22FF00скачать &fи &#22FF00проверить &fверсию &#22FF00v{latest} "
+          - ""
+      url:
+        hover:
+          - ""
+          - " &#FFFF00▶ &fНажмите, чтобы &#FFFF00открыть ссылку &fв браузере: "
+          - ""
+          - " &#FFFF00{url} "
+          - ""
+      cancel:
+        text: "&#FB8808[Отменить]"
+        hover:
+          - ""
+          - " &#FB8808◆ &fНажмите, чтобы &#FB8808отменить &fустановку "
+          - ""
+
+    confirm-ambiguous:
+      - "[message] "
+      - "[message]                              &#FB8808▶ Внимание!"
+      - "[message] "
+      - "[message]      &#FFFF00◆ &fТочно ли вы хотите &#FFFF00обновить &fплагин &#FFFF00«{plugin}» "
+      - "[message]    &fс версии &#FFFF00v{current} &fна новую версию &#FFFF00v{latest} &fс источника &#FFFF00{source}&f, "
+      - "[message]          &fесли для этого плагина найден был похожий"
+      - "[message]              &fпроект с названием &#FFFF00«{reason}»?"
+      - "[message] "
+      - "[message]                      &#FFFF00◆ &fПлагин был &#FFFF00найден &fтут:"
+      - "[message] "
+      - "[message]          &#FFFF00{url}"
+      - "[message] "
+      - "[message]    {single-button}   {cancel-button}"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    confirm-ambiguous-buttons:
+      single:
+        text: "&#22FF00[Установить неточное]"
+        hover:
+          - ""
+          - " &#22FF00◆ &fНажмите, чтобы &#22FF00установить &fнайденную версию &#22FF00v{latest} &fдля &#22FF00«{plugin}» "
+          - ""
+      url:
+        hover:
+          - ""
+          - " &#FFFF00▶ &fНажмите, чтобы &#FFFF00открыть ссылку &fв браузере: "
+          - ""
+          - " &#FFFF00{url} "
+          - ""
+      cancel:
+        text: "&#FB8808[Отменить]"
+        hover:
+          - ""
+          - " &#FB8808◆ &fНажмите, чтобы &#FB8808отменить &fустановку "
+          - ""
+
+    manual-source:
+      errors:
+        empty-link: "ссылка не может быть пустой"
+        bad-url: "неверный формат ссылки"
+        no-host: "не удалось определить домен"
+        direct-jar: "прямые ссылки на .jar не поддерживаются — дайте ссылку на страницу проекта"
+        host-not-allowed: "поддерживаются только ссылки на GitHub, Modrinth, Hangar, SpigotMC, Ruspigot и серверы Jenkins"
+        github-format: "GitHub требует формат: github.com/Владелец/Репозиторий"
+        modrinth-profile: "это ссылка на профиль автора, а не на страницу плагина: modrinth.com/plugin/slug"
+        modrinth-format: "Modrinth требует формат: modrinth.com/plugin/slug"
+        hangar-format: "Hangar требует формат: hangar.papermc.io/Владелец/Проект"
+        spigot-format: "SpigotMC требует ссылку на ресурс, например: spigotmc.org/resources/name.12345"
+        ruspigot-format: "Ruspigot требует ссылку на ресурс, например: spigotmc.ru/resources/name.12345"
+        jenkins-format: "неверная ссылка на задачу Jenkins"
+        unknown-source: "не удалось определить тип источника по ссылке"
+        unsupported-source: "неподдерживаемый тип источника: {source}"
+      notices:
+        spigot: "для SpigotMC доступна только проверка версий, скачать напрямую нельзя"
+        ruspigot: "если на странице ресурса указано поле Source code, обновления будут браться из того репозитория"
+      ask:
+        - "[message] "
+        - "[message]                &#FB8808▶ Источник обновления не найден!"
+        - "[message] "
+        - "[message]     &#FB8808◆ &fК сожалению, у меня &#FB8808не получилось &fавтоматически"
+        - "[message]        &fнайти для плагина &#FB8808«{plugin}» &f(&#FB8808v{current}&f) &fисточник,"
+        - "[message]        &fоткуда &#FB8808можно &fскачать и проверить обновления..."
+        - "[message] "
+        - "[message]       &#FFFF00◆ &fНо вы всегда можете &#FFFF00указать &fссылку на плагин"
+        - "[message]        &fвручную прямо &#FFFF00в чате&f, откуда я смогу &#FFFF00скачивать"
+        - "[message]             &fи &#FFFF00проверять &fобновления этого плагина)"
+        - "[message] "
+        - "[message]                {set-source-button}   {cancel-button}"
+        - "[message] "
+        - "[sound] BLOCK_ANVIL_LAND"
+      waiting:
+        - "[message] "
+        - "[message]                       &#FFFF00▶ Режим ввода источника:"
+        - "[message] "
+        - "[message]     &#FFFF00◆ &fВы можете прямо сюда  &#FFFF00отправить &fссылку на любую "
+        - "[message]          &fстраничку плагина &#FFFF00«{plugin}»&f, откуда я уже "
+        - "[message]           &fбуду &#FFFF00проверять &fобновления и &#FFFF00скачивать &fих "
+        - "[message] "
+        - "[message]                    &#FFFF00◆ &fПоддерживаемые источники: "
+        - "[message] "
+        - "[message]             &#FFFF00SpigotMC&f, &#FFFF00Modrinth&f, &#FFFF00GitHub&f, &#FFFF00Hangar&f, и &#FFFF00Jenkins"
+        - "[message] "
+        - "[message]                                 {cancel-button}"
+        - "[message] "
+        - "[sound] BLOCK_LEVER_CLICK"
+      cancelled:
+        - "[message] &#FFFF00◆ &fВвод источника для плагина &#FFFF00«{plugin}» &fуспешно отменён!"
+        - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+      timeout:
+        - "[message] &#FB8808▶ Ошибочка! &fВаше время &#FB8808ожидания &fввода источника для &#FB8808«{plugin}» &fистекло..."
+        - "[sound] BLOCK_ANVIL_LAND"
+      bad-url:
+        - "[message] &#FB8808▶ Ошибочка! У меня &#FB8808не получилось &fразобрать данную ссылку: &#FB8808{reason}"
+        - "[sound] BLOCK_ANVIL_LAND"
+      project-not-found:
+        - "[message] &#FB8808▶ Ошибочка! &fЯ &#FB8808не смог &fнайти проект &#FB8808«{ref}» &fна площадке &#FB8808{source}&f..."
+        - "[sound] BLOCK_ANVIL_LAND"
+      no-versions:
+        - "[message] &#FB8808▶ Ошибочка! &fВ проекте &#FB8808«{ref}» &fна площадке &#FB8808{source} &fне найдено &#FB8808опубликованных &fрелизов плагина..."
+        - "[sound] BLOCK_ANVIL_LAND"
+      rate-limited:
+        - "[message] &#FB8808▶ Ошибочка! &fПлощадка &#FB8808{source} &fвременно &#FB8808ограничила &fзапросы из-за лимитов, так что &#FB8808попробуйте &fпозже..."
+        - "[sound] BLOCK_ANVIL_LAND"
+      save-failed:
+        - "[message] &#FB8808▶ Ошибочка! &fНе удалось &#FB8808сохранить &fисточник в файл &#FB8808sources-custom.yml"
+        - "[sound] BLOCK_ANVIL_LAND"
+      not-found:
+        - "[message] &#FB8808▶ Ошибочка! &fПо указанной &#FB8808ссылке &fдля &#FB8808«{plugin}» &fни одной версии плагина..."
+        - "[sound] BLOCK_ANVIL_LAND"
+      saved:
+        - "[message] "
+        - "[message] &#FFFF00▶ Готово! &fИсточник плагина &#FFFF00«{plugin}» &fна площадке &#FFFF00{source} &fуспешно добавлен!"
+        - "[message] "
+        - "[message] &#FFFF00◆ &fТеперь, когда у плагина выйдет новое обновление, я это замечу и уведомлю вас)"
+        - "[message] "
+        - "[sound] ENTITY_PLAYER_LEVELUP"
+      console-hint:
+        - "[message] &#FB8808▶ Ошибочка! &fРучной ввод через &#FB8808чат &fдоступен &#FB8808только &fигрокам в игре!"
+        - "[sound] BLOCK_ANVIL_LAND"
+      buttons:
+        set:
+          text: "&#22FF00[Указать источник]"
+          hover:
+            - ""
+            - " &#22FF00▶ &fНажмите, чтобы &#22FF00указать ссылку &fна страницу плагина &#22FF00«{plugin}» &fв чате "
+            - ""
+        source:
+          text: "&#FFFF00{source}"
+          hover:
+            - ""
+            - " &#FFFF00▶ &fНажмите, чтобы &#FFFF00открыть &fстраничку плагина в браузере:"
+            - ""
+            - " &#FFFF00{url} "
+            - ""
+        cancel:
+          text: "&#FB8808[Отменить]"
+          hover:
+            - ""
+            - " &#FB8808◆ &fНажмите, чтобы &#FB8808отменить &fввод источника "
+            - ""
+  download:
+    version-latest: "Последняя"
+    default-license: "Открытый исходный код"
+    author-unknown: "Неизвестен"
+    searching:
+      - "[message] &#FFFF00◆ &fПоиск плагина &#FFFF00«{query}» &fна проверенных площадках..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    searching-source:
+      - "[message] &#FFFF00◆ &fПоиск плагина &#FFFF00«{query}» &fна площадке &#FFFF00{source}&f..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    search-results-header:
+      - "[message] "
+      - "[message]  &#FFFF00▶ &fРезультаты по запросу плагина &#FFFF00«{query}»&f:"
+      - "[message] "
+      - "[message] {cards}"
+      - "[sound] BLOCK_LEVER_CLICK"
+    search-card:
+      - "  &#FFFF00{index}. &fПлагин &#FFFF00«{title}» &f(&#FFFF00v{version}&f) от автора &#FFFF00{author}&f:"
+      - ""
+      - "     &#FFFF00◆ &fПлощадка: &#FFFF00{source} &f| Скачиваний: &#FFFF00{downloads} &f| Звёзд: &#FFFF00{stars}"
+      - ""
+      - "     {download-button}   {info-button}   {web-button}"
+      - ""
+    count-units:
+      thousand: "тыс."
+      million: "млн."
+    not-found:
+      - "[message] &#FB8808▶ Ошибочка! &fПо запросу &#FB8808«{query}» &fмне &#FB8808не удалось &fнайти подходящий плагин..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    confirm-single:
+      - "[message] "
+      - "[message]   &#FFFF00◆ &fТочно ли вы хотите &#FFFF00скачать &fплагин &#FFFF00«{plugin}» &f(&#FFFF00v{version}&f)"
+      - "[message]     &fот автора &#FFFF00{author} &fс площадки &#FFFF00{source}&f, у которого "
+      - "[message]                &#FFFF00{downloads} &fскачиваний и &#FFFF00{stars} &fзвёзд?"
+      - "[message] "
+      - "[message]                      &#FFFF00◆ &fПлагин был &#FFFF00найден &fтут:"
+      - "[message] "
+      - "[message]          &#FFFF00{url}"
+      - "[message] "
+      - "[message]             {confirm-download-button}   {cancel-button}"
+      - "[message] "
+      - "[sound] BLOCK_LEVER_CLICK"
+    confirm-dependencies:
+      - "[message] "
+      - "[message]                 &#FB8808▶ Внимание! Требуются зависимости!"
+      - "[message] "
+      - "[message]   &#FFFF00◆ &fДля правильной работы плагина &#FFFF00«{plugin}» &fнеобходимо"
+      - "[message]      &fзагрузить и подключить следующие зависимости:"
+      - "[message] "
+      - "[message] {dependency-list}"
+      - "[message] "
+      - "[message]       &#FFFF00◆ &fХотите скачать плагин вместе со всеми зависимостями?"
+      - "[message] "
+      - "[message]          {confirm-download-deps-button}   {cancel-button}"
+      - "[message] "
+      - "[sound] BLOCK_NOTE_BLOCK_PLING"
+    cancelled:
+      - "[message] &#FFFF00◆ &fУстановка плагина &#FFFF00«{plugin}» &fуспешно отменена!"
+      - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
+    timeout:
+      - "[message] &#FB8808▶ Ошибочка! &fВремя &#FB8808ожидания &fподтверждения установки плагина &#FB8808«{plugin}» &fистекло..."
+      - "[sound] BLOCK_ANVIL_LAND"
+    installing:
+      - "[message] &#FFFF00◆ &fНачинаю &#FFFF00скачивание &fи &#FFFF00подготовку &fплагина &#FFFF00«{plugin}» &f(&#FFFF00{current}/{total}&f)..."
+      - "[sound] BLOCK_LEVER_CLICK"
+    bootstrapper-installed:
+      - "[message] &#FFFF00▶ Готово! &fПлагин &#FFFF00«{plugin}» &f(&#FFFF00v{version}&f) сохранён в папку &#FFFF00update/ &fи загрузится при &#FFFF00перезапуске &fсервера!"
+      - "[sound] ENTITY_PLAYER_LEVELUP"
+    installed:
+      - "[message] &#FFFF00▶ Готово! &fПлагин &#FFFF00«{plugin}» &f(&#FFFF00v{version}&f) успешно &#FFFF00скачан &fс источника &#FFFF00{source} &fи &#FFFF00включен &fна сервере!"
+      - "[sound] ENTITY_PLAYER_LEVELUP"
+    failed:
+      - "[message] &#FB8808▶ Ошибочка! &fМне &#FB8808не удалось &fустановить плагин &#FB8808«{plugin}»&f: &#FB8808{reason}"
+      - "[sound] BLOCK_ANVIL_LAND"
+    details:
+      unknown-plugin: "плагин"
+      cycle-unknown: "точную цепочку определить не удалось"
+      stage-failed: "не удалось скачать или проверить файл"
+      no-direct-link: "не удалось получить прямую ссылку на скачивание"
+      network: "ошибка сети или таймаут при скачивании"
+      not-a-jar: "скачанный файл не является .jar-архивом"
+      sha512-mismatch: "контрольная сумма SHA-512 не совпала с заявленной площадкой"
+      sha256-mismatch: "контрольная сумма SHA-256 не совпала с заявленной площадкой"
+      github-no-releases: "в репозитории GitHub нет опубликованных релизов"
+      github-no-jar: "в релизе GitHub не нашлось подходящих .jar-файлов"
+      github-no-assets: "у релиза GitHub нет файлов для скачивания"
+      update-folder-write-failed: "не удалось сохранить файл в папку update/"
+      disk-write-failed: "ошибка записи на диск"
+      load-failed-rolled-back: "плагин не смог загрузиться, все изменения отменены"
+      load-failed-dirty: "плагин не смог загрузиться, откат выполнен не полностью — подробности в консоли"
+      locked: "установка этого плагина уже выполняется"
+      deps-check-failed: "не удалось скачать файл, чтобы проверить его зависимости"
+    reasons:
+      incompatible-java: "Плагину требуется Java {required-java}+, а на сервере установлена Java {current-java}"
+      invalid-jar: "Скачанный файл повреждён или не является допустимым .jar-архивом"
+      invalid-manifest: "В архиве плагина отсутствует или повреждён файл манифеста plugin.yml"
+      hash-mismatch: "Контрольная сумма файла не совпала с заявленной площадкой (возможен обрыв загрузки)"
+      download-failed: "Не удалось скачать файл с площадки {source} из-за ошибки сети или таймаута"
+      missing-deps: "Не удалось найти или разрешить обязательные зависимости: {deps}"
+      circular-deps: "Обнаружена циклическая цепочка зависимостей: {chain}"
+      locked: "Установка этого плагина уже выполняется в другом потоке"
+      rolled-back: "Плагин не смог инициализироваться, все изменения и зависимости были безопасно отменены"
+      activation-failed: "Не удалось активировать плагин на сервере: {detail}"
+      write-failed: "Не удалось сохранить плагин в папку с плагинами (ошибка прав доступа к диску)"
+      rate-limited: "Площадка {source} временно ограничила доступ из-за лимита запросов"
+    buttons:
+      download:
+        text: "&#22FF00[Скачать и установить]"
+        hover:
+          - ""
+          - " &#22FF00▶ &fНажмите, чтобы &#22FF00скачать &fи &#22FF00активировать &fплагин &#22FF00«{title}» "
+          - ""
+      confirm-single:
+        text: "&#22FF00[Скачать и установить]"
+        hover:
+          - ""
+          - " &#22FF00▶ &fНажмите, чтобы &#22FF00скачать &fи &#22FF00активировать &fплагин &#22FF00«{plugin}» "
+          - ""
+      info:
+        text: "&#FFFF00[Подробнее]"
+        hover:
+          - ""
+          - " &#FFFF00▶ &fИнформация о плагине &#FFFF00«{title}» &f(&#FFFF00v{version}&f): "
+          - ""
+          - "  &#FFFF00◆ &fАвтор: &#FFFF00{author} "
+          - "  &#FFFF00◆ &fПлощадка: &#FFFF00{source} "
+          - "  &#FFFF00◆ &fСкачиваний: &#00FF5A{downloads} "
+          - "  &#FFFF00◆ &fВерсии: &#FFFF00{game-versions} "
+          - "  &#FFFF00◆ &fЛицензия: &#FFFF00{license} "
+          - ""
+          - " &#FFFF00◆ &fОписание: "
+          - ""
+          - "  &#FFFF00{description} "
+          - ""
+          - " &#FFFF00▶ &fНажмите, чтобы &#FFFF00открыть &fстраничку плагина в браузере "
+          - ""
+      web:
+        text: "&#62CCFF[Страничка]"
+        hover:
+          - ""
+          - " &#62CCFF▶ &fНажмите, чтобы &#62CCFFперейти &fна страницу плагина в браузере: "
+          - ""
+          - " &#62CCFF{url} "
+          - ""
+      url:
+        hover:
+          - ""
+          - " &#62CCFF▶ &fНажмите, чтобы &#62CCFFоткрыть ссылку &fв браузере: "
+          - ""
+          - " &#62CCFF{url} "
+          - ""
+      confirm-deps:
+        text: "&#22FF00[Скачать всё с зависимостями]"
+        hover:
+          - ""
+          - " &#22FF00▶ &fНажмите, чтобы автоматически &#22FF00скачать его зависимости &fи &#22FF00включить &fплагин "
+          - ""
+      cancel:
+        text: "&#FB8808[Отменить]"
+        hover:
+          - ""
+          - " &#FB8808◆ &fНажмите, чтобы &#FB8808отменить &fустановку плагина "
+          - ""

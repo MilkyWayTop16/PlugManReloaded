@@ -1,0 +1,509 @@
+#
+# Localized technical logs for PlugManReloaded (console/debug output)
+# Separate from messages/*.yml — this is operator-facing console output, not player messages
+#
+config-version: 1.0
+logs:
+  plugincleanup:
+    self-blocked: "[PluginCleanup] Attempt to clean up itself ({plugin}) was blocked — operation skipped entirely"
+    services-failed: "[PluginCleanup] Failed to unregister services for {plugin}"
+    listeners-failed: "[PluginCleanup] Failed to clean up event listeners for {plugin}"
+    messenger-failed: "[PluginCleanup] Failed to clean up Plugin Messenger channels for {plugin}"
+    scheduler-failed: "[PluginCleanup] Failed to cancel scheduler tasks for {plugin}"
+    introspector-failed: "[PluginCleanup] Failed to flush the Introspector cache for {plugin}"
+    reflection-cache-failed: "[PluginCleanup] Failed to clear the ReflectionHelper cache for {plugin}"
+    paper-event-manager-failed: "[PluginCleanup] Failed to unregister paperEventManager for {plugin}"
+    placeholderapi-failed: "[PluginCleanup] Failed to unregister the PlaceholderAPI expansion for {plugin}"
+    protocollib-failed: "[PluginCleanup] Failed to remove ProtocolLib packet listeners for {plugin}"
+    packetevents-failed: "[PluginCleanup] Failed to remove PacketEvents listeners for {plugin}"
+    thread-interrupt-failed: "[PluginCleanup] Failed to interrupt thread {thread} for {plugin}"
+    threads-failed: "[PluginCleanup] Failed to clean up threads for {plugin}"
+    jdbc-failed: "[PluginCleanup] Failed to unregister JDBC drivers for {plugin}"
+    paper-lifecycle-failed: "[PluginCleanup] Failed to clean up the Paper LifecycleManager for {plugin}"
+    paper-dependencies-failed: "[PluginCleanup] Failed to clean up PaperPluginClassLoader dependencies for {plugin}"
+    static-fields-failed: "[PluginCleanup] Failed to clear static fields for {plugin}"
+    safe-class-definer-failed: "[PluginCleanup] Failed to clean up SafeClassDefiner for {plugin}"
+    javapluginloader-failed: "[PluginCleanup] Failed to remove the loader and caches from JavaPluginLoader for {plugin}"
+    classes-table-failed: "[PluginCleanup] Failed to clear the classes table for {plugin}"
+    closeable-cl-failed: "[PluginCleanup] Failed to close the Closeable ClassLoader for {plugin}"
+    urlclasspath-failed: "[PluginCleanup] Access to URLClassPath was blocked by the module system, couldn't close the loaders inside ucp for {plugin}"
+    jar-close-failed: "[PluginCleanup] Failed to close the jar in PluginClassLoader for {plugin}"
+    plugin-ref-failed: "[PluginCleanup] Failed to null out the plugin reference in ClassLoader for {plugin}"
+    field-close-failed: "[PluginCleanup] Couldn't read or close field {field} of plugin {plugin}"
+    internal-loaders-failed: "[PluginCleanup] Failed to clean up internal loaders for {plugin}"
+
+  pluginsearch:
+    cache-hit: "[Search] Returning cached results for «{query}» ({count} entries)"
+    querying-sources: "[Search] Querying sites for «{query}» (source: {source})"
+    source-no-response: "[PluginSearch] One of the sites didn't respond to the search"
+    not-all-sources-responded: "[PluginSearch] Not all sites responded in time, using what came back"
+    search-finished: "Search &#ffff00«{query}» &ffinished: found &#00FF5A{count} &fresults ({elapsed} ms)"
+    version-load-timeout: "[PluginSearch] Timed out loading versions, using the data that arrived"
+    version-fetch-failed: "[PluginSearch] Failed to fetch the version for {project}"
+    modrinth-search-failed: "[PluginSearch] Search on Modrinth failed for {query}"
+    hangar-search-failed: "[PluginSearch] Search on Hangar failed for {query}"
+    spiget-fetch-failed: "[PluginSearch] Failed to fetch the Spiget resource with ID {id}"
+    spiget-search-failed: "[PluginSearch] Search on Spiget failed for {query}"
+    github-repo-fetch-failed: "[PluginSearch] Failed to fetch the GitHub repository {repo}"
+    github-rate-limited: "[PluginSearch] GitHub Search API: request limit exceeded (Rate Limit 403). Set github-token in config.yml"
+    github-search-failed: "[PluginSearch] Search on GitHub failed for {query}"
+
+  hotswapmanager:
+    started: "&#00FF5AHot-Swap &7(auto-reload for jars) &fsystem &#00FF5Astarted &fsuccessfully!"
+    watchservice-close-failed: "[HotSwap] Failed to close the WatchService after a failed startup"
+    init-failed: "[HotSwap] Failed to &#FF5D00initialize &fthe Hot-Swap WatchService: &#FF5D00{error}&f"
+    close-error: "[HotSwap] An &#FF5D00error &foccurred while closing the WatchService: &#FF5D00{error}&f"
+    overflow: "[HotSwap] WatchService queue overflow (OVERFLOW), some file change events may have been lost"
+    task-rejected: "[HotSwap] The Hot-Swap task was &#FF5D00rejected &fby the scheduler for &#FF5D00{file}&f: &#FF5D00{error}&f"
+    file-still-writing: "[HotSwap] File {file} changed, but is still being written to disk or is corrupted"
+    preflight-failed: "[HotSwap] File &#ffff00{file} &ffailed the preflight check ({error}), auto-reload cancelled"
+    updating-via-installer: "[HotSwap] Plugin {plugin} is currently being updated by the installer, auto-reload skipped"
+    untrusted-load-blocked: "[HotSwap] New file {file} detected. Auto-loading is disabled for security. Use /plm load"
+    protected-skip: "[HotSwap] Plugin &#ffff00«{plugin}» &#FB8808is protected &ffrom automatic Hot-Swap reloading"
+    apply-failed: "[HotSwap] File &#ffff00{file} &fcan't be applied to «{plugin}» ({error}), the old plugin was left active"
+    old-move-failed: "[HotSwap] Failed to move the old file to .old {file}"
+    new-version-load-failed: "[HotSwap] The new version for &#FF5D00{plugin} &ffailed to load, rolling back"
+    old-backup-delete-failed: "[HotSwap] Failed to delete the previous backup {file}"
+    move-attempt-failed: "[HotSwap] Attempt {attempt} to move {file} failed"
+    delete-attempt-failed: "[HotSwap] Attempt {attempt} to delete {file} failed"
+
+  backupstore:
+    mtime-update-failed: "[BackupStore] Failed to update the modification time of {file}"
+    backup-failed: "[BackupStore] Failed to create a backup for {plugin}: {error}"
+    unreadable-file-skipped: "[BackupStore] Skipping unreadable file {file}: {error}"
+    file-access-error: "[BackupStore] Error accessing file {file}: {error}"
+    folder-backup-failed: "[BackupStore] Failed to create a data folder backup for {plugin}: {error}"
+    restore-attempt-failed: "[BackupStore] Attempt {attempt} to restore {file} failed"
+    restore-failed: "[BackupStore] Failed to restore backup {backup} to {target}"
+    folder-restore-failed: "[BackupStore] Failed to restore the data folder backup {backup}: {error}"
+    backup-check-failed: "[BackupStore] Failed to verify backup {file}"
+    prune-all-failed: "[BackupStore] Failed to prune old backups"
+    list-failed: "[BackupStore] Failed to list backups for {plugin}"
+    old-copy-delete-failed: "[BackupStore] Failed to delete the old copy {file}"
+    timestamp-unparseable: "[BackupStore] Couldn't parse a timestamp from backup name {name}, using the file date instead"
+
+  updateinstaller:
+    jar-overwrite-failed: "[UpdateInstaller] Failed to overwrite the JAR for &#FF5D00{plugin}&f, keeping it staged for a restart instead"
+    new-version-load-failed: "[UpdateInstaller] The new version of &#ffff00{plugin} &ffailed to load, rolling back"
+    jarindex-invalidate-failed: "[UpdateInstaller] Failed to invalidate the jar index cache"
+    updated: "Plugin &#ffff00«{plugin}» &#00FF5Awas successfully &fupdated: &#ffff00v{from} &f→ &#00FF5Av{to}"
+    staged-for-restart: "Plugin &#ffff00«{plugin}» &#00FF5Awas downloaded &finto the update/ folder to apply on the next server restart: &#ffff00v{from} &f→ &#00FF5Av{to}"
+    stage-for-restart-failed: "[UpdateInstaller] Failed to stage the update for a restart for &#FF5D00{plugin}&f: {error}"
+    dependents-collect-failed: "[UpdateInstaller] Failed to collect dependents for {plugin}"
+    restarting-dependents: "[UpdateInstaller] Restarting dependent plugins after updating &#FFFF00{plugin}&f: &#FFFF00{count}"
+    dependent-load-failed: "[UpdateInstaller] Dependent plugin &#FF5D00{dependent} &ffailed to load after updating {plugin}, a server restart may be required"
+    rollback-failed: "[UpdateInstaller] Rollback failed: file &#FF5D00{file} &fwas left in an unknown state"
+    rollback-load-failed: "[UpdateInstaller] The previous version of &#FF5D00{plugin} &ffailed to load after rollback, a server restart is required"
+    move-attempt-failed: "[UpdateInstaller] Attempt {attempt} to move {source} to {destination} failed"
+    delete-attempt-failed: "[UpdateInstaller] Attempt {attempt} to delete {file} failed"
+    empty-folder-cleanup-failed: "[UpdateInstaller] Failed to remove the empty folder {folder}"
+    temp-file-delete-failed: "[UpdateInstaller] Failed to delete the temporary file {file}"
+
+  plugindownloader:
+    transaction-error: "[PluginDownloader] Error while running the download transaction: {error}"
+    catalog-create-failed: "[PluginDownloader] Failed to create the catalog for resolving dependencies"
+    update-folder-write-failed: "[PluginDownloader] Failed to save &#FF5D00{plugin}&f into the update/ folder"
+    disk-write-failed: "[PluginDownloader] Failed to write &#FF5D00{plugin}&f to disk"
+    direct-link-failed: "[PluginDownloader] Failed to get a direct link for {title}"
+    stage-validate-failed: "[PluginDownloader] Error validating and staging {title}"
+    post-install-refresh-failed: "[PluginDownloader] Failed to refresh commands and the index after installation"
+    rollback-unload-failed: "[PluginDownloader] Install rollback: failed to unload &#FF5D00{plugin}&f, the plugin was left in server memory"
+    rollback-delete-failed: "[PluginDownloader] Install rollback: failed to delete &#FF5D00{file}&f, the file was left in plugins/"
+    source-write-failed: "[PluginDownloader] Failed to save the source for &#FF5D00{plugin}&f to sources-custom.yml — the update checker won't know where it was installed from"
+    modrinth-parse-failed: "[PluginDownloader] Failed to parse the Modrinth response"
+    hangar-parse-failed: "[PluginDownloader] Failed to parse the Hangar response"
+    github-parse-failed: "[PluginDownloader] Failed to parse GitHub releases for {repo}"
+    temp-file-delete-failed: "[PluginDownloader] Failed to delete the temporary file {file}"
+    staging-cleanup-failed: "[PluginDownloader] Failed to clean up the staging directory"
+
+  reflectionhelper:
+    class-not-found: "[ReflectionHelper] Class {class} not found"
+    field-access-error: "[ReflectionHelper] Error accessing field {class}#{field}"
+    field-not-found: "[ReflectionHelper] Field {class}#{field} not found"
+    field-get-failed: "[ReflectionHelper] Failed to get the value of field {class}#{field}"
+    field-read-failed: "[ReflectionHelper] Failed to read field {class}#{field}"
+    static-field-get-failed: "[ReflectionHelper] Failed to get the static value of field {class}#{field}"
+    field-set-failed: "[ReflectionHelper] Failed to set the value of field {class}#{field}"
+    static-field-set-failed: "[ReflectionHelper] Failed to set the static value of field {class}#{field}"
+    method-access-error: "[ReflectionHelper] Error accessing method {class}#{method}"
+    method-not-found: "[ReflectionHelper] Method {class}#{method} not found"
+    method-invoke-error: "[ReflectionHelper] Error invoking method {class}#{method}"
+    access-not-opened: "[ReflectionHelper] Access to {description} isn't open, this call may fail later"
+
+  serverstatecleanup:
+    inventory-close-error-global: "[ServerStateCleanup] Error while globally closing the inventory of player {player}"
+    inventory-close-error: "[ServerStateCleanup] Error while closing the inventory of player {player}"
+    inventory-close-failed-count: "[ServerStateCleanup] Failed to close inventories for {count} players for {plugin}"
+    attachment-cleanup-error: "[ServerStateCleanup] Error cleaning up the permission attachment of player {player}"
+    attachment-cleanup-failed-count: "[ServerStateCleanup] Failed to clean up permission attachments for {count} players for {plugin}"
+    permission-remove-failed: "[ServerStateCleanup] Failed to remove permission {permission}"
+    dynamic-permission-remove-failed: "[ServerStateCleanup] Failed to remove dynamic permission {permission}"
+    permissions-cleanup-failed: "[ServerStateCleanup] Failed to clean up permissions for {plugin}"
+    metadata-cleanup-failed: "[ServerStateCleanup] Failed to clean up metadata for {plugin}"
+    recipes-cleanup-failed: "[ServerStateCleanup] Failed to clean up recipes for {plugin}"
+    bossbars-cleanup-failed: "[ServerStateCleanup] Failed to clean up boss bars for {plugin}"
+    helptopics-cleanup-failed: "[ServerStateCleanup] Failed to clean up help topics for {plugin}"
+
+  sourcecatalog:
+    resource-not-found: "[SourceCatalog] Resource {resource} not found, the catalog is empty"
+    loaded: "[SourceCatalog] Plugins loaded into the catalog: {count}"
+    load-failed: "[SourceCatalog] Failed to load the source catalog: {error}"
+    entry-no-params: "[SourceCatalog] Custom sources: entry «{plugin}» has no parameters, it was skipped"
+    entry-no-valid-source: "[SourceCatalog] Custom sources: entry «{plugin}» has no valid source"
+    custom-sources-loaded: "[SourceCatalog] Loaded custom update sources: &#FFFF00{count}"
+    custom-file-read-failed: "[SourceCatalog] Failed to read the custom update sources file"
+    source-missing-id: "[SourceCatalog] Custom sources: «{plugin}» has a source missing the id field"
+    template-not-found: "[SourceCatalog] Template {resource} not found in the jar"
+    custom-file-create-failed: "[SourceCatalog] Failed to create the custom update sources file {file}"
+    mainclass-mismatch: "[SourceCatalog] Main class {mainClass} in the catalog belongs to a different plugin, «{plugin}» wasn't confirmed by name — no sources returned"
+    custom-mainclass-mismatch: "[SourceCatalog] Custom sources: «{plugin}» declares main {required}, but {installed} is installed — the entry doesn't apply"
+
+  jarvalidator:
+    null-file: "JarValidator: got a null file"
+    file-missing: "JarValidator: file {file} doesn't exist on disk"
+    not-a-file: "JarValidator: path {file} isn't a file"
+    file-too-small: "JarValidator: file {file} is too small ({size} bytes), the write may still be in progress"
+    no-descriptor: "JarValidator: file {file} has no plugin.yml or paper-plugin.yml descriptor"
+    corrupted-archive: "JarValidator: file {file} is corrupted or isn't a valid archive: {error}"
+    io-error: "JarValidator: I/O error while reading {file}: {error}"
+    unexpected-validation-error: "JarValidator: unexpected error while validating {file}: {error}"
+    descriptor-read-failed: "JarValidator: failed to read the descriptor bytes"
+    yaml-parse-error: "JarValidator: error parsing YAML via YamlConfiguration: {error}"
+    name-read-failed: "JarValidator: failed to read the plugin name from {file}: {error}"
+    dependencies-read-failed: "JarValidator: failed to read dependencies from {file}"
+    missing-file: "The plugin file was not found on disk"
+    path-not-file: "The given path is not a file"
+    too-small: "The file is too small ({size} bytes) - it may still be being written to disk"
+    unknown: "Unknown error"
+    fabric: "The file is a Fabric mod, not a Paper/Spigot plugin"
+    quilt: "The file is a Quilt mod, not a Paper/Spigot plugin"
+    neoforge: "The file is a NeoForge mod, not a Paper/Spigot plugin"
+    forge: "The file is a Forge mod, not a Paper/Spigot plugin"
+    velocity: "The file is a Velocity proxy plugin, not a server plugin"
+    bungeecord: "The file is a BungeeCord proxy plugin, not a server plugin"
+    no-name: "Plugin name is not specified in the descriptor ('name' field)"
+    name-mismatch: "The plugin name inside the JAR ('{declared}') does not match the target plugin ('{expected}')"
+    incompatible-java: "Requires Java {required}+, but your server is running Java {current}"
+    requires-cold-restart: "The plugin uses paper-plugin.yml or Paper Bootstrapper — the Paper core forbids reloading such plugins at runtime (server restart required)"
+    missing-dependencies: "Missing required dependencies: {deps}"
+    corrupted-jar: "The JAR file is corrupted or is not a valid ZIP archive: {error}"
+    unexpected: "Unexpected validation error: {error}"
+
+  configupdater:
+    default-load-failed: "[ConfigUpdater] Failed to load the default config {resource}"
+    version-fragment-nonnumeric: "[ConfigUpdater] Non-numeric version fragment «{fragment}», treated as 0"
+    updated: "Config {file} was successfully updated to version {version}"
+    version-bumped: "Config {file}'s version was bumped to {version}"
+    atomic-move-unsupported: "[ConfigUpdater] ATOMIC_MOVE isn't supported by the file system, falling back to plain REPLACE_EXISTING"
+    save-failed: "[ConfigUpdater] Error saving config {file}"
+    temp-file-delete-failed: "[ConfigUpdater] Failed to delete the temporary file {file}"
+    default-read-error: "[ConfigUpdater] Error reading the default resource {resource}"
+    backup-created: "[ConfigUpdater] Created a config backup: {file}"
+    backup-failed: "[ConfigUpdater] Failed to create a config backup for {file}"
+    old-backup-delete-failed: "[ConfigUpdater] Failed to delete the old backup {file}"
+    header-footer-unsupported: "[ConfigUpdater] Copying the config header/footer isn't supported on this Bukkit API version, skipped"
+
+  lifecyclemanager:
+    loading-file: "[Lifecycle] Loading file {file}"
+    unloading: "[Lifecycle] Unloading plugin {plugin}"
+    reloading: "[Lifecycle] Reloading plugin {plugin}"
+    cascade-plan: "[Cascade] Cascade restart plan for «{plugin}»: {order}"
+    cascade-skipped: "[Cascade] Plugin &#ffff00{plugin} &fwas skipped during the cascade ({error})"
+    cascade-no-jar: "[Cascade] No usable &#ffff00.jar &fwas found for &#ffff00{plugin}&f, unloading this plugin was cancelled"
+    cascade-rollback-failed: "[Cascade] Cascade rollback: failed to bring back &#FF5D00{plugin}&f, the plugin stayed unloaded"
+    file-outside-plugins-dir: "[Lifecycle] File &#ffff00{file} &#FB8808is outside &fthe plugins/ folder, the load was &#FB8808rejected&f"
+    canonical-path-check-failed: "[Lifecycle] An &#FF5D00error &foccurred while checking the canonical path for &#FF5D00{file}&f"
+
+  downloadclient:
+    scheme-compare-failed: "[DownloadClient] Failed to compare schemes {original} and {candidate}"
+    insecure-downgrade: "[DownloadClient] Download aborted: the server redirected from &#FF5D00https &fto plain &#FF5D00{protocol}&f — the file may have been swapped in transit"
+    redirect-no-location: "[DownloadClient] Download aborted: redirect with no destination address"
+    bad-status: "[DownloadClient] Download failed, the server responded with status &#FF5D00{status}&f"
+    file-too-large-declared: "[DownloadClient] File is too large ({mb} MB), download cancelled"
+    too-many-redirects: "[DownloadClient] Download aborted: too many redirects"
+    download-failed: "[DownloadClient] Failed to download the file: {error}"
+    size-limit-exceeded: "[DownloadClient] The download exceeded the size limit and was aborted"
+    downloaded: "[Download] Downloaded {mb} MB to {file}"
+
+  dependencyresolver:
+    no-jar: "[DependencyResolver] No .jar was given for {owner}, dependencies can't be read"
+    depth-limit: "[DependencyResolver] Reached the depth limit {maxDepth} at {owner}"
+    cycle-detected: "[DependencyResolver] A dependency cycle was found: {details}"
+    jar-not-in-index: "[DependencyResolver] Couldn't find the jar for dependency {dependency} in the index"
+    jar-fetch-failed: "[DependencyResolver] Failed to fetch the .jar of dependency {dependency} to parse it"
+    provides-read-failed: "[DependencyResolver] Failed to read provides for plugin {plugin}"
+    no-name-match: "[DependencyResolver] No search result matched by name for dependency {dependency}, the closest was {best}"
+    source-not-found: "[DependencyResolver] Couldn't find a source for dependency {dependency}"
+
+  updateservice:
+    check-start: "[Update] Starting an update check for {count} plugins"
+    check-error: "[UpdateService] The update check finished with an error: {error}"
+    check-finished: "Update check finished: checked &#ffff00{count} &fplugins, updates available: &#00FF5A{available} &f({elapsed} ms)"
+    check-interrupted: "[UpdateService] Check interrupted at {plugin}"
+    check-failed: "[UpdateService] Failed to check {plugin}"
+    jarref-title-unknown: "[JarScanner] Couldn't find out the project title for link {source}:{ref} from {plugin}, rejected"
+    jarref-companion-rejected: "[JarScanner] Link {source}:{ref} from {plugin} points to a companion «{title}», rejected"
+    jarref-low-similarity: "[JarScanner] Link {source}:{ref} from {plugin} points to «{title}» (similarity {similarity}), rejected"
+
+  deletecommand:
+    backup-failed: "[DeleteCommand] Failed to save a backup before deleting {plugin}"
+    folder-backup-failed: "[DeleteCommand] Failed to back up the data folder for {plugin}"
+    file-delete-error: "[DeleteCommand] Error deleting file {file}"
+    canonical-path-check-failed: "[DeleteCommand] Failed to check the canonical path for {file}"
+    delete-attempt-failed: "[DeleteCommand] Attempt {attempt} to delete {file} failed"
+    file-locked: "[DeleteCommand] Couldn't delete file &#FF5D00{file}&f: it's held by the server process. The plugin was unloaded, but the file stayed and will come back on the next restart. A backup was saved"
+    folder-delete-error: "[DeleteCommand] Error deleting the data folder for {plugin}"
+
+  brigadiermanager:
+    methodhandle-unavailable: "[BrigadierManager] The CraftServer#syncCommands method isn't available via MethodHandle"
+    sync-methodhandle-failed: "[BrigadierManager] Failed to sync commands via MethodHandle"
+    sync-reflection-failed: "[BrigadierManager] Failed to sync commands via reflection"
+    cleanup-error: "[BrigadierManager] Error cleaning up commands for {plugin}"
+    unregister-failed: "[BrigadierManager] Failed to unregister command {command} for {plugin}"
+    nodes-cleanup-failed: "[BrigadierManager] Failed to clean up Brigadier nodes for {plugin}"
+
+  pluginjarindex:
+    canonical-path-check-failed: "[PluginJarIndex] Failed to check the canonical path for {file}"
+    query-no-match: "[PluginJarIndex] No jar in plugins/ matched query «{query}»"
+    indexed: "[PluginJarIndex] Indexed jar files in plugins/: {count}"
+    duplicate-jar: "[PluginJarIndex] There are two files for plugin &#FF5D00{plugin}&f in the plugins folder: {first} and {second}. The server won't be able to load both, delete the extra one!"
+    no-descriptor: "[PluginJarIndex] {file} has neither plugin.yml nor paper-plugin.yml"
+    descriptor-read-failed: "[PluginJarIndex] Failed to read the descriptor from {file}: {error}"
+
+  modrinthsource:
+    hash-batch-failed: "[ModrinthSource] The batch hash lookup didn't go through"
+    candidate-author-mismatch: "[ModrinthSource] Candidate {slug} rejected, author «{remoteAuthor}» doesn't match the plugin's author"
+    candidate-no-corroboration: "[ModrinthSource] Candidate {slug} rejected, no author or brand corroboration"
+    ambiguous-match: "[ModrinthSource] Name «{plugin}» matches {count} projects equally well, the match was marked ambiguous"
+    rate-limited: "[ModrinthSource] Modrinth rate-limited our requests, the update check was deferred"
+    version-parse-failed: "[ModrinthSource] Failed to parse the version for project {project}"
+
+  logcatalog:
+    reload-failed: "[LogCatalog] Failed to reload the log catalog - messages will be printed as raw keys"
+
+  pluginmetahelper:
+    version-not-substituted: "[PluginMetaHelper] The version in plugin.yml is still a build placeholder: {placeholder}. Resource filtering is not enabled in pom.xml, so the plugin does not know its own version."
+    version-pluginmeta-failed: "[PluginMetaHelper] Failed to read the version from PluginMeta for {plugin}"
+    version-description-failed: "[PluginMetaHelper] Failed to read the version from PluginDescriptionFile for {plugin}"
+    authors-pluginmeta-failed: "[PluginMetaHelper] Failed to read authors from PluginMeta for {plugin}"
+    authors-description-failed: "[PluginMetaHelper] Failed to read authors from PluginDescriptionFile for {plugin}"
+    permissions-description-failed: "[PluginMetaHelper] Failed to read permissions from PluginDescriptionFile for {plugin}"
+    permissions-pluginmeta-failed: "[PluginMetaHelper] Failed to read permissions from PluginMeta for {plugin}"
+
+  legacybukkitbridge:
+    enable-error: "[LegacyBukkitBridge] Error enabling plugin {plugin}"
+    disable-error: "[LegacyBukkitBridge] Error disabling plugin {plugin}"
+    load-error: "[LegacyBukkitBridge] Error loading a plugin from {file}"
+    unload-error: "[LegacyBukkitBridge] Error unloading plugin {plugin}"
+    paperplugin-check-error: "[LegacyBukkitBridge] Error checking paper-plugin.yml in {file}"
+
+  nettyguard:
+    player-cleanup-error: "[NettyGuard] Error cleaning up the pipeline of player {player}"
+    server-cleanup-failed: "[NettyGuard] Failed to walk the server's connection pool for {plugin}"
+    cleanup-failed-count: "[NettyGuard] Failed to process the pipeline for {count} players while unloading {plugin}"
+    handler-remove-failed: "[NettyGuard] Failed to remove handler {handler} from the pipeline"
+    pipeline-inspect-failed: "[NettyGuard] Failed to inspect the connection pipeline"
+    sync-timeout: "[NettyGuard] Timed out waiting for Netty event loop synchronization"
+
+  httpjson:
+    host-disabled: "[HttpJson] Host {host} was temporarily disabled after repeated connection failures, for 45 sec"
+    raw-request-failed: "[HttpJson] Raw request {url} failed: {error}"
+    request-failed: "[HttpJson] Request {method} {url} failed: {error}"
+    ratelimit-header-unreadable: "[HttpJson] The x-ratelimit-remaining header is unreadable: {value}"
+    response-too-large: "[HttpJson] A site's response exceeded the size limit and was discarded"
+
+  githubsource:
+    invalid-repo-ref: "[GithubSource] Repository reference «{ref}» is invalid, request not sent"
+    rate-limited-no-token: "[GithubSource] GitHub's request limit is exhausted (60/hour without a token). Until it resets, versions come from the release feed, and auto-install for GitHub plugins is unavailable. Set &#ffff00settings.updates.github-token&f in the config to raise the limit to 5000/hour"
+    rate-limited-with-token: "[GithubSource] GitHub's request limit is exhausted even with a token. Auto-install for GitHub plugins will be unavailable until the limit resets"
+    atom-feed-failed: "[GithubSource] Failed to read the Atom feed for {ref}"
+    no-matching-asset: "[GithubSource] No asset resembles {plugin} (best match {bestScore})"
+
+  spigotsource:
+    candidate-no-brand: "[SpigotSource] Candidate «{title}» rejected, no brand corroboration"
+    ambiguous-match: "[SpigotSource] Name «{plugin}» matches {count} resources equally well, the match was marked ambiguous"
+    rate-limited: "[SpigotSource] Spiget rate-limited our requests, the update check was deferred"
+    resource-attributes-failed: "[SpigotSource] Failed to get attributes for resource {resourceId}"
+    version-parse-failed: "[SpigotSource] Failed to parse the version for resource {ref}"
+
+  actionmanager:
+    sendtitle-failed: "[ActionManager] Player.sendTitle didn't work, falling back to player.showTitle"
+    title-error: "[ActionManager] An &#FF5D00error &foccurred while showing a Title to player &#ffff00{player}&f: &#FF5D00{error}&f"
+    sound-error: "[ActionManager] An &#FF5D00error &foccurred while playing sound &#FF5D00«{sound}»&f: &#FF5D00{error}&f"
+    unknown-sound: "[ActionManager] An &#FF5D00unknown &fsound &#FF5D00«{sound}» &fwas specified in the action config"
+
+  identityscanner:
+    jar-not-found: "[IdentityScanner] No .jar found for {plugin}, can't check for updates"
+    descriptor-read-failed: "[IdentityScanner] Failed to read the descriptor from {file}"
+    pending-update-check-failed: "[IdentityScanner] Failed to check the pending update for {plugin}"
+    hash-failed: "[IdentityScanner] Failed to hash file {file}"
+
+  serverprofile:
+    java-version-parse-failed: "[ServerProfile] Failed to parse java.specification.version={spec}"
+    getminecraftversion-missing: "[ServerProfile] Bukkit.getMinecraftVersion() isn't available, falling back to getBukkitVersion()"
+    getminecraftversion-failed: "[ServerProfile] Failed to read Bukkit.getMinecraftVersion()"
+    version-detect-failed: "[ServerProfile] Couldn't detect the Minecraft version, update compatibility checks will be limited"
+
+  updatecache:
+    misses-save-failed: "[UpdateCache] Failed to save the search-miss cache to disk"
+    corrupted-miss-entry: "[UpdateCache] Corrupted entry in the misses file: {line}"
+    misses-restored: "[UpdateCache] Restored search misses from the previous run: {count}"
+    misses-load-failed: "[UpdateCache] Failed to read the search-miss cache from disk"
+
+  ruspigotsource:
+    rate-limit-interrupted: "[RusPigotSource] The pause between requests was interrupted"
+    candidate-rejected: "[RusPigotSource] Candidate «{title}» rejected, no brand corroboration and the source-code field is empty"
+    date-like-value: "[RusPigotSource] String «{value}» looks like a date, not treated as a version"
+    non-github-link: "[RusPigotSource] The source-code field contains a non-GitHub link: {link}"
+
+  usercatalogwriter:
+    header-read-failed: "[UserCatalogWriter] Failed to read the sources-custom.yml header from resources"
+    atomic-move-unsupported: "[UserCatalogWriter] ATOMIC_MOVE isn't supported by the filesystem, falling back to plain REPLACE_EXISTING"
+    save-failed: "[UserCatalogWriter] Failed to save the source for {plugin} in {file}"
+    temp-file-delete-failed: "[UserCatalogWriter] Failed to delete temp file {file}"
+
+  usagecommand:
+    permission-search-failed: "[UsageCommand] Permission search across plugins was interrupted"
+    knowncommands-read-failed: "[UsageCommand] Failed to read knownCommands from SimpleCommandMap"
+    permissions-collect-failed: "[UsageCommand] Failed to collect permissions from PluginManager"
+
+  configmanager:
+    reloading: "Reloading all &#ffff00config files&f"
+    reloaded: "Plugin configuration &#00FF5Areloaded &fsuccessfully!"
+    reload-error: "An &#FF5D00error &foccurred while reloading the configuration: &#FF5D00{error}&f"
+
+  dependencygraph:
+    provides-reflection-failed: "[DependencyGraph] Failed to read provides via reflection"
+    dependencies-reflection-failed: "[DependencyGraph] Failed to read dependencies via reflection"
+    getname-unavailable: "[DependencyGraph] GetName() isn't available, falling back to toString() for the name"
+
+  jarscanner:
+    canonicalpath-failed: "[JarScanner] GetCanonicalPath failed, falling back to getAbsolutePath: {error}"
+    scan-failed: "[JarScanner] Failed to scan {jar}"
+    refs-found: "[JarScanner] Found {count} references in {jar} in {ms} ms ({kb} KB)"
+
+  hangarsource:
+    candidate-rejected: "[HangarSource] Candidate {slug} rejected, no author or brand corroboration"
+    rate-limited: "[HangarSource] Hangar rate-limited the request, the update check has been postponed"
+    version-parse-failed: "[HangarSource] Failed to parse the version of project {project}"
+
+  foliabridge:
+    cancel-tasks-failed: "[FoliaBridge] Failed to cancel Folia tasks for {plugin}"
+    cancel-entity-tasks-failed: "[FoliaBridge] Failed to cancel entity tasks of {plugin} for player {player}"
+
+  platformdetector:
+    unsupported-core: "Unsupported core (Paper required)"
+    probe-failed: "[PlatformDetector] The core class check failed for a reason other than the class being absent: {failure}"
+    getname-failed: "[PlatformDetector] Failed to read Bukkit.getName()"
+
+  dumpcommand:
+    saved: "Server environment dump &#00FF5Asaved &fsuccessfully to file &#ffff00{file}"
+    failed: "An &#FF5D00error &foccurred while creating the dump: &#FF5D00{error}&f"
+
+  listcommand:
+    jar-list-failed: "[ListCommand] Failed to get the jar list"
+    unloaded-jar-list-failed: "[ListCommand] Failed to get the unloaded jar list"
+
+  unloadsafetychecker:
+    marker-check-failed: "[UnloadSafetyChecker] Error checking marker {marker} for {plugin}"
+    servicesmanager-scan-failed: "[UnloadSafetyChecker] Failed to scan the ServicesManager for {plugin}"
+
+  manualsourcelistener:
+    hide-message-failed: "[ManualSourceListener] Failed to hide the message from other players"
+
+  directsource:
+    endpoint-missing: "[DirectSource] {ref} has no endpoint or downloadPath in the catalog"
+    no-version-or-url: "[DirectSource] Endpoint {endpoint} doesn't contain a version or a link"
+
+  jenkinssource:
+    endpoint-missing: "[JenkinsSource] {ref} has no endpoint in the catalog"
+    no-matching-artifact: "[JenkinsSource] No artifact matches {plugin}"
+
+  hexcolors:
+    minimessage-failed: "[HexColors] MiniMessage failed ({stage}), falling back to the standalone parser: {error}"
+    rainbow-phase-parse-failed: "[HexColors] Failed to parse rainbow phase «{phase}»"
+
+  plugininfo:
+    plugin-yml-read-failed: "[PluginInfo] Failed to read plugin.yml, dependencies are unknown"
+
+  plugmanapiimpl:
+    backup-before-delete-failed: "[PlugManAPIImpl] Failed to save a backup before deleting {plugin}"
+
+  modernpaperbridge:
+    paperpluginmanager-cleanup-failed: "[ModernPaperBridge] Failed to clean up the PaperPluginManager for {plugin}"
+
+  updatecommand:
+    reloading-dependents: "Reloading dependent plugins after the batch update ({count} total): {plugins}"
+
+  chatbuttonfactory:
+    url-looks-like-markup: "[ChatButtonFactory] The url value looks like markup rather than a link, the button won't be clickable: {value}"
+
+  downloadservice:
+    search-failed: "[DownloadService] Search error while downloading from URL {url}"
+
+  manualsources:
+    source-verify-failed: "[ManualSources] Error verifying source {source} ({ref})"
+
+  bstats:
+    metrics-start-failed: "[BStats] Metrics failed to start"
+
+  standalonetagparser:
+    page-number-parse-failed: "[HexColors] Page number «{value}» isn't a number, the click was ignored"
+
+  updatechecker:
+    check-failed: "An &#FF5D00error &foccurred while checking for updates: &#FF5D00{error}&f"
+    hover-fallback: "\n &#FFFF00▶ &fClick to &#FFFF00open &flink\n"
+
+  startup:
+    reading-config: "&#00C9FF▶ PlugMan &8| &fReading &#00FF5Aconfig files &fand &#00FF5Aloading &fresources"
+    detecting-platform: "&#00C9FF▶ PlugMan &8| &fDetecting the environment: &#00FF5A{platform}&f"
+    init-core: "&#00C9FF▶ PlugMan &8| &fInitializing the plugin's &#00FF5Alifecycle &fand &#00FF5Amemory &fcore"
+    registering-commands: "&#00C9FF▶ PlugMan &8| &fRegistering &#00FF5Acommands &fand &#00FF5Atab completion&f"
+    init-hotswap: "&#00C9FF▶ PlugMan &8| &fInitializing the &#00FF5AHot-Swap &fsystem"
+    init-updates: "&#00C9FF▶ PlugMan &8| &fInitializing the &#00FF5Aupdate checking &fsystem"
+    registering-api: "&#00C9FF▶ PlugMan &8| &fRegistering the public &#00FF5AAPI&f"
+    init-failed: "Critical &#FF5D00initialization failure&f: &#FF5D00{error}&f"
+    banner-enabled: "&#00FF5A        ▶ &fPlugin &#00FF5Asuccessfully &floaded and enabled!"
+    banner-version: "&#ffff00               ▶ &fPlugin version: &#ffff00v{version}"
+    banner-platform: "&#ffff00               ▶ &fServer platform: &#ffff00{platform}"
+    banner-plugins: "&#ffff00               ▶ &fPlugins detected: &#ffff00{count}"
+    banner-time: "&#ffff00               ▶ &fLoad time: &#ffff00{ms} ms"
+
+  shutdown:
+    starting: "&#FF5D00▶ PlugMan &8| &fStarting to &#FF5D00unload &fthe plugin"
+    stopping-hotswap: "&#FF5D00▶ PlugMan &8| &fStopping the &#FF5D00Hot-Swap &fservice"
+    stopping-updatechecker: "&#FF5D00▶ PlugMan &8| &fStopping the &#FF5D00UpdateChecker &fservice"
+    clearing-caches: "&#FF5D00▶ PlugMan &8| &fClearing internal &#FF5D00caches &fand resources"
+    banner-disabled: "&#FF5D00     ▶ &fPlugin &#FF5D00successfully &funloaded and disabled"
+    banner-version: "&#ffff00               ▶ &fPlugin version: &#ffff00v{version}"
+    banner-time: "&#ffff00               ▶ &fUnload time: &#ffff00{ms} ms"
+
+  configlocalizer:
+    applied: "[ConfigLocalizer] Comments in &#ffff00{file} &fwere switched to &#00FF5A{language}&f, all values kept as they were"
+    no-template: "[ConfigLocalizer] There is no config template for language «{language}», comments left as they are"
+    template-missing: "[ConfigLocalizer] Failed to read config template {resource} from resources"
+    key-would-be-lost: "[ConfigLocalizer] Comment translation cancelled, otherwise setting «{key}» would have been lost"
+    value-would-change: "[ConfigLocalizer] Comment translation cancelled, otherwise the value of «{key}» would have changed"
+    atomic-move-unsupported: "[ConfigLocalizer] ATOMIC_MOVE isn't supported by the filesystem, falling back to plain REPLACE_EXISTING"
+    failed: "[ConfigLocalizer] Failed to translate the comments in file {file}"
+
+  erroranalyzer:
+    unknown: "Unknown error"
+    unsupported-java: "The plugin is compiled for Java {required}+, but the server is running Java {current}"
+    unsupported-api: "The plugin requires API version {api}, which is not supported by the server"
+    missing-deps: "Missing required dependencies: {deps}"
+    class-not-found: "Class not found: {class}"
+    incompatible-core: "The plugin is incompatible with the current core version: missing {member}"
+    incompatible-class-change: "The plugin is compiled for an incompatible API version or server core interfaces"
+    database-locked: "The plugin's database is locked by another process or an active connection"
+    port-in-use: "Network port or address is already in use by another process"
+    circular-deps: "A circular dependency between plugins was detected"
+    invalid-description: "The plugin.yml / paper-plugin.yml file is corrupted or missing"
+    duplicate-plugin: "Plugin conflict: another plugin with the same name or provider already exists in the plugins/ folder"
+    paper-bootstrapper: "The plugin uses Paper Bootstrapper (early load before server start), the Paper core forbids loading such plugins on the fly"
+
+  prefix:
+    info: "&#00C9FF▶ PlugMan &8| &f"
+    success: "&#92FE9D▶ PlugMan &8| &f"
+    warn: "&#FB8808▶ Warning &8| &f"
+    error: "&#FF5D00▶ Error! &8| &f"

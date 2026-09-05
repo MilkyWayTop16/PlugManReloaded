@@ -1,0 +1,508 @@
+# Локализация технических логов PlugManReloaded (консоль/debug-режим)
+# Отдельно от messages/*.yml, так как это не сообщения игрокам, а служебный вывод для владельца сервера
+#
+config-version: 1.0
+logs:
+  plugincleanup:
+    self-blocked: "[PluginCleanup] Попытка очистить самого себя ({plugin}) заблокирована — операция пропущена целиком"
+    services-failed: "[PluginCleanup] Не удалось разрегистрировать сервисы для {plugin}"
+    listeners-failed: "[PluginCleanup] Не удалось очистить слушатели событий для {plugin}"
+    messenger-failed: "[PluginCleanup] Не удалось очистить Plugin Messenger channels для {plugin}"
+    scheduler-failed: "[PluginCleanup] Не удалось отменить задачи планировщика для {plugin}"
+    introspector-failed: "[PluginCleanup] Не удалось сбросить кэш Introspector для {plugin}"
+    reflection-cache-failed: "[PluginCleanup] Не удалось очистить кэш ReflectionHelper для {plugin}"
+    paper-event-manager-failed: "[PluginCleanup] Не удалось разрегистрировать paperEventManager для {plugin}"
+    placeholderapi-failed: "[PluginCleanup] Не удалось разрегистрировать расширение PlaceholderAPI для {plugin}"
+    protocollib-failed: "[PluginCleanup] Не удалось удалить пакетные слушатели ProtocolLib для {plugin}"
+    packetevents-failed: "[PluginCleanup] Не удалось удалить слушатели PacketEvents для {plugin}"
+    thread-interrupt-failed: "[PluginCleanup] Не удалось прервать поток {thread} для {plugin}"
+    threads-failed: "[PluginCleanup] Не удалось очистить потоки для {plugin}"
+    jdbc-failed: "[PluginCleanup] Не удалось разрегистрировать JDBC драйверы для {plugin}"
+    paper-lifecycle-failed: "[PluginCleanup] Не удалось очистить Paper LifecycleManager для {plugin}"
+    paper-dependencies-failed: "[PluginCleanup] Не удалось очистить зависимости PaperPluginClassLoader для {plugin}"
+    static-fields-failed: "[PluginCleanup] Не удалось очистить статические поля для {plugin}"
+    safe-class-definer-failed: "[PluginCleanup] Не удалось очистить SafeClassDefiner для {plugin}"
+    javapluginloader-failed: "[PluginCleanup] Не удалось удалить загрузчик и кэши из JavaPluginLoader для {plugin}"
+    classes-table-failed: "[PluginCleanup] Не удалось очистить таблицу классов для {plugin}"
+    closeable-cl-failed: "[PluginCleanup] Не удалось закрыть Closeable ClassLoader для {plugin}"
+    urlclasspath-failed: "[PluginCleanup] Доступ к URLClassPath закрыт модульной системой, загрузчики внутри ucp не закрыть для {plugin}"
+    jar-close-failed: "[PluginCleanup] Не удалось закрыть jar в PluginClassLoader для {plugin}"
+    plugin-ref-failed: "[PluginCleanup] Не удалось обнулить ссылку на плагин в ClassLoader для {plugin}"
+    field-close-failed: "[PluginCleanup] Поле {field} плагина {plugin} не удалось прочитать или закрыть"
+    internal-loaders-failed: "[PluginCleanup] Не удалось очистить внутренние загрузчики для {plugin}"
+
+  pluginsearch:
+    cache-hit: "[Search] Отдаём результаты из кэша для «{query}» ({count} шт.)"
+    querying-sources: "[Search] Запрос к площадкам по «{query}» (источник: {source})"
+    source-no-response: "[PluginSearch] Одна из площадок не ответила на поиск"
+    not-all-sources-responded: "[PluginSearch] Не все площадки ответили за отведённое время, берём что успело прийти"
+    search-finished: "Поиск &#ffff00«{query}» &fзавершён: найдено &#00FF5A{count} &fрезультатов ({elapsed} мс)"
+    version-load-timeout: "[PluginSearch] Таймаут подгрузки версий, берём полученные данные"
+    version-fetch-failed: "[PluginSearch] Не удалось получить версию для {project}"
+    modrinth-search-failed: "[PluginSearch] Поиск в Modrinth не удался для {query}"
+    hangar-search-failed: "[PluginSearch] Поиск в Hangar не удался для {query}"
+    spiget-fetch-failed: "[PluginSearch] Не удалось получить ресурс Spiget по ID {id}"
+    spiget-search-failed: "[PluginSearch] Поиск в Spiget не удался для {query}"
+    github-repo-fetch-failed: "[PluginSearch] Не удалось получить репозиторий GitHub {repo}"
+    github-rate-limited: "[PluginSearch] GitHub Search API: превышен лимит запросов (Rate Limit 403). Укажите github-token в config.yml"
+    github-search-failed: "[PluginSearch] Поиск в GitHub не удался для {query}"
+
+  hotswapmanager:
+    started: "Система &#00FF5AHot-Swap &7(авто-перезагрузка jar) &#00FF5Aуспешно &fзапущена!"
+    watchservice-close-failed: "[HotSwap] Не удалось закрыть WatchService после неудачного запуска"
+    init-failed: "[HotSwap] Не удалось &#FF5D00инициализировать &fHot-Swap WatchService: &#FF5D00{error}&f"
+    close-error: "[HotSwap] Возникла &#FF5D00ошибка &fпри закрытии WatchService: &#FF5D00{error}&f"
+    overflow: "[HotSwap] Переполнение очереди WatchService (OVERFLOW), события изменений файлов могли быть потеряны"
+    task-rejected: "[HotSwap] Задача Hot-Swap &#FF5D00отклонена &fпланировщиком для &#FF5D00{file}&f: &#FF5D00{error}&f"
+    file-still-writing: "[HotSwap] Файл {file} изменён, но ещё дописывается на диск или повреждён"
+    preflight-failed: "[HotSwap] Файл &#ffff00{file} &fне прошёл предварительную проверку ({error}), авто-перезагрузка отменена"
+    updating-via-installer: "[HotSwap] Плагин {plugin} сейчас обновляется через установщик, авто-перезагрузка пропущена"
+    untrusted-load-blocked: "[HotSwap] Обнаружен новый файл {file}. Автозагрузка отключена в целях безопасности. Используйте /plm load"
+    protected-skip: "[HotSwap] Плагин &#ffff00«{plugin}» &#FB8808защищен &fот автоматической перезагрузки Hot-Swap"
+    apply-failed: "[HotSwap] Файл &#ffff00{file} &fне может быть применён к «{plugin}» ({error}), старый плагин оставлен активным"
+    old-move-failed: "[HotSwap] Не удалось переместить старый файл в .old {file}"
+    new-version-load-failed: "[HotSwap] Новая версия для &#FF5D00{plugin} &fне загрузилась, выполняется откат"
+    old-backup-delete-failed: "[HotSwap] Не удалось удалить прежний бэкап {file}"
+    move-attempt-failed: "[HotSwap] Попытка {attempt} перенести {file} не удалась"
+    delete-attempt-failed: "[HotSwap] Попытка {attempt} удалить {file} не удалась"
+
+  backupstore:
+    mtime-update-failed: "[BackupStore] Не удалось обновить время модификации {file}"
+    backup-failed: "[BackupStore] Не удалось создать резервную копию для {plugin}: {error}"
+    unreadable-file-skipped: "[BackupStore] Пропуск недоступного файла {file}: {error}"
+    file-access-error: "[BackupStore] Ошибка доступа к файлу {file}: {error}"
+    folder-backup-failed: "[BackupStore] Не удалось создать резервную копию папки данных для {plugin}: {error}"
+    restore-attempt-failed: "[BackupStore] Попытка {attempt} восстановить {file} не удалась"
+    restore-failed: "[BackupStore] Не удалось восстановить резервную копию {backup} в {target}"
+    folder-restore-failed: "[BackupStore] Не удалось восстановить резервную копию папки данных {backup}: {error}"
+    backup-check-failed: "[BackupStore] Не удалось проверить бэкап {file}"
+    prune-all-failed: "[BackupStore] Не удалось очистить старые резервные копии"
+    list-failed: "[BackupStore] Не удалось перечислить резервные копии для {plugin}"
+    old-copy-delete-failed: "[BackupStore] Не удалось удалить старую копию {file}"
+    timestamp-unparseable: "[BackupStore] В имени копии {name} нет разбираемой метки времени, берётся дата файла"
+
+  updateinstaller:
+    jar-overwrite-failed: "[UpdateInstaller] Не удалось перезаписать JAR для &#FF5D00{plugin}&f, сохраняю для перезапуска"
+    new-version-load-failed: "[UpdateInstaller] Новая версия &#ffff00{plugin} &fне загрузилась, выполняется откат"
+    jarindex-invalidate-failed: "[UpdateInstaller] Не удалось сбросить кэш индекса jar-файлов"
+    updated: "Плагин &#ffff00«{plugin}» &#00FF5Aуспешно &fобновлён: &#ffff00v{from} &f→ &#00FF5Av{to}"
+    staged-for-restart: "Плагин &#ffff00«{plugin}» &#00FF5Aскачан &fв папку update/ для применения при перезапуске сервера: &#ffff00v{from} &f→ &#00FF5Av{to}"
+    stage-for-restart-failed: "[UpdateInstaller] Не удалось подготовить обновление для перезапуска &#FF5D00{plugin}&f: {error}"
+    dependents-collect-failed: "[UpdateInstaller] Не удалось собрать зависимые плагины для {plugin}"
+    restarting-dependents: "[UpdateInstaller] Перезапускаю зависимые плагины после обновления &#FFFF00{plugin}&f: &#FFFF00{count}"
+    dependent-load-failed: "[UpdateInstaller] Зависимый плагин &#FF5D00{dependent} &fне загрузился после обновления {plugin}, может потребоваться перезапуск сервера"
+    rollback-failed: "[UpdateInstaller] Откат не удался: файл &#FF5D00{file} &fостался в неизвестном состоянии"
+    rollback-load-failed: "[UpdateInstaller] Прежняя версия &#FF5D00{plugin} &fне загрузилась после отката, нужен перезапуск сервера"
+    move-attempt-failed: "[UpdateInstaller] Попытка {attempt} переместить {source} в {destination} не удалась"
+    delete-attempt-failed: "[UpdateInstaller] Попытка {attempt} удалить {file} не удалась"
+    empty-folder-cleanup-failed: "[UpdateInstaller] Не удалось убрать пустую папку {folder}"
+    temp-file-delete-failed: "[UpdateInstaller] Не удалось удалить временный файл {file}"
+
+  plugindownloader:
+    transaction-error: "[PluginDownloader] Ошибка выполнения транзакции загрузки: {error}"
+    catalog-create-failed: "[PluginDownloader] Не удалось создать каталог для разбора зависимостей"
+    update-folder-write-failed: "[PluginDownloader] Не удалось сохранить &#FF5D00{plugin}&f в папку update/"
+    disk-write-failed: "[PluginDownloader] Ошибка записи &#FF5D00{plugin}&f на диск"
+    direct-link-failed: "[PluginDownloader] Не удалось получить прямую ссылку для {title}"
+    stage-validate-failed: "[PluginDownloader] Ошибка проверки и подготовки {title}"
+    post-install-refresh-failed: "[PluginDownloader] Не удалось обновить команды и индекс после установки"
+    rollback-unload-failed: "[PluginDownloader] Откат установки: не удалось выгрузить &#FF5D00{plugin}&f, плагин остался в памяти сервера"
+    rollback-delete-failed: "[PluginDownloader] Откат установки: не удалось удалить &#FF5D00{file}&f, файл остался в plugins/"
+    source-write-failed: "[PluginDownloader] Не удалось записать источник для &#FF5D00{plugin}&f в sources-custom.yml — проверка обновлений не будет знать, откуда он установлен"
+    modrinth-parse-failed: "[PluginDownloader] Не удалось разобрать ответ Modrinth"
+    hangar-parse-failed: "[PluginDownloader] Не удалось разобрать ответ Hangar"
+    github-parse-failed: "[PluginDownloader] Не удалось разобрать релизы GitHub для {repo}"
+    temp-file-delete-failed: "[PluginDownloader] Не удалось удалить временный файл {file}"
+    staging-cleanup-failed: "[PluginDownloader] Не удалось очистить staging-каталог"
+
+  reflectionhelper:
+    class-not-found: "[ReflectionHelper] Класс {class} не найден"
+    field-access-error: "[ReflectionHelper] Ошибка доступа к полю {class}#{field}"
+    field-not-found: "[ReflectionHelper] Поле {class}#{field} не найдено"
+    field-get-failed: "[ReflectionHelper] Не удалось получить значение поля {class}#{field}"
+    field-read-failed: "[ReflectionHelper] Не удалось прочитать поле {class}#{field}"
+    static-field-get-failed: "[ReflectionHelper] Не удалось получить статическое значение поля {class}#{field}"
+    field-set-failed: "[ReflectionHelper] Не удалось установить значение поля {class}#{field}"
+    static-field-set-failed: "[ReflectionHelper] Не удалось установить статическое значение поля {class}#{field}"
+    method-access-error: "[ReflectionHelper] Ошибка доступа к методу {class}#{method}"
+    method-not-found: "[ReflectionHelper] Метод {class}#{method} не найден"
+    method-invoke-error: "[ReflectionHelper] Ошибка вызова метода {class}#{method}"
+    access-not-opened: "[ReflectionHelper] Доступ к {description} не открыт, обращение может сорваться позже"
+
+  serverstatecleanup:
+    inventory-close-error-global: "[ServerStateCleanup] Ошибка при общем закрытии инвентаря игрока {player}"
+    inventory-close-error: "[ServerStateCleanup] Ошибка при закрытии инвентаря игрока {player}"
+    inventory-close-failed-count: "[ServerStateCleanup] Не удалось закрыть инвентари у {count} игроков для {plugin}"
+    attachment-cleanup-error: "[ServerStateCleanup] Ошибка при очистке permission attachment игрока {player}"
+    attachment-cleanup-failed-count: "[ServerStateCleanup] Не удалось очистить permission attachments у {count} игроков для {plugin}"
+    permission-remove-failed: "[ServerStateCleanup] Не удалось снять право {permission}"
+    dynamic-permission-remove-failed: "[ServerStateCleanup] Не удалось снять динамическое право {permission}"
+    permissions-cleanup-failed: "[ServerStateCleanup] Не удалось очистить разрешения для {plugin}"
+    metadata-cleanup-failed: "[ServerStateCleanup] Не удалось очистить metadata для {plugin}"
+    recipes-cleanup-failed: "[ServerStateCleanup] Не удалось очистить рецепты для {plugin}"
+    bossbars-cleanup-failed: "[ServerStateCleanup] Не удалось очистить bossbars для {plugin}"
+    helptopics-cleanup-failed: "[ServerStateCleanup] Не удалось очистить help topics для {plugin}"
+
+  sourcecatalog:
+    resource-not-found: "[SourceCatalog] Ресурс {resource} не найден, каталог пуст"
+    loaded: "[SourceCatalog] Загружено плагинов в каталоге: {count}"
+    load-failed: "[SourceCatalog] Не удалось загрузить каталог источников: {error}"
+    entry-no-params: "[SourceCatalog] Свои источники: у записи «{plugin}» нет параметров, она пропущена"
+    entry-no-valid-source: "[SourceCatalog] Свои источники: у записи «{plugin}» нет ни одного корректного источника"
+    custom-sources-loaded: "[SourceCatalog] Загружено своих источников обновлений: &#FFFF00{count}"
+    custom-file-read-failed: "[SourceCatalog] Не удалось прочитать файл своих источников обновлений"
+    source-missing-id: "[SourceCatalog] Свои источники: у «{plugin}» пропущен источник без поля id"
+    template-not-found: "[SourceCatalog] Шаблон {resource} не найден в jar"
+    custom-file-create-failed: "[SourceCatalog] Не удалось создать файл своих источников обновлений {file}"
+    mainclass-mismatch: "[SourceCatalog] Main-класс {mainClass} в каталоге принадлежит другому плагину, «{plugin}» не подтверждён по имени — источники не выдаются"
+    custom-mainclass-mismatch: "[SourceCatalog] Свои источники: у «{plugin}» указан main {required}, а установлен {installed} — запись не применяется"
+
+  jarvalidator:
+    null-file: "JarValidator: передан null файл"
+    file-missing: "JarValidator: файл {file} не существует на диске"
+    not-a-file: "JarValidator: путь {file} не является файлом"
+    file-too-small: "JarValidator: файл {file} слишком мал ({size} байт), возможно запись ещё не завершена"
+    no-descriptor: "JarValidator: в файле {file} отсутствуют дескрипторы plugin.yml и paper-plugin.yml"
+    corrupted-archive: "JarValidator: файл {file} поврежден или не является валидным архивом: {error}"
+    io-error: "JarValidator: ошибка ввода-вывода при чтении {file}: {error}"
+    unexpected-validation-error: "JarValidator: непредвиденная ошибка при валидации {file}: {error}"
+    descriptor-read-failed: "JarValidator: не удалось прочитать байты дескриптора"
+    yaml-parse-error: "JarValidator: ошибка парсинга YAML через YamlConfiguration: {error}"
+    name-read-failed: "JarValidator: не удалось прочитать имя плагина из {file}: {error}"
+    dependencies-read-failed: "JarValidator: не удалось прочитать зависимости из {file}"
+    missing-file: "Файл плагина не найден на диске"
+    path-not-file: "Указанный путь не является файлом"
+    too-small: "Файл слишком мал ({size} байт) — возможно, он ещё дописывается на диск"
+    unknown: "Неизвестная ошибка"
+    fabric: "Файл является модом Fabric, а не плагином для Paper/Spigot"
+    quilt: "Файл является модом Quilt, а не плагином для Paper/Spigot"
+    neoforge: "Файл является модом NeoForge, а не плагином для Paper/Spigot"
+    forge: "Файл является модом Forge, а не плагином для Paper/Spigot"
+    velocity: "Файл является прокси-плагином Velocity, а не серверным плагином"
+    bungeecord: "Файл является прокси-плагином BungeeCord, а не серверным плагином"
+    no-name: "В дескрипторе не указано имя плагина (поле 'name')"
+    name-mismatch: "Имя плагина внутри JAR («{declared}») не совпадает с целевым плагином («{expected}»)"
+    incompatible-java: "Требуется Java {required}+, а ваш сервер работает на Java {current}"
+    requires-cold-restart: "Плагин использует paper-plugin.yml или Paper Bootstrapper — ядро Paper запрещает перезагружать такие плагины во время работы сервера (требуется перезапуск сервера)"
+    missing-dependencies: "Отсутствуют обязательные зависимости: {deps}"
+    corrupted-jar: "JAR-файл повреждён или не является валидным ZIP-архивом: {error}"
+    unexpected: "Непредвиденная ошибка при валидации: {error}"
+
+  configupdater:
+    default-load-failed: "[ConfigUpdater] Не удалось загрузить дефолтный конфиг {resource}"
+    version-fragment-nonnumeric: "[ConfigUpdater] Нечисловой фрагмент версии «{fragment}», принят за 0"
+    updated: "Конфиг {file} успешно обновлен до версии {version}"
+    version-bumped: "Версия конфига {file} обновлена до {version}"
+    atomic-move-unsupported: "[ConfigUpdater] ATOMIC_MOVE не поддерживается файловой системой, используется стандартный REPLACE_EXISTING"
+    save-failed: "[ConfigUpdater] Ошибка сохранения конфига {file}"
+    temp-file-delete-failed: "[ConfigUpdater] Не удалось удалить временный файл {file}"
+    default-read-error: "[ConfigUpdater] Ошибка чтения ресурса по умолчанию {resource}"
+    backup-created: "[ConfigUpdater] Создана резервная копия конфига: {file}"
+    backup-failed: "[ConfigUpdater] Не удалось создать бэкап конфига {file}"
+    old-backup-delete-failed: "[ConfigUpdater] Не удалось удалить старый бэкап {file}"
+    header-footer-unsupported: "[ConfigUpdater] Копирование шапки/подвала конфига не поддерживается этой версией Bukkit API, пропущено"
+
+  lifecyclemanager:
+    loading-file: "[Lifecycle] Загрузка файла {file}"
+    unloading: "[Lifecycle] Выгрузка плагина {plugin}"
+    reloading: "[Lifecycle] Перезагрузка плагина {plugin}"
+    cascade-plan: "[Cascade] План каскадного перезапуска для «{plugin}»: {order}"
+    cascade-skipped: "[Cascade] Каскад: плагин &#ffff00{plugin} &fпропущен при каскаде ({error})"
+    cascade-no-jar: "[Cascade] Каскад: для &#ffff00{plugin} &fне найден пригодный &#ffff00.jar&f, выгрузка этого плагина отменена"
+    cascade-rollback-failed: "[Cascade] Откат каскада: не удалось вернуть &#FF5D00{plugin}&f, плагин остался выгруженным"
+    file-outside-plugins-dir: "[Lifecycle] Файл &#ffff00{file} &#FB8808находится вне папки &fplugins/, загрузка &#FB8808отклонена&f"
+    canonical-path-check-failed: "[Lifecycle] Возникла &#FF5D00ошибка &fпроверки канонического пути для &#FF5D00{file}&f"
+
+  downloadclient:
+    scheme-compare-failed: "[DownloadClient] Не удалось сравнить схемы {original} и {candidate}"
+    insecure-downgrade: "[DownloadClient] Загрузка прервана: сервер увёл с &#FF5D00https &fна незащищённый &#FF5D00{protocol}&f — файл мог быть подменён по дороге"
+    redirect-no-location: "[DownloadClient] Загрузка прервана: редирект без адреса назначения"
+    bad-status: "[DownloadClient] Загрузка не удалась, сервер ответил кодом &#FF5D00{status}&f"
+    file-too-large-declared: "[DownloadClient] Файл слишком большой ({mb} МБ), загрузка отменена"
+    too-many-redirects: "[DownloadClient] Загрузка прервана: слишком много редиректов"
+    download-failed: "[DownloadClient] Не удалось скачать файл: {error}"
+    size-limit-exceeded: "[DownloadClient] Загрузка превысила лимит размера и была прервана"
+    downloaded: "[Download] Скачано {mb} МБ в {file}"
+
+  dependencyresolver:
+    no-jar: "[DependencyResolver] Для {owner} не передан .jar, зависимости прочитать невозможно"
+    depth-limit: "[DependencyResolver] Достигнут предел глубины {maxDepth} на {owner}"
+    cycle-detected: "[DependencyResolver] Обнаружен цикл зависимостей: {details}"
+    jar-not-in-index: "[DependencyResolver] Не удалось найти jar зависимости {dependency} в индексе"
+    jar-fetch-failed: "[DependencyResolver] Не удалось получить .jar зависимости {dependency} для разбора"
+    provides-read-failed: "[DependencyResolver] Не удалось прочитать provides у плагина {plugin}"
+    no-name-match: "[DependencyResolver] Ни один результат поиска не подошёл по имени для зависимости {dependency}, лучший был {best}"
+    source-not-found: "[DependencyResolver] Не удалось найти источник для зависимости {dependency}"
+
+  updateservice:
+    check-start: "[Update] Запуск проверки обновлений для {count} плагинов"
+    check-error: "[UpdateService] Проверка обновлений завершилась с ошибкой: {error}"
+    check-finished: "Проверка обновлений завершена: проверено &#ffff00{count} &fплагинов, доступно обновлений: &#00FF5A{available} &f({elapsed} мс)"
+    check-interrupted: "[UpdateService] Проверка прервана на {plugin}"
+    check-failed: "[UpdateService] Не удалось проверить {plugin}"
+    jarref-title-unknown: "[JarScanner] У ссылки {source}:{ref} из {plugin} не удалось узнать название проекта, отклонено"
+    jarref-companion-rejected: "[JarScanner] Ссылка {source}:{ref} из {plugin} ведёт на спутник «{title}», отклонено"
+    jarref-low-similarity: "[JarScanner] Ссылка {source}:{ref} из {plugin} ведёт на «{title}» (схожесть {similarity}), отклонено"
+
+  deletecommand:
+    backup-failed: "[DeleteCommand] Не удалось сохранить бэкап перед удалением для {plugin}"
+    folder-backup-failed: "[DeleteCommand] Не удалось сохранить бэкап папки данных для {plugin}"
+    file-delete-error: "[DeleteCommand] Ошибка удаления файла {file}"
+    canonical-path-check-failed: "[DeleteCommand] Не удалось проверить канонический путь для {file}"
+    delete-attempt-failed: "[DeleteCommand] Попытка {attempt} удалить {file} не удалась"
+    file-locked: "[DeleteCommand] Файл &#FF5D00{file}&f удалить не удалось: его держит процесс сервера. Плагин выгружен, но файл на месте и вернётся после перезапуска. Бэкап сохранён"
+    folder-delete-error: "[DeleteCommand] Ошибка удаления папки данных для {plugin}"
+
+  brigadiermanager:
+    methodhandle-unavailable: "[BrigadierManager] Метод CraftServer#syncCommands недоступен через MethodHandle"
+    sync-methodhandle-failed: "[BrigadierManager] Не удалось синхронизировать команды через MethodHandle"
+    sync-reflection-failed: "[BrigadierManager] Не удалось синхронизировать команды через рефлексию"
+    cleanup-error: "[BrigadierManager] Ошибка очистки команд для {plugin}"
+    unregister-failed: "[BrigadierManager] Не удалось отменить регистрацию команды {command} для {plugin}"
+    nodes-cleanup-failed: "[BrigadierManager] Не удалось очистить узлы Brigadier для {plugin}"
+
+  pluginjarindex:
+    canonical-path-check-failed: "[PluginJarIndex] Не удалось проверить канонический путь для {file}"
+    query-no-match: "[PluginJarIndex] По запросу «{query}» не найден ни один jar в plugins/"
+    indexed: "[PluginJarIndex] Проиндексировано jar-файлов в plugins/: {count}"
+    duplicate-jar: "[PluginJarIndex] В папке plugins лежат два файла плагина &#FF5D00{plugin}&f: {first} и {second}. Сервер не сможет загрузить оба, лишний нужно удалить!"
+    no-descriptor: "[PluginJarIndex] В {file} нет ни plugin.yml, ни paper-plugin.yml"
+    descriptor-read-failed: "[PluginJarIndex] Не удалось прочитать дескриптор из {file}: {error}"
+
+  modrinthsource:
+    hash-batch-failed: "[ModrinthSource] Пакетный запрос по хешам не выполнен"
+    candidate-author-mismatch: "[ModrinthSource] Кандидат {slug} отклонён, автор «{remoteAuthor}» не совпадает с автором плагина"
+    candidate-no-corroboration: "[ModrinthSource] Кандидат {slug} отклонён, нет подтверждения автором или брендом"
+    ambiguous-match: "[ModrinthSource] Имени «{plugin}» одинаково хорошо соответствует {count} проектов, совпадение помечено неоднозначным"
+    rate-limited: "[ModrinthSource] Modrinth ограничил частоту запросов, проверка обновлений отложена"
+    version-parse-failed: "[ModrinthSource] Не удалось разобрать версию проекта {project}"
+
+  logcatalog:
+    reload-failed: "[LogCatalog] Не удалось перезагрузить каталог логов — сообщения будут печататься сырыми ключами"
+
+  pluginmetahelper:
+    version-not-substituted: "[PluginMetaHelper] Версия в plugin.yml осталась подстановкой сборки: {placeholder}. В pom.xml не включена фильтрация ресурсов — плагин не знает свою версию."
+    version-pluginmeta-failed: "[PluginMetaHelper] Не удалось прочитать версию из PluginMeta для {plugin}"
+    version-description-failed: "[PluginMetaHelper] Не удалось прочитать версию из PluginDescriptionFile для {plugin}"
+    authors-pluginmeta-failed: "[PluginMetaHelper] Не удалось прочитать авторов из PluginMeta для {plugin}"
+    authors-description-failed: "[PluginMetaHelper] Не удалось прочитать авторов из PluginDescriptionFile для {plugin}"
+    permissions-description-failed: "[PluginMetaHelper] Не удалось прочитать права из PluginDescriptionFile для {plugin}"
+    permissions-pluginmeta-failed: "[PluginMetaHelper] Не удалось прочитать права из PluginMeta для {plugin}"
+
+  legacybukkitbridge:
+    enable-error: "[LegacyBukkitBridge] Ошибка включения плагина {plugin}"
+    disable-error: "[LegacyBukkitBridge] Ошибка выключения плагина {plugin}"
+    load-error: "[LegacyBukkitBridge] Ошибка загрузки плагина из {file}"
+    unload-error: "[LegacyBukkitBridge] Ошибка выгрузки плагина {plugin}"
+    paperplugin-check-error: "[LegacyBukkitBridge] Ошибка проверки paper-plugin.yml в {file}"
+
+  nettyguard:
+    player-cleanup-error: "[NettyGuard] Ошибка очистки пайплайна игрока {player}"
+    server-cleanup-failed: "[NettyGuard] Не удалось обойти пул соединений сервера для {plugin}"
+    cleanup-failed-count: "[NettyGuard] Не удалось обработать пайплайн у {count} игроков при выгрузке {plugin}"
+    handler-remove-failed: "[NettyGuard] Не удалось снять обработчик {handler} с пайплайна"
+    pipeline-inspect-failed: "[NettyGuard] Не удалось просмотреть pipeline соединения"
+    sync-timeout: "[NettyGuard] Истекло время ожидания синхронизации сетевых потоков Netty"
+
+  httpjson:
+    host-disabled: "[HttpJson] Хост {host} временно отключен из-за повторных ошибок подключения на 45 сек"
+    raw-request-failed: "[HttpJson] Raw-запрос {url} не выполнен: {error}"
+    request-failed: "[HttpJson] Запрос {method} {url} не выполнен: {error}"
+    ratelimit-header-unreadable: "[HttpJson] Заголовок x-ratelimit-remaining нечитаем: {value}"
+    response-too-large: "[HttpJson] Ответ площадки превысил лимит размера и был отброшен"
+
+  githubsource:
+    invalid-repo-ref: "[GithubSource] Ссылка на репозиторий «{ref}» некорректна, запрос не отправлен"
+    rate-limited-no-token: "[GithubSource] GitHub исчерпал лимит запросов (60 в час без токена). Пока лимит не сбросится, версии берутся из ленты релизов, а автоустановка для плагинов с GitHub недоступна. Укажите &#ffff00settings.updates.github-token&f в конфиге, чтобы поднять лимит до 5000 в час"
+    rate-limited-with-token: "[GithubSource] GitHub исчерпал лимит запросов даже с токеном. Автоустановка для плагинов с GitHub будет недоступна до сброса лимита"
+    atom-feed-failed: "[GithubSource] Не удалось прочитать Atom ленту для {ref}"
+    no-matching-asset: "[GithubSource] Ни один ассет не похож на {plugin} (лучшее совпадение {bestScore})"
+
+  spigotsource:
+    candidate-no-brand: "[SpigotSource] Кандидат «{title}» отклонён, нет подтверждения брендом"
+    ambiguous-match: "[SpigotSource] Имени «{plugin}» одинаково хорошо соответствует {count} ресурсов, совпадение помечено неоднозначным"
+    rate-limited: "[SpigotSource] Spiget ограничил частоту запросов, проверка обновлений отложена"
+    resource-attributes-failed: "[SpigotSource] Не удалось получить признаки ресурса {resourceId}"
+    version-parse-failed: "[SpigotSource] Не удалось разобрать версию ресурса {ref}"
+
+  actionmanager:
+    sendtitle-failed: "[ActionManager] Player.sendTitle не сработал, используется player.showTitle"
+    title-error: "[ActionManager] Возникла &#FF5D00ошибка &fотображения Title для игрока &#ffff00{player}&f: &#FF5D00{error}&f"
+    sound-error: "[ActionManager] Возникла &#FF5D00ошибка &fвоспроизведения звука &#FF5D00«{sound}»&f: &#FF5D00{error}&f"
+    unknown-sound: "[ActionManager] Указан &#FF5D00неизвестный &fзвук &#FF5D00«{sound}» &fв конфигурации действия"
+
+  identityscanner:
+    jar-not-found: "[IdentityScanner] Не найден .jar для {plugin}, проверка обновлений невозможна"
+    descriptor-read-failed: "[IdentityScanner] Не удалось прочитать дескриптор из {file}"
+    pending-update-check-failed: "[IdentityScanner] Не удалось проверить отложенное обновление для {plugin}"
+    hash-failed: "[IdentityScanner] Не удалось посчитать хеш файла {file}"
+
+  serverprofile:
+    java-version-parse-failed: "[ServerProfile] Не удалось разобрать java.specification.version={spec}"
+    getminecraftversion-missing: "[ServerProfile] Bukkit.getMinecraftVersion() отсутствует, версия берётся из getBukkitVersion()"
+    getminecraftversion-failed: "[ServerProfile] Не удалось прочитать Bukkit.getMinecraftVersion()"
+    version-detect-failed: "[ServerProfile] Не удалось определить версию Minecraft, проверка совместимости обновлений будет ограничена"
+
+  updatecache:
+    misses-save-failed: "[UpdateCache] Не удалось сохранить кэш промахов поиска на диск"
+    corrupted-miss-entry: "[UpdateCache] Повреждённая запись в файле промахов: {line}"
+    misses-restored: "[UpdateCache] Восстановлено промахов поиска с прошлого запуска: {count}"
+    misses-load-failed: "[UpdateCache] Не удалось прочитать кэш промахов поиска с диска"
+
+  ruspigotsource:
+    rate-limit-interrupted: "[RusPigotSource] Пауза между запросами прервана"
+    candidate-rejected: "[RusPigotSource] Кандидат «{title}» отклонён, нет подтверждения брендом и поле исходного кода пусто"
+    date-like-value: "[RusPigotSource] Строка «{value}» похожа на дату, версией не считается"
+    non-github-link: "[RusPigotSource] Поле исходного кода содержит не-github ссылку: {link}"
+
+  usercatalogwriter:
+    header-read-failed: "[UserCatalogWriter] Не удалось прочитать шапку sources-custom.yml из ресурсов"
+    atomic-move-unsupported: "[UserCatalogWriter] ATOMIC_MOVE не поддерживается файловой системой, используется стандартный REPLACE_EXISTING"
+    save-failed: "[UserCatalogWriter] Не удалось сохранить источник для {plugin} в {file}"
+    temp-file-delete-failed: "[UserCatalogWriter] Не удалось удалить временный файл {file}"
+
+  usagecommand:
+    permission-search-failed: "[UsageCommand] Поиск по правам плагинов прерван"
+    knowncommands-read-failed: "[UsageCommand] Не удалось прочитать knownCommands из SimpleCommandMap"
+    permissions-collect-failed: "[UsageCommand] Не удалось собрать права из PluginManager"
+
+  configmanager:
+    reloading: "Перезагрузка всех &#ffff00файлов конфигурации&f"
+    reloaded: "Конфигурация плагина &#00FF5Aуспешно &fперезагружена!"
+    reload-error: "Возникла &#FF5D00ошибка &fперезагрузки конфигурации: &#FF5D00{error}&f"
+
+  dependencygraph:
+    provides-reflection-failed: "[DependencyGraph] Не удалось прочитать provides через рефлексию"
+    dependencies-reflection-failed: "[DependencyGraph] Не удалось прочитать зависимости через рефлексию"
+    getname-unavailable: "[DependencyGraph] GetName() недоступен, имя берётся из toString()"
+
+  jarscanner:
+    canonicalpath-failed: "[JarScanner] GetCanonicalPath не удался, используется getAbsolutePath: {error}"
+    scan-failed: "[JarScanner] Не удалось просканировать {jar}"
+    refs-found: "[JarScanner] В {jar} найдено ссылок: {count} за {ms} мс ({kb} КБ)"
+
+  hangarsource:
+    candidate-rejected: "[HangarSource] Кандидат {slug} отклонён, нет подтверждения автором или брендом"
+    rate-limited: "[HangarSource] Hangar ограничил частоту запросов, проверка обновлений отложена"
+    version-parse-failed: "[HangarSource] Не удалось разобрать версию проекта {project}"
+
+  foliabridge:
+    cancel-tasks-failed: "[FoliaBridge] Не удалось отменить задачи Folia для {plugin}"
+    cancel-entity-tasks-failed: "[FoliaBridge] Не удалось отменить entity-задачи {plugin} у игрока {player}"
+
+  platformdetector:
+    unsupported-core: "Неподдерживаемое ядро (требуется Paper)"
+    probe-failed: "[PlatformDetector] Проверка класса ядра сорвалась не из-за его отсутствия: {failure}"
+    getname-failed: "[PlatformDetector] Не удалось прочитать Bukkit.getName()"
+
+  dumpcommand:
+    saved: "Дамп серверного окружения &#00FF5Aуспешно &fсохранён в файл &#ffff00{file}"
+    failed: "Возникла &#FF5D00ошибка &fсоздания дампа: &#FF5D00{error}&f"
+
+  listcommand:
+    jar-list-failed: "[ListCommand] Не удалось получить список jar"
+    unloaded-jar-list-failed: "[ListCommand] Не удалось получить список незагруженных jar"
+
+  unloadsafetychecker:
+    marker-check-failed: "[UnloadSafetyChecker] Ошибка проверки маркера {marker} для {plugin}"
+    servicesmanager-scan-failed: "[UnloadSafetyChecker] Не удалось просканировать ServicesManager для {plugin}"
+
+  manualsourcelistener:
+    hide-message-failed: "[ManualSourceListener] Не удалось скрыть сообщение от других игроков"
+
+  directsource:
+    endpoint-missing: "[DirectSource] У {ref} в каталоге нет endpoint или downloadPath"
+    no-version-or-url: "[DirectSource] Эндпоинт {endpoint} не содержит версию или ссылку"
+
+  jenkinssource:
+    endpoint-missing: "[JenkinsSource] У {ref} в каталоге нет endpoint"
+    no-matching-artifact: "[JenkinsSource] Ни один артефакт не похож на {plugin}"
+
+  hexcolors:
+    minimessage-failed: "[HexColors] MiniMessage не справился ({stage}), используется автономный парсер: {error}"
+    rainbow-phase-parse-failed: "[HexColors] Не удалось разобрать фазу радуги «{phase}»"
+
+  plugininfo:
+    plugin-yml-read-failed: "[PluginInfo] Не удалось прочитать plugin.yml, зависимости неизвестны"
+
+  plugmanapiimpl:
+    backup-before-delete-failed: "[PlugManAPIImpl] Не удалось сохранить бэкап перед удалением {plugin}"
+
+  modernpaperbridge:
+    paperpluginmanager-cleanup-failed: "[ModernPaperBridge] Не удалось очистить PaperPluginManager для {plugin}"
+
+  updatecommand:
+    reloading-dependents: "Перезагрузка зависимых плагинов после пакетного обновления ({count} шт.): {plugins}"
+
+  chatbuttonfactory:
+    url-looks-like-markup: "[ChatButtonFactory] Значение url похоже на разметку, а не на ссылку, кнопка не станет кликабельной: {value}"
+
+  downloadservice:
+    search-failed: "[DownloadService] Ошибка поиска при скачивании по URL {url}"
+
+  manualsources:
+    source-verify-failed: "[ManualSources] Ошибка проверки источника {source} ({ref})"
+
+  bstats:
+    metrics-start-failed: "[BStats] Метрики не запустились"
+
+  standalonetagparser:
+    page-number-parse-failed: "[HexColors] Номер страницы «{value}» не число, click проигнорирован"
+
+  updatechecker:
+    check-failed: "Возникла &#FF5D00ошибка &fпроверки обновлений: &#FF5D00{error}&f"
+    hover-fallback: "\n &#FFFF00▶ &fНажмите, чтобы &#FFFF00перейти &fпо ссылке\n"
+
+  startup:
+    reading-config: "&#00C9FF▶ PlugMan &8| &fЧтение &#00FF5Aфайлов конфигурации &fи &#00FF5Aзагрузка &fресурсов"
+    detecting-platform: "&#00C9FF▶ PlugMan &8| &fОпределение среды: &#00FF5A{platform}&f"
+    init-core: "&#00C9FF▶ PlugMan &8| &fИнициализация ядра &#00FF5Aцикла &fи &#00FF5Aпамяти &fплагина"
+    registering-commands: "&#00C9FF▶ PlugMan &8| &fРегистрация &#00FF5Aкоманд &fи &#00FF5Aавтодополнений&f"
+    init-hotswap: "&#00C9FF▶ PlugMan &8| &fИнициализация системы &#00FF5AHot-Swap&f"
+    init-updates: "&#00C9FF▶ PlugMan &8| &fИнициализация &#00FF5Aсистемы проверки &fобновлений"
+    registering-api: "&#00C9FF▶ PlugMan &8| &fРегистрация публичного &#00FF5AAPI&f"
+    init-failed: "Критический &#FF5D00сбой &fинициализации: &#FF5D00{error}&f"
+    banner-enabled: "&#00FF5A          ▶ &fПлагин &#00FF5Aуспешно &fзагружен и включен!"
+    banner-version: "&#ffff00               ▶ &fВерсия плагина: &#ffff00v{version}"
+    banner-platform: "&#ffff00               ▶ &fПлатформа ядра: &#ffff00{platform}"
+    banner-plugins: "&#ffff00               ▶ &fОбнаружено плагинов: &#ffff00{count}"
+    banner-time: "&#ffff00               ▶ &fВремя загрузки: &#ffff00{ms} мс."
+
+  shutdown:
+    starting: "&#FF5D00▶ PlugMan &8| &fНачало &#FF5D00выгрузки &fплагина"
+    stopping-hotswap: "&#FF5D00▶ PlugMan &8| &fОстановка службы &#FF5D00Hot-Swap&f"
+    stopping-updatechecker: "&#FF5D00▶ PlugMan &8| &fОстановка службы &#FF5D00UpdateChecker&f"
+    clearing-caches: "&#FF5D00▶ PlugMan &8| &fОчистка внутренних &#FF5D00кэшей &fи ресурсов"
+    banner-disabled: "&#FF5D00        ▶ &fПлагин &#FF5D00успешно &fвыгружен и выключен"
+    banner-version: "&#ffff00               ▶ &fВерсия плагина: &#ffff00v{version}"
+    banner-time: "&#ffff00               ▶ &fВремя выгрузки: &#ffff00{ms} мс."
+
+  configlocalizer:
+    applied: "[ConfigLocalizer] Комментарии файла &#ffff00{file} &fпереведены на язык &#00FF5A{language}&f, значения сохранены"
+    no-template: "[ConfigLocalizer] Для языка «{language}» нет шаблона конфига, комментарии оставлены как есть"
+    template-missing: "[ConfigLocalizer] Не удалось прочитать шаблон конфига {resource} из ресурсов"
+    key-would-be-lost: "[ConfigLocalizer] Перевод комментариев отменён, иначе потерялся бы параметр «{key}»"
+    value-would-change: "[ConfigLocalizer] Перевод комментариев отменён, иначе изменилось бы значение «{key}»"
+    atomic-move-unsupported: "[ConfigLocalizer] ATOMIC_MOVE не поддерживается файловой системой, используется стандартный REPLACE_EXISTING"
+    failed: "[ConfigLocalizer] Не удалось перевести комментарии в файле {file}"
+
+  erroranalyzer:
+    unknown: "Неизвестная ошибка"
+    unsupported-java: "Плагин скомпилирован под Java {required}+, а сервер работает на Java {current}"
+    unsupported-api: "Плагин требует версию API {api}, которая не поддерживается сервером"
+    missing-deps: "Отсутствуют обязательные зависимости: {deps}"
+    class-not-found: "Не найден класс: {class}"
+    incompatible-core: "Плагин несовместим с текущей версией ядра: отсутствует {member}"
+    incompatible-class-change: "Плагин скомпилирован под несовместимую версию API или интерфейсов ядра сервера"
+    database-locked: "База данных плагина заблокирована другим процессом или активным соединением"
+    port-in-use: "Сетевой порт или адрес уже занят другим процессом"
+    circular-deps: "Обнаружена циклическая зависимость между плагинами"
+    invalid-description: "Файл plugin.yml / paper-plugin.yml повреждён или отсутствует"
+    duplicate-plugin: "Конфликт плагинов: в папке plugins/ уже есть другой плагин с таким же именем или провайдером"
+    paper-bootstrapper: "Плагин использует Paper Bootstrapper (раннюю загрузку до старта сервера), ядро Paper запрещает загружать такие плагины на лету"
+
+  prefix:
+    info: "&#00C9FF▶ PlugMan &8| &f"
+    success: "&#92FE9D▶ PlugMan &8| &f"
+    warn: "&#FB8808▶ Внимание &8| &f"
+    error: "&#FF5D00▶ Ошибочка! &8| &f"

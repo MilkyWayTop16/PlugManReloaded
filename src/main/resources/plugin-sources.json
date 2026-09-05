@@ -1,0 +1,513 @@
+{
+  "version": 2,
+  "plugins": [
+    {
+      "main": "me.lucko.luckperms.bukkit.loader.BukkitLoaderPlugin",
+      "name": "LuckPerms",
+      "sources": [
+        {
+          "id": "direct",
+          "ref": "luckperms",
+          "endpoint": "https://metadata.luckperms.net/data/all",
+          "versionPath": "version",
+          "downloadPath": "downloads.bukkit",
+          "url": "https://luckperms.net/download"
+        },
+        {
+          "id": "jenkins",
+          "ref": "luckperms",
+          "endpoint": "https://ci.lucko.me/job/LuckPerms",
+          "url": "https://luckperms.net/download"
+        }
+      ]
+    },
+    {
+      "main": "com.earth2me.essentials.Essentials",
+      "name": "Essentials",
+      "sources": [
+        {
+          "id": "github",
+          "ref": "EssentialsX/Essentials",
+          "url": "https://github.com/EssentialsX/Essentials"
+        },
+        {
+          "id": "jenkins",
+          "ref": "essentialsx",
+          "endpoint": "https://ci.ender.zone/job/EssentialsX",
+          "url": "https://essentialsx.net/downloads.html"
+        }
+      ]
+    },
+    {
+      "main": "com.earth2me.essentials.antibuild.EssentialsAntiBuild",
+      "name": "EssentialsAntiBuild",
+      "sources": [
+        {
+          "id": "github",
+          "ref": "EssentialsX/Essentials",
+          "url": "https://github.com/EssentialsX/Essentials"
+        },
+        {
+          "id": "jenkins",
+          "ref": "essentialsx",
+          "endpoint": "https://ci.ender.zone/job/EssentialsX",
+          "url": "https://essentialsx.net/downloads.html"
+        }
+      ]
+    },
+    {
+      "main": "com.earth2me.essentials.chat.EssentialsChat",
+      "name": "EssentialsChat",
+      "sources": [
+        {
+          "id": "github",
+          "ref": "EssentialsX/Essentials",
+          "url": "https://github.com/EssentialsX/Essentials"
+        },
+        {
+          "id": "jenkins",
+          "ref": "essentialsx",
+          "endpoint": "https://ci.ender.zone/job/EssentialsX",
+          "url": "https://essentialsx.net/downloads.html"
+        }
+      ]
+    },
+    {
+      "main": "net.essentialsx.discord.EssentialsDiscord",
+      "name": "EssentialsDiscord",
+      "sources": [
+        {
+          "id": "github",
+          "ref": "EssentialsX/Essentials",
+          "url": "https://github.com/EssentialsX/Essentials"
+        },
+        {
+          "id": "jenkins",
+          "ref": "essentialsx",
+          "endpoint": "https://ci.ender.zone/job/EssentialsX",
+          "url": "https://essentialsx.net/downloads.html"
+        }
+      ]
+    },
+    {
+      "main": "net.essentialsx.discordlink.EssentialsDiscordLink",
+      "name": "EssentialsDiscordLink",
+      "sources": [
+        {
+          "id": "github",
+          "ref": "EssentialsX/Essentials",
+          "url": "https://github.com/EssentialsX/Essentials"
+        },
+        {
+          "id": "jenkins",
+          "ref": "essentialsx",
+          "endpoint": "https://ci.ender.zone/job/EssentialsX",
+          "url": "https://essentialsx.net/downloads.html"
+        }
+      ]
+    },
+    {
+      "main": "com.earth2me.essentials.geoip.EssentialsGeoIP",
+      "name": "EssentialsGeoIP",
+      "sources": [
+        {
+          "id": "github",
+          "ref": "EssentialsX/Essentials",
+          "url": "https://github.com/EssentialsX/Essentials"
+        },
+        {
+          "id": "jenkins",
+          "ref": "essentialsx",
+          "endpoint": "https://ci.ender.zone/job/EssentialsX",
+          "url": "https://essentialsx.net/downloads.html"
+        }
+      ]
+    },
+    {
+      "main": "com.earth2me.essentials.protect.EssentialsProtect",
+      "name": "EssentialsProtect",
+      "sources": [
+        {
+          "id": "github",
+          "ref": "EssentialsX/Essentials",
+          "url": "https://github.com/EssentialsX/Essentials"
+        },
+        {
+          "id": "jenkins",
+          "ref": "essentialsx",
+          "endpoint": "https://ci.ender.zone/job/EssentialsX",
+          "url": "https://essentialsx.net/downloads.html"
+        }
+      ]
+    },
+    {
+      "main": "com.earth2me.essentials.spawn.EssentialsSpawn",
+      "name": "EssentialsSpawn",
+      "sources": [
+        {
+          "id": "github",
+          "ref": "EssentialsX/Essentials",
+          "url": "https://github.com/EssentialsX/Essentials"
+        },
+        {
+          "id": "jenkins",
+          "ref": "essentialsx",
+          "endpoint": "https://ci.ender.zone/job/EssentialsX",
+          "url": "https://essentialsx.net/downloads.html"
+        }
+      ]
+    },
+    {
+      "main": "com.earth2me.essentials.xmpp.EssentialsXMPP",
+      "name": "EssentialsXMPP",
+      "sources": [
+        {
+          "id": "github",
+          "ref": "EssentialsX/Essentials",
+          "url": "https://github.com/EssentialsX/Essentials"
+        },
+        {
+          "id": "jenkins",
+          "ref": "essentialsx",
+          "endpoint": "https://ci.ender.zone/job/EssentialsX",
+          "url": "https://essentialsx.net/downloads.html"
+        }
+      ]
+    },
+    {
+      "main": "net.milkbowl.vault.Vault",
+      "name": "Vault",
+      "sources": [
+        {
+          "id": "spigot",
+          "ref": "34315",
+          "url": "https://www.spigotmc.org/resources/vault.34315/"
+        },
+        {
+          "id": "github",
+          "ref": "MilkBowl/Vault",
+          "url": "https://github.com/MilkBowl/Vault"
+        }
+      ]
+    },
+    {
+      "main": "fr.andross.banitem.BanItem",
+      "name": "BanItem",
+      "sources": [
+        {
+          "id": "spigot",
+          "ref": "67701",
+          "url": "https://www.spigotmc.org/resources/banitem-1-7-1-20-nbt-check-world-guard-custom-inventory-and-more.67701/"
+        }
+      ]
+    },
+    {
+      "main": "me.chocolf.moneyfrommobs.MoneyFromMobs",
+      "name": "MoneyFromMobs",
+      "sources": [
+        {
+          "id": "github",
+          "ref": "chocolf/MoneyFromMobs",
+          "url": "https://github.com/chocolf/MoneyFromMobs"
+        }
+      ]
+    },
+    {
+      "main": "com.github.jikoo.enchantableblocks.EnchantableBlocksPlugin",
+      "name": "EnchantableBlocks",
+      "sources": [
+        {
+          "id": "github",
+          "ref": "Jikoo/EnchantableBlocks",
+          "url": "https://github.com/Jikoo/EnchantableBlocks"
+        }
+      ]
+    },
+    {
+      "main": "com.ssomar.executableblocks.ExecutableBlocks",
+      "name": "ExecutableBlocks",
+      "sources": [
+        {
+          "id": "spigot",
+          "ref": "94696",
+          "url": "https://www.spigotmc.org/resources/executable-blocks-add-activators-on-your-blocks.94696/"
+        }
+      ]
+    },
+    {
+      "main": "ru.mrbrikster.chatty.Chatty",
+      "name": "Chatty",
+      "sources": [
+        {
+          "id": "github",
+          "ref": "Brikster/Chatty",
+          "url": "https://github.com/Brikster/Chatty"
+        },
+        {
+          "id": "spigot",
+          "ref": "59411",
+          "url": "https://www.spigotmc.org/resources/chatty-lightweight-universal-bukkit-chat-system-solution.59411/"
+        }
+      ]
+    },
+    {
+      "main": "io.github.battlepass.BattlePlugin",
+      "name": "BattlePass",
+      "sources": [
+        {
+          "id": "spigot",
+          "ref": "63076",
+          "url": "https://www.spigotmc.org/resources/battlepass-custom-quests-tiers-free-premium-passes-and-more-1-8-1-20-6.63076/"
+        }
+      ]
+    },
+    {
+      "main": "com.sk89q.worldedit.bukkit.WorldEditPlugin",
+      "name": "WorldEdit",
+      "sources": [
+        {
+          "id": "modrinth",
+          "ref": "worldedit",
+          "url": "https://modrinth.com/plugin/worldedit"
+        },
+        {
+          "id": "hangar",
+          "ref": "EngineHub/WorldEdit",
+          "url": "https://hangar.papermc.io/EngineHub/WorldEdit"
+        }
+      ]
+    },
+    {
+      "main": "com.sk89q.worldguard.bukkit.WorldGuardPlugin",
+      "name": "WorldGuard",
+      "sources": [
+        {
+          "id": "modrinth",
+          "ref": "worldguard",
+          "url": "https://modrinth.com/plugin/worldguard"
+        }
+      ]
+    },
+    {
+      "main": "eu.kennytv.worldeditsui.WorldEditSUIPlugin",
+      "name": "WorldEditSUI",
+      "sources": [
+        {
+          "id": "modrinth",
+          "ref": "worldeditsui",
+          "url": "https://modrinth.com/plugin/worldeditsui"
+        },
+        {
+          "id": "github",
+          "ref": "kennytv/WorldEditSUI",
+          "url": "https://github.com/kennytv/WorldEditSUI"
+        }
+      ]
+    },
+    {
+      "main": "me.clip.placeholderapi.PlaceholderAPIPlugin",
+      "name": "PlaceholderAPI",
+      "sources": [
+        {
+          "id": "hangar",
+          "ref": "PlaceholderAPI/PlaceholderAPI",
+          "url": "https://hangar.papermc.io/PlaceholderAPI/PlaceholderAPI"
+        },
+        {
+          "id": "github",
+          "ref": "PlaceholderAPI/PlaceholderAPI",
+          "url": "https://github.com/PlaceholderAPI/PlaceholderAPI"
+        },
+        {
+          "id": "spigot",
+          "ref": "6245",
+          "url": "https://www.spigotmc.org/resources/placeholderapi.6245/"
+        }
+      ]
+    },
+    {
+      "main": "dev.by1337.bmenu.BMenu",
+      "name": "BMenu",
+      "sources": [
+        {
+          "id": "github",
+          "ref": "By1337/BMenu",
+          "url": "https://github.com/By1337/BMenu"
+        }
+      ]
+    },
+    {
+      "main": "dev.by1337.virtualentity.core.Main",
+      "name": "VirtualEntityApi",
+      "sources": [
+        {
+          "id": "github",
+          "ref": "By1337/VirtualEntityApi",
+          "url": "https://github.com/By1337/VirtualEntityApi"
+        }
+      ]
+    },
+    {
+      "main": "com.gmail.nossr50.mcMMO",
+      "name": "mcMMO",
+      "sources": [
+        {
+          "id": "github",
+          "ref": "mcMMO-Dev/mcMMO",
+          "url": "https://github.com/mcMMO-Dev/mcMMO"
+        }
+      ]
+    },
+    {
+      "main": "com.vexsoftware.votifier.NuVotifierBukkit",
+      "name": "Votifier",
+      "aliases": [
+        "NuVotifier"
+      ],
+      "sources": [
+        {
+          "id": "github",
+          "ref": "NuVotifier/NuVotifier",
+          "url": "https://github.com/NuVotifier/NuVotifier"
+        }
+      ]
+    },
+    {
+      "main": "com.gamingmesh.jobs.Jobs",
+      "name": "Jobs",
+      "sources": [
+        {
+          "id": "github",
+          "ref": "Zrips/Jobs",
+          "url": "https://github.com/Zrips/Jobs"
+        },
+        {
+          "id": "spigot",
+          "ref": "4216",
+          "url": "https://www.spigotmc.org/resources/jobs-reborn.4216/"
+        }
+      ],
+      "aliases": [
+        "Jobs Reborn"
+      ]
+    },
+    {
+      "main": "eu.decentsoftware.holograms.plugin.DecentHolograms",
+      "name": "DecentHolograms",
+      "sources": [
+        {
+          "id": "spigot",
+          "ref": "96927",
+          "url": "https://www.spigotmc.org/resources/decent-holograms-1-8-1-20-4-papi-support-no-dependencies.96927/"
+        }
+      ]
+    },
+    {
+      "main": "ac.grim.grimac.GrimAC",
+      "name": "GrimAC",
+      "aliases": [
+        "Grim"
+      ],
+      "sources": [
+        {
+          "id": "github",
+          "ref": "GrimAnticheat/Grim",
+          "url": "https://github.com/GrimAnticheat/Grim"
+        }
+      ]
+    },
+    {
+      "main": "net.skinsrestorer.bukkit.SkinsRestorer",
+      "name": "SkinsRestorer",
+      "sources": [
+        {
+          "id": "spigot",
+          "ref": "2124",
+          "url": "https://www.spigotmc.org/resources/skinsrestorer.2124/"
+        },
+        {
+          "id": "github",
+          "ref": "SkinsRestorer/SkinSystem",
+          "url": "https://github.com/SkinsRestorer/SkinSystem"
+        }
+      ]
+    },
+    {
+      "main": "org.popcraft.chunky.ChunkyBukkit",
+      "name": "Chunky",
+      "sources": [
+        {
+          "id": "spigot",
+          "ref": "81534",
+          "url": "https://www.spigotmc.org/resources/chunky.81534/"
+        },
+        {
+          "id": "github",
+          "ref": "pop4959/Chunky",
+          "url": "https://github.com/pop4959/Chunky"
+        }
+      ]
+    },
+    {
+      "main": "org.black_ixx.playerpoints.PlayerPoints",
+      "name": "PlayerPoints",
+      "sources": [
+        {
+          "id": "spigot",
+          "ref": "80745",
+          "url": "https://www.spigotmc.org/resources/playerpoints.80745/"
+        }
+      ]
+    },
+    {
+      "main": "dev.geco.gsit.GSitMain",
+      "name": "GSit",
+      "sources": [
+        {
+          "id": "spigot",
+          "ref": "62325",
+          "url": "https://www.spigotmc.org/resources/gsit-modern-sit-seat-and-chair-lay-and-crawl-plugin-1-13-1-20-4.62325/"
+        },
+        {
+          "id": "github",
+          "ref": "Gecolay/GSit",
+          "url": "https://github.com/Gecolay/GSit"
+        }
+      ]
+    },
+    {
+      "main": "org.terraform.main.TerraformGeneratorPlugin",
+      "name": "TerraformGenerator",
+      "sources": [
+        {
+          "id": "spigot",
+          "ref": "75132",
+          "url": "https://www.spigotmc.org/resources/terraformgenerator.75132/"
+        }
+      ]
+    },
+    {
+      "main": "mycommand.Main",
+      "name": "MyCommand",
+      "sources": [
+        {
+          "id": "spigot",
+          "ref": "22272",
+          "url": "https://www.spigotmc.org/resources/mycommand.22272/"
+        }
+      ]
+    },
+    {
+      "main": "me.arcaniax.hdb.Main",
+      "name": "HeadDatabase",
+      "aliases": ["HeadDB", "headdb"],
+      "sources": [
+        {
+          "id": "spigot",
+          "ref": "14280",
+          "url": "https://www.spigotmc.org/resources/head-database.14280/"
+        }
+      ]
+    }
+  ]
+}
