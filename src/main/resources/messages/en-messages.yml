@@ -157,8 +157,8 @@ actions:
       - "[message]   &#FFFF00◆ /plm disable <Plugin> &f— Disable a running plugin"
       - "[message]   &#FFFF00◆ /plm usage <Command/Permission> &f— Find the plugin that registered a command or permission"
       - "[message]   &#FFFF00◆ /plm dump &f— Create a file with a full dump of the server environment"
-      - "[message]   &#FFFF00◆ /plm update (Plugin/all) (-y/-r/-s) &f— Check for and install updates for server plugins"
-      - "[message]   &#FFFF00◆ /plm download <Plugin/URL> (-s/-y) &f— Find and automatically download a plugin with its dependencies"
+      - "[message]   &#FFFF00◆ /plm update (Plugin/-all) (-y/-r/-s/-c/-pre) &f— Check for and install updates for server plugins"
+      - "[message]   &#FFFF00◆ /plm download <Plugin/URL> (-y/-s/-w) &f— Find and automatically download a plugin with its dependencies"
       - "[message]   &#FFFF00◆ /plm delete <Plugin> (-y/-d) &f— Fully unload and delete a plugin's .jar file from disk"
       - "[message]   &#FFFF00◆ /plm hotswap <on/off/status> &f— Auto-watch plugin files (auto-load and auto-update)"
       - "[message]   &#FFFF00◆ /plm config reload &f— Reload the plugin's configuration"
@@ -327,7 +327,7 @@ actions:
       - "[sound] BLOCK_LEVER_CLICK"
     update:
       - "[message] "
-      - "[message]  &#FFFF00▶ &fCommand: &#FFFF00/plm update (Plugin/-all) (-y/-r/-s)"
+      - "[message]  &#FFFF00▶ &fCommand: &#FFFF00/plm update (Plugin/-all) (-y/-r/-s/-c/-pre)"
       - "[message] "
       - "[message]  &#FFFF00◆ &fDescription: &#FFFF00Checks for newer plugin versions on Modrinth, Hangar, GitHub, SpigotMC, Jenkins and SpigotMC.ru, with an option to install them automatically"
       - "[message] "
@@ -337,8 +337,10 @@ actions:
       - "[message]    &#FFFF00-y &for &#FFFF00--yes &f— Automatically download and install found updates without confirmation"
       - "[message]    &#FFFF00-r &for &#FFFF00--refresh &f— Clear the version cache and request fresh data from the sites"
       - "[message]    &#FFFF00-s &for &#FFFF00--single &f— Update the plugin without restarting its dependents"
+      - "[message]    &#FFFF00-c &for &#FFFF00--cascade &f— Restart the plugin along with all its dependents"
+      - "[message]    &#FFFF00-pre &for &#FFFF00--prerelease &f— Check for and download pre-release (beta/alpha) versions"
       - "[message] "
-      - "[message]  &#FFFF00◆ &fCommand example: &#FFFF00/plm update -all -r"
+      - "[message]  &#FFFF00◆ &fCommand examples: &#FFFF00/plm update -all -r &for &#FFFF00/plm update LuckPerms -pre"
       - "[message] "
       - "[sound] BLOCK_LEVER_CLICK"
 
@@ -1179,6 +1181,9 @@ actions:
     pending-restart:
       - "[message] &#FFFF00◆ Done! &fPlugin &#FFFF00«{plugin}» &fwas successfully &#FFFF00updated &ffrom &#FFFF00v{from} &fto &#FFFF00v{to}&f, but it will only take effect on the next &#FFFF00server restart&f..."
       - "[sound] ENTITY_PLAYER_LEVELUP"
+    dependency-notice:
+      - "[message] &#FB8808▶ Attention! &fDependency &#FB8808«{dependency}» &fof plugin &#FB8808«{plugin}» &fhas an update available: &#FB8808v{dep_version}&f"
+      - "[sound] BLOCK_LEVER_CLICK"
     rolled-back:
       - "[message] "
       - "[message] &#FB8808▶ Attention! &fDownloading the &#FB8808new &fversion of plugin &#FB8808«{plugin}» &fcouldn't be finished: &#FB8808{detail}"

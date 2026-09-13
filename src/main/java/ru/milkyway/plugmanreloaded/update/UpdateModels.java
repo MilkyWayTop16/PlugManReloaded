@@ -1,6 +1,7 @@
 package ru.milkyway.plugmanreloaded.update;
 
 import org.jetbrains.annotations.Nullable;
+import ru.milkyway.plugmanreloaded.api.UpdateInfo;
 
 import java.io.File;
 import java.time.Instant;
@@ -185,7 +186,7 @@ public final class UpdateModels {
                 if (dash > 0) {
                     String min = clean.substring(0, dash).trim();
                     String max = clean.substring(dash + 1).trim();
-                    if (VersionUtil.compare(server, min) >= 0 && VersionUtil.compare(server, max) <= 0) {
+                    if (VersionCompare.compare(server, min) >= 0 && VersionCompare.compare(server, max) <= 0) {
                         return true;
                     }
                 }
@@ -235,6 +236,19 @@ public final class UpdateModels {
         public String remoteVersionNumber() {
             return version != null ? version.versionNumber() : "";
         }
+
+        public UpdateInfo toUpdateInfo() {
+            return new UpdateInfo(
+                    identity.pluginName(),
+                    identity.currentVersion(),
+                    version != null ? version.versionNumber() : "Unknown",
+                    version != null ? version.sourceId() : "none",
+                    version != null ? version.downloadUrl() : "",
+                    version != null && version.downloadable(),
+                    identity.isPremium(),
+                    status.hasNewerVersion()
+            );
+        }
     }
 
     public enum InstallStatus {
@@ -262,13 +276,32 @@ public final class UpdateModels {
         }
     }
 
-    public record InstallResult(InstallStatus outcome, String pluginName, String fromVersion, String toVersion, String detail) {
+    public record InstallResult(
+            InstallStatus outcome,
+            String pluginName,
+            String fromVersion,
+            String toVersion,
+            String detail,
+            List<String> dependencyWarnings
+    ) {
+        public InstallResult(InstallStatus outcome, String pluginName, String fromVersion, String toVersion, String detail) {
+            this(outcome, pluginName, fromVersion, toVersion, detail, List.of());
+        }
+
         public static InstallResult of(InstallStatus outcome, String pluginName, String fromVersion, String toVersion) {
-            return new InstallResult(outcome, pluginName, fromVersion, toVersion, "");
+            return new InstallResult(outcome, pluginName, fromVersion, toVersion, "", List.of());
+        }
+
+        public static InstallResult of(InstallStatus outcome, String pluginName, String fromVersion, String toVersion, List<String> warnings) {
+            return new InstallResult(outcome, pluginName, fromVersion, toVersion, "", warnings != null ? warnings : List.of());
         }
 
         public static InstallResult failed(InstallStatus outcome, String pluginName, String detail) {
-            return new InstallResult(outcome, pluginName, "", "", detail == null ? "" : detail);
+            return new InstallResult(outcome, pluginName, "", "", detail == null ? "" : detail, List.of());
+        }
+
+        public static InstallResult failed(InstallStatus outcome, String pluginName, String detail, List<String> warnings) {
+            return new InstallResult(outcome, pluginName, "", "", detail == null ? "" : detail, warnings != null ? warnings : List.of());
         }
     }
 }

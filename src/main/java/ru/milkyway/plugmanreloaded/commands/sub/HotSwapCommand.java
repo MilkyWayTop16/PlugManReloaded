@@ -63,5 +63,12 @@ public class HotSwapCommand extends AbstractSubCommand {
 
         return true;
     }
+
+    private static final java.util.List<String> HOTSWAP_MODES = java.util.List.of("on", "off", "status");
+
+    @Override
+    public java.util.List<String> tabCandidates(int argLength, String previousToken, java.util.Set<String> usedTokens, CommandSender sender) {
+        return argLength == 2 ? HOTSWAP_MODES : java.util.Collections.emptyList();
+    }
 }
 

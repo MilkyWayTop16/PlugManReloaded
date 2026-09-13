@@ -7,8 +7,8 @@ import ru.milkyway.plugmanreloaded.PlugManReloaded;
 import ru.milkyway.plugmanreloaded.api.PluginResult;
 import ru.milkyway.plugmanreloaded.commands.AbstractSubCommand;
 import ru.milkyway.plugmanreloaded.commands.CommandContext;
-import ru.milkyway.plugmanreloaded.managers.DependencyGraph;
-import ru.milkyway.plugmanreloaded.managers.PluginJarIndex;
+import ru.milkyway.plugmanreloaded.managers.DependencyManager;
+import ru.milkyway.plugmanreloaded.utils.PluginJarIndex;
 import ru.milkyway.plugmanreloaded.update.install.BackupStore;
 import ru.milkyway.plugmanreloaded.utils.Log;
 import ru.milkyway.plugmanreloaded.utils.PluginMetaHelper;
@@ -21,6 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -148,7 +149,7 @@ public class DeleteCommand extends AbstractSubCommand {
         }
 
         if (loadedPlugin == null && (jarFile == null || !jarFile.isFile())) {
-            sendAction(sender, "errors.plugin-not-found", Map.of("plugin", targetName));
+            sendPluginNotFound(sender, targetName);
             return null;
         }
 
@@ -242,10 +243,10 @@ public class DeleteCommand extends AbstractSubCommand {
 
     private boolean promptConfirmation(CommandSender sender, DeleteTarget target, Map<String, String> placeholders) {
         Set<String> dependents = target.loadedPlugin() != null
-                ? plugin.getPluginLifecycleManager().getSafetyAdvisor().assess(target.loadedPlugin()).dependents()
+                ? plugin.getPluginLifecycleManager().getSafetyManager().assess(target.loadedPlugin()).dependents()
                 : Set.of();
-        dependents = DependencyGraph.resolveDependentsWithFallback(dependents,
-                plugin.getPluginLifecycleManager().getDependencyGraph(), target.pluginName());
+        dependents = DependencyManager.resolveDependentsWithFallback(dependents,
+                plugin.getPluginLifecycleManager().getDependencyManager(), target.pluginName());
 
         String confirmKey = "delete.confirm";
         if (!dependents.isEmpty()) {
@@ -435,5 +436,12 @@ public class DeleteCommand extends AbstractSubCommand {
         }
     }
 
+    @Override
+    public List<String> tabCandidates(int argLength, String previousToken, Set<String> usedTokens, CommandSender sender) {
+        if (argLength == 2) {
+            return new ArrayList<>(allDeletablePlugins());
+        }
+        return suggestFlags(usedTokens);
+    }
 }
 

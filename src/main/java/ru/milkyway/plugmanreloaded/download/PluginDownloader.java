@@ -12,10 +12,8 @@ import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.Nullable;
 import ru.milkyway.plugmanreloaded.PlugManReloaded;
 import ru.milkyway.plugmanreloaded.bridge.PlatformDetector;
-import ru.milkyway.plugmanreloaded.managers.PluginJarIndex;
+import ru.milkyway.plugmanreloaded.utils.PluginJarIndex;
 import ru.milkyway.plugmanreloaded.update.*;
-
-import ru.milkyway.plugmanreloaded.update.install.DownloadClient;
 import ru.milkyway.plugmanreloaded.utils.JarValidator;
 import ru.milkyway.plugmanreloaded.utils.Log;
 import ru.milkyway.plugmanreloaded.utils.TaskScheduler;

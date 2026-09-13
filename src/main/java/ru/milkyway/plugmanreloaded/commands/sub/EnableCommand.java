@@ -10,9 +10,11 @@ import ru.milkyway.plugmanreloaded.commands.AbstractSubCommand;
 import ru.milkyway.plugmanreloaded.commands.CommandContext;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class EnableCommand extends AbstractSubCommand {
 
@@ -61,7 +63,7 @@ public class EnableCommand extends AbstractSubCommand {
         String targetName = ctx.target();
         Plugin targetPlugin = plugin.getPluginLifecycleManager().getPlugin(targetName);
         if (targetPlugin == null) {
-            sendAction(sender, "errors.plugin-not-found", Map.of("plugin", targetName));
+            sendPluginNotFound(sender, targetName);
             return true;
         }
 
@@ -79,14 +81,16 @@ public class EnableCommand extends AbstractSubCommand {
         long start = System.currentTimeMillis();
 
         PluginResult result = plugin.getPluginLifecycleManager().enable(targetPlugin);
-        long elapsed = System.currentTimeMillis() - start;
-
-        Map<String, String> placeholders = new HashMap<>(startPh);
-        placeholders.putAll(result.placeholders());
-        placeholders.put("time", String.valueOf(elapsed));
-
-        sendAction(sender, result.messageKey(), placeholders);
+        sendResult(sender, result, startPh, System.currentTimeMillis() - start);
         return true;
+    }
+
+    @Override
+    public List<String> tabCandidates(int argLength, String previousToken, Set<String> usedTokens, CommandSender sender) {
+        if (argLength == 2) {
+            return withAllFlag(usedTokens, loadedPlugins(p -> !p.isEnabled()));
+        }
+        return Collections.emptyList();
     }
 }
 

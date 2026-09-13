@@ -1,17 +1,13 @@
 package ru.milkyway.plugmanreloaded.update;
 
 import ru.milkyway.plugmanreloaded.update.UpdateModels.*;
-import ru.milkyway.plugmanreloaded.update.VersionUtil.Resolver;
+import ru.milkyway.plugmanreloaded.update.VersionResolver;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.Nullable;
 import ru.milkyway.plugmanreloaded.PlugManReloaded;
-import ru.milkyway.plugmanreloaded.api.UpdateInfo;
 import ru.milkyway.plugmanreloaded.api.event.PluginUpdateFoundEvent;
 import ru.milkyway.plugmanreloaded.update.input.SourceUrlParser;
 import ru.milkyway.plugmanreloaded.update.install.UpdateInstaller;
@@ -23,11 +19,21 @@ import ru.milkyway.plugmanreloaded.update.source.ModrinthSource;
 import ru.milkyway.plugmanreloaded.update.source.RusPigotSource;
 import ru.milkyway.plugmanreloaded.update.source.SpigotSource;
 import ru.milkyway.plugmanreloaded.update.source.UpdateSource;
+import org.bukkit.configuration.file.YamlConfiguration;
 import ru.milkyway.plugmanreloaded.utils.Log;
+import ru.milkyway.plugmanreloaded.utils.PluginJarIndex;
+import ru.milkyway.plugmanreloaded.utils.PluginJarIndex.JarDescriptor;
 import ru.milkyway.plugmanreloaded.utils.PluginMetaHelper;
 import ru.milkyway.plugmanreloaded.utils.TaskScheduler;
 
 import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -35,6 +41,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -44,11 +51,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
-public final class UpdateService implements Listener {
+public final class UpdateService {
 
     private final PlugManReloaded plugin;
-    private final java.util.Map<String, String[]> hashCache = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<String, String[]> hashCache = new ConcurrentHashMap<>();
     private final UpdateCache cache;
     private final List<UpdateSource> sources = new ArrayList<>();
     private final HangarSource hangarSource;
@@ -134,6 +143,10 @@ public final class UpdateService implements Listener {
         return null;
     }
 
+    public @Nullable List<UpdateCandidate> getLastResults() {
+        return lastAllResults != null ? Collections.unmodifiableList(lastAllResults) : null;
+    }
+
     public void clearVersionsCache() {
         cache.clearVersions();
         cache.clearMisses();
@@ -186,7 +199,7 @@ public final class UpdateService implements Listener {
             }
         }
 
-        for (ru.milkyway.plugmanreloaded.managers.PluginJarIndex.JarInfo info : plugin.getPluginLifecycleManager().getJarIndex().getEntries()) {
+        for (ru.milkyway.plugmanreloaded.utils.PluginJarIndex.JarInfo info : plugin.getPluginLifecycleManager().getJarIndex().getEntries()) {
             if (info.file() != null && info.file().isFile()) {
                 String key = info.preferredName().toLowerCase(Locale.ROOT);
                 if (!byName.containsKey(key)) {
@@ -241,13 +254,13 @@ public final class UpdateService implements Listener {
     public @Nullable PluginIdentity scanIdentity(@Nullable File jar) {
         if (jar == null || !jar.isFile()) return null;
 
-        try (java.util.jar.JarFile jarFile = new java.util.jar.JarFile(jar)) {
-            java.util.jar.JarEntry entry = jarFile.getJarEntry("plugin.yml");
+        try (JarFile jarFile = new JarFile(jar)) {
+            JarEntry entry = jarFile.getJarEntry("plugin.yml");
             if (entry == null) entry = jarFile.getJarEntry("paper-plugin.yml");
             if (entry == null) return null;
 
-            try (java.io.Reader reader = new java.io.InputStreamReader(jarFile.getInputStream(entry), java.nio.charset.StandardCharsets.UTF_8)) {
-                org.bukkit.configuration.file.YamlConfiguration yaml = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(reader);
+            try (Reader reader = new InputStreamReader(jarFile.getInputStream(entry), StandardCharsets.UTF_8)) {
+                YamlConfiguration yaml = YamlConfiguration.loadConfiguration(reader);
                 String name = yaml.getString("name");
                 if (name == null || name.isBlank()) return null;
                 String main = yaml.getString("main");
@@ -307,8 +320,7 @@ public final class UpdateService implements Listener {
 
             File directPending = new File(updateFolder, jar.getName());
             if (directPending.isFile()) {
-                ru.milkyway.plugmanreloaded.managers.PluginJarIndex.JarDescriptor desc =
-                        ru.milkyway.plugmanreloaded.managers.PluginJarIndex.readDescriptor(directPending);
+                JarDescriptor desc = PluginJarIndex.readDescriptor(directPending);
                 if (desc != null && desc.version() != null && !desc.version().isBlank()) {
                     return desc.version();
                 }
@@ -317,8 +329,7 @@ public final class UpdateService implements Listener {
             File[] files = updateFolder.listFiles((dir, name) -> name.toLowerCase(Locale.ROOT).endsWith(".jar"));
             if (files != null) {
                 for (File f : files) {
-                    ru.milkyway.plugmanreloaded.managers.PluginJarIndex.JarDescriptor desc =
-                            ru.milkyway.plugmanreloaded.managers.PluginJarIndex.readDescriptor(f);
+                    JarDescriptor desc = PluginJarIndex.readDescriptor(f);
                     if (desc != null && desc.declaredName() != null && desc.declaredName().equalsIgnoreCase(pluginName)) {
                         if (desc.version() != null && !desc.version().isBlank()) {
                             return desc.version();
@@ -340,16 +351,14 @@ public final class UpdateService implements Listener {
                 return cached;
             }
 
-            java.security.MessageDigest sha1 = java.security.MessageDigest.getInstance("SHA-1");
-            java.security.MessageDigest sha256 = java.security.MessageDigest.getInstance("SHA-256");
+            MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
+            MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
 
-            try (java.io.InputStream raw = java.nio.file.Files.newInputStream(jar.toPath());
-                 java.security.DigestInputStream first = new java.security.DigestInputStream(raw, sha1);
-                 java.security.DigestInputStream second = new java.security.DigestInputStream(first, sha256)) {
+            try (InputStream raw = Files.newInputStream(jar.toPath());
+                 DigestInputStream first = new DigestInputStream(raw, sha1);
+                 DigestInputStream second = new DigestInputStream(first, sha256)) {
                 byte[] buffer = new byte[16384];
-                while (second.read(buffer) != -1) {
-                    continue;
-                }
+                while (second.read(buffer) != -1) {}
             }
 
             String[] result = new String[]{PluginMatcher.toHex(sha1.digest()), PluginMatcher.toHex(sha256.digest())};
@@ -400,7 +409,7 @@ public final class UpdateService implements Listener {
                         Plugin matchedPlugin = Bukkit.getPluginManager().getPlugin(candidate.identity().pluginName());
                         if (matchedPlugin != null) {
                             Bukkit.getPluginManager().callEvent(new PluginUpdateFoundEvent(
-                                    matchedPlugin, UpdateInfo.from(candidate)));
+                                    matchedPlugin, candidate.toUpdateInfo()));
                         }
                     }
                 }
@@ -439,7 +448,7 @@ public final class UpdateService implements Listener {
         }
     }
 
-    private boolean canReceiveNotify(Player player) {
+    public boolean canReceiveNotify(Player player) {
         return player != null && player.isOnline() && (
                 player.hasPermission("plugmanreloaded.admin")
                 || player.hasPermission("plugmanreloaded.notify")
@@ -447,39 +456,40 @@ public final class UpdateService implements Listener {
         );
     }
 
-    @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent event) {
-        if (!plugin.getConfigManager().isUpdatesCheckOnStart()) return;
+    public boolean isInitialChecked() {
+        return initialChecked;
+    }
 
-        String mode = plugin.getConfigManager().getUpdatesNotifyMode().toLowerCase(Locale.ROOT);
-        if (!mode.equals("on-join") && !mode.equals("both")) return;
+    public int getLastAvailableCount() {
+        return lastAvailableCount;
+    }
 
-        String target = plugin.getConfigManager().getUpdatesNotifyTarget().toLowerCase(Locale.ROOT);
-        if (target.equals("console")) return;
-
-        if (!initialChecked || lastAvailableCount <= 0) return;
-
-        Player player = event.getPlayer();
-        if (!canReceiveNotify(player)) return;
-
-        TaskScheduler.runSyncLater(plugin, () -> {
-            if (player.isOnline()) {
-                Map<String, String> placeholders = Map.of(
-                        "count", String.valueOf(lastAvailableCount),
-                        "available", String.valueOf(lastAvailableCount),
-                        "total", String.valueOf(lastTotalCount)
-                );
-                plugin.getConfigManager().executeActions(player, "update.plugins-notify", placeholders);
-            }
-        }, 40L);
+    public int getLastTotalCount() {
+        return lastTotalCount;
     }
 
     public void checkAll(Consumer<List<UpdateCandidate>> callback) {
+        checkAll(plugin.getConfigManager().isAllowPrerelease(), callback);
+    }
+
+    public void checkAll(boolean allowPrerelease, Consumer<List<UpdateCandidate>> callback) {
         List<Plugin> loadedPlugins = snapshotLoadedPlugins();
-        TaskScheduler.runAsync(plugin, () -> runCheck(scanAllIdentities(loadedPlugins), callback));
+        TaskScheduler.runAsync(plugin, () -> runCheck(scanAllIdentities(loadedPlugins), allowPrerelease, callback));
+    }
+
+    public @Nullable UpdateCandidate checkSync(Plugin target, boolean allowPrerelease) {
+        if (target == null) return null;
+        PluginIdentity identity = scanIdentity(target);
+        if (identity == null) return null;
+        List<UpdateCandidate> results = check(List.of(identity), allowPrerelease);
+        return results != null && !results.isEmpty() ? results.get(0) : null;
     }
 
     public void checkOne(Plugin target, Consumer<List<UpdateCandidate>> callback) {
+        checkOne(target, plugin.getConfigManager().isAllowPrerelease(), callback);
+    }
+
+    public void checkOne(Plugin target, boolean allowPrerelease, Consumer<List<UpdateCandidate>> callback) {
         if (target != null) {
             cache.invalidateMiss(target.getName());
         }
@@ -489,23 +499,27 @@ public final class UpdateService implements Listener {
                 TaskScheduler.runSync(plugin, () -> callback.accept(Collections.emptyList()));
                 return;
             }
-            runCheck(List.of(identity), callback);
+            runCheck(List.of(identity), allowPrerelease, callback);
         });
     }
 
     public void checkOne(File jar, Consumer<List<UpdateCandidate>> callback) {
+        checkOne(jar, plugin.getConfigManager().isAllowPrerelease(), callback);
+    }
+
+    public void checkOne(File jar, boolean allowPrerelease, Consumer<List<UpdateCandidate>> callback) {
         TaskScheduler.runAsync(plugin, () -> {
             PluginIdentity identity = scanIdentity(jar);
             if (identity != null) {
                 cache.invalidateMiss(identity.pluginName());
-                runCheck(List.of(identity), callback);
+                runCheck(List.of(identity), allowPrerelease, callback);
             } else {
                 TaskScheduler.runSync(plugin, () -> callback.accept(Collections.emptyList()));
             }
         });
     }
 
-    private void runCheck(List<PluginIdentity> identities, Consumer<List<UpdateCandidate>> callback) {
+    private void runCheck(List<PluginIdentity> identities, boolean allowPrerelease, Consumer<List<UpdateCandidate>> callback) {
         if (identities.isEmpty()) {
             TaskScheduler.runSync(plugin, () -> callback.accept(Collections.emptyList()));
             return;
@@ -518,7 +532,7 @@ public final class UpdateService implements Listener {
 
         List<UpdateCandidate> results = new ArrayList<>(identities.size());
         try {
-            results.addAll(check(identities));
+            results.addAll(check(identities, allowPrerelease));
         } catch (Exception | LinkageError t) {
             Log.warn("updateservice.check-error", t, "error", t.getMessage());
             for (PluginIdentity identity : identities) {
@@ -563,9 +577,12 @@ public final class UpdateService implements Listener {
     }
 
     private @Nullable List<UpdateCandidate> check(List<PluginIdentity> identities) {
+        return check(identities, plugin.getConfigManager().isAllowPrerelease());
+    }
+
+    private @Nullable List<UpdateCandidate> check(List<PluginIdentity> identities, boolean allowPrerelease) {
         ServerProfile profile = ServerProfile.detect();
-        boolean allowPrerelease = plugin.getConfigManager().isAllowPrerelease();
-        Resolver resolver = new VersionUtil.Resolver(profile, allowPrerelease);
+        VersionResolver resolver = new VersionResolver(profile, allowPrerelease);
 
         Map<String, List<UpdateCandidate>> candidatesByPlugin = new HashMap<>();
 
@@ -621,7 +638,7 @@ public final class UpdateService implements Listener {
         return results;
     }
 
-    private UpdateCandidate resolvePipeline(PluginIdentity identity, Resolver resolver) {
+    private UpdateCandidate resolvePipeline(PluginIdentity identity, VersionResolver resolver) {
         UpdateCandidate candidate = resolveSingleFromCatalog(identity, resolver);
         if (candidate != null && isConfirmed(candidate)) {
             return candidate;
@@ -757,7 +774,7 @@ public final class UpdateService implements Listener {
         return stillPending;
     }
 
-    private @Nullable UpdateCandidate resolveSingleFromWebsite(PluginIdentity identity, Resolver resolver) {
+    private @Nullable UpdateCandidate resolveSingleFromWebsite(PluginIdentity identity, VersionResolver resolver) {
         String website = identity.website();
         if (website == null || website.isBlank()) {
             return null;
@@ -799,7 +816,7 @@ public final class UpdateService implements Listener {
         return null;
     }
 
-    private @Nullable UpdateCandidate resolveSingleByHash(PluginIdentity identity, Resolver resolver) {
+    private @Nullable UpdateCandidate resolveSingleByHash(PluginIdentity identity, VersionResolver resolver) {
         UpdateSource.ProjectMatch match = hangarSource.identifyBatch(List.of(identity)).get(identity.pluginName());
         if (match == null) {
             return null;
@@ -814,7 +831,7 @@ public final class UpdateService implements Listener {
         return candidate.status() != UpdateStatus.NO_SOURCE ? candidate : null;
     }
 
-    private @Nullable UpdateCandidate resolveSingleFromJarReferences(PluginIdentity identity, Resolver resolver) {
+    private @Nullable UpdateCandidate resolveSingleFromJarReferences(PluginIdentity identity, VersionResolver resolver) {
         List<JarScanner.DiscoveredRef> refs = jarScanner.scan(identity.jarFile(), identity.mainClass());
         if (refs.isEmpty()) {
             return null;
@@ -913,7 +930,7 @@ public final class UpdateService implements Listener {
         return null;
     }
 
-    private @Nullable UpdateCandidate resolveSingleByName(PluginIdentity identity, Resolver resolver) {
+    private @Nullable UpdateCandidate resolveSingleByName(PluginIdentity identity, VersionResolver resolver) {
         List<UpdateCandidate> candidates = new ArrayList<>();
 
         for (UpdateSource source : sources) {
@@ -963,7 +980,7 @@ public final class UpdateService implements Listener {
         String n1 = v1 == null ? null : v1.versionNumber();
         String n2 = v2 == null ? null : v2.versionNumber();
         if (n1 == null || n2 == null) return 0;
-        return VersionUtil.compare(n1, n2);
+        return VersionCompare.compare(n1, n2);
     };
 
     static final Comparator<UpdateCandidate> CANDIDATE_COMPARATOR = Comparator
@@ -1014,7 +1031,7 @@ public final class UpdateService implements Listener {
         };
     }
 
-    private @Nullable UpdateCandidate resolveSingleFromCatalog(PluginIdentity identity, Resolver resolver) {
+    private @Nullable UpdateCandidate resolveSingleFromCatalog(PluginIdentity identity, VersionResolver resolver) {
         List<UpdateCandidate> candidates = new ArrayList<>();
         boolean blockedByLimit = false;
 

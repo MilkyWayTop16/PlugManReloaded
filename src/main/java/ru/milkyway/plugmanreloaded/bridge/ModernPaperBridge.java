@@ -9,7 +9,7 @@ import ru.milkyway.plugmanreloaded.PlugManReloaded;
 import ru.milkyway.plugmanreloaded.api.FailureReason;
 import ru.milkyway.plugmanreloaded.api.PluginResult;
 import ru.milkyway.plugmanreloaded.managers.BrigadierManager;
-import ru.milkyway.plugmanreloaded.managers.PluginCleanup;
+import ru.milkyway.plugmanreloaded.managers.SanitizerManager;
 import ru.milkyway.plugmanreloaded.utils.ErrorAnalyzer;
 import ru.milkyway.plugmanreloaded.utils.Log;
 import ru.milkyway.plugmanreloaded.utils.PluginMetaHelper;
@@ -22,8 +22,8 @@ import java.util.Set;
 
 public class ModernPaperBridge extends LegacyBukkitBridge {
 
-    public ModernPaperBridge(PlugManReloaded plugin, BrigadierManager brigadierManager, PluginCleanup pluginCleanup) {
-        super(plugin, brigadierManager, pluginCleanup);
+    public ModernPaperBridge(PlugManReloaded plugin, BrigadierManager brigadierManager, SanitizerManager sanitizerManager) {
+        super(plugin, brigadierManager, sanitizerManager);
     }
 
     @Override

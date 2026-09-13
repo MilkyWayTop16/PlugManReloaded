@@ -286,7 +286,7 @@ public class HotSwapManager {
         long start = System.currentTimeMillis();
         boolean cascade = plugin.getConfigManager().isHotSwapCascadeReload();
         List<String> cascadeOrder = cascade
-                ? lifecycleManager.getDependencyGraph().calculateCascadeOrder(pluginName, true)
+                ? lifecycleManager.getDependencyManager().calculateCascadeOrder(pluginName, true)
                 : null;
 
         PluginResult unloadResult = lifecycleManager.unload(target);

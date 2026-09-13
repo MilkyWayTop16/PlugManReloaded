@@ -1,4 +1,4 @@
-package ru.milkyway.plugmanreloaded.managers;
+package ru.milkyway.plugmanreloaded.utils;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;

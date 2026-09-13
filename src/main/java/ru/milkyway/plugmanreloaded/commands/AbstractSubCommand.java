@@ -1,5 +1,6 @@
 package ru.milkyway.plugmanreloaded.commands;
 
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -7,12 +8,21 @@ import org.jetbrains.annotations.Nullable;
 import ru.milkyway.plugmanreloaded.PlugManReloaded;
 import ru.milkyway.plugmanreloaded.api.BulkOperationResult;
 import ru.milkyway.plugmanreloaded.api.PluginResult;
+import ru.milkyway.plugmanreloaded.configs.MainConfig;
 import ru.milkyway.plugmanreloaded.managers.ConfirmationManager;
-import ru.milkyway.plugmanreloaded.managers.UnloadSafetyChecker;
+import ru.milkyway.plugmanreloaded.managers.LifecycleManager;
+import ru.milkyway.plugmanreloaded.utils.PluginJarIndex;
+import ru.milkyway.plugmanreloaded.managers.SafetyManager;
 import ru.milkyway.plugmanreloaded.utils.HexColors;
 import ru.milkyway.plugmanreloaded.utils.PluginMetaHelper;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -61,6 +71,14 @@ public abstract class AbstractSubCommand implements SubCommand {
         plugin.getConfigManager().executeActions(sender, path, placeholders);
     }
 
+    protected void sendAction(CommandSender sender, String path, String key, String value) {
+        sendAction(sender, path, Map.of(key, value));
+    }
+
+    protected void sendPluginNotFound(CommandSender sender, String pluginName) {
+        sendAction(sender, "errors.plugin-not-found", "plugin", pluginName);
+    }
+
     protected void sendResult(CommandSender sender, PluginResult result, Map<String, String> base, long elapsed) {
         Map<String, String> placeholders = new HashMap<>(base);
         placeholders.putAll(result.placeholders());
@@ -68,7 +86,7 @@ public abstract class AbstractSubCommand implements SubCommand {
         sendAction(sender, result.messageKey(), placeholders);
     }
 
-    protected String riskReasonKey(String namespace, UnloadSafetyChecker.SafetyAssessment assessment) {
+    protected String riskReasonKey(String namespace, SafetyManager.SafetyAssessment assessment) {
         if (!assessment.dependents().isEmpty()) {
             return "actions." + namespace + ".reasons.has-dependents";
         }
@@ -81,7 +99,7 @@ public abstract class AbstractSubCommand implements SubCommand {
     }
 
     protected boolean askRiskConfirmation(CommandSender sender, Plugin targetPlugin, String namespace,
-                                          UnloadSafetyChecker.SafetyAssessment assessment,
+                                          SafetyManager.SafetyAssessment assessment,
                                           Map<String, String> base) {
         Set<String> dependents = assessment.dependents();
         String noneDependents = plugin.getConfigManager().getMessagesConfig()
@@ -178,7 +196,7 @@ public abstract class AbstractSubCommand implements SubCommand {
 
     protected boolean checkProtected(CommandSender sender, String pluginName) {
         if (plugin.getPluginLifecycleManager().isProtected(pluginName)) {
-            sendAction(sender, plugin.getPluginLifecycleManager().protectedReason(pluginName).messageKey(), Map.of("plugin", pluginName));
+            sendAction(sender, plugin.getPluginLifecycleManager().protectedReason(pluginName).messageKey(), "plugin", pluginName);
             return true;
         }
         return false;
@@ -226,6 +244,203 @@ public abstract class AbstractSubCommand implements SubCommand {
             }
         }
         return false;
+    }
+
+    @Override
+    public List<String> tabComplete(CommandSender sender, String[] args) {
+        if (args.length == 0) {
+            return Collections.emptyList();
+        }
+        String previousToken = args.length >= 2 ? (args[args.length - 2] != null ? args[args.length - 2].toLowerCase(Locale.ROOT) : "") : "";
+        Set<String> usedTokens = extractUsedTokens(args);
+        return tabCandidates(args.length + 1, previousToken, usedTokens, sender);
+    }
+
+    public List<String> tabCandidates(int argLength, String previousToken, Set<String> usedTokens, CommandSender sender) {
+        return Collections.emptyList();
+    }
+
+    protected Set<String> extractUsedTokens(String[] args) {
+        Set<String> usedTokens = new HashSet<>();
+        for (int i = 0; i < args.length - 1; i++) {
+            if (args[i] != null) {
+                usedTokens.add(args[i].toLowerCase(Locale.ROOT));
+            }
+        }
+        return usedTokens;
+    }
+
+    protected List<String> withAllFlag(Set<String> usedTokens, Collection<String> plugins) {
+        List<String> list = new ArrayList<>();
+        if (!isFlagUsed("-all", usedTokens)) {
+            list.add("-all");
+            list.add("-a");
+        }
+        list.addAll(plugins);
+        return list;
+    }
+
+    protected boolean isFlagUsed(String flag, Set<String> usedTokens) {
+        return isFlagUsed(getName(), flag, usedTokens);
+    }
+
+    protected boolean isFlagUsed(@Nullable String subCommand, String flag, Set<String> usedTokens) {
+        String lower = flag.toLowerCase(Locale.ROOT);
+        if (usedTokens.contains(lower)) {
+            return true;
+        }
+        CommandFlags.Flag cmdFlag = CommandFlags.findFlag(subCommand, lower);
+        return cmdFlag != null && cmdFlag.isUsed(usedTokens);
+    }
+
+    protected List<String> filterUnused(List<String> flags, Set<String> usedTokens) {
+        return filterUnused(getName(), flags, usedTokens);
+    }
+
+    protected List<String> filterUnused(@Nullable String subCommand, List<String> flags, Set<String> usedTokens) {
+        List<String> result = new ArrayList<>();
+        for (String flag : flags) {
+            if (!isFlagUsed(subCommand, flag, usedTokens)) {
+                result.add(flag);
+            }
+        }
+        return result;
+    }
+
+    protected List<String> suggestFlags(Set<String> usedTokens) {
+        return CommandFlags.suggestFlags(getName(), usedTokens);
+    }
+
+    protected List<String> allDeletablePlugins() {
+        LifecycleManager lifecycle = plugin != null ? plugin.getPluginLifecycleManager() : null;
+        if (Bukkit.getServer() == null || lifecycle == null || plugin == null) return Collections.emptyList();
+        Set<String> set = new LinkedHashSet<>();
+        boolean useJar = plugin.getConfigManager().isUseJarFileNames();
+        if (useJar) {
+            for (PluginJarIndex.JarInfo info : lifecycle.getJarIndex().getEntries()) {
+                if (info.declaredName() != null && lifecycle.isProtected(info.declaredName())) continue;
+                set.add(info.file().getName());
+            }
+            for (Plugin p : Bukkit.getPluginManager().getPlugins()) {
+                if (lifecycle.isProtected(p)) continue;
+                File f = lifecycle.getPluginFile(p);
+                if (f != null) {
+                    set.add(f.getName());
+                }
+            }
+        } else {
+            for (Plugin p : Bukkit.getPluginManager().getPlugins()) {
+                if (!lifecycle.isProtected(p)) {
+                    set.add(p.getName());
+                }
+            }
+            for (String name : lifecycle.getLoadableNames(false)) {
+                if (!lifecycle.isProtected(name)) {
+                    set.add(name);
+                }
+            }
+        }
+        List<String> list = new ArrayList<>(set);
+        list.sort(String.CASE_INSENSITIVE_ORDER);
+        return list;
+    }
+
+    protected List<String> allInspectablePlugins() {
+        LifecycleManager lifecycle = plugin != null ? plugin.getPluginLifecycleManager() : null;
+        if (Bukkit.getServer() == null || lifecycle == null) return Collections.emptyList();
+        Set<String> set = new LinkedHashSet<>();
+        for (Plugin p : Bukkit.getPluginManager().getPlugins()) {
+            set.add(p.getName());
+        }
+        for (String name : lifecycle.getLoadableNames(false)) {
+            set.add(name);
+        }
+        List<String> list = new ArrayList<>(set);
+        list.sort(String.CASE_INSENSITIVE_ORDER);
+        return list;
+    }
+
+    protected List<String> loadedPlugins(Predicate<Plugin> filter) {
+        if (Bukkit.getServer() == null || plugin == null) return Collections.emptyList();
+        Set<String> names = new LinkedHashSet<>();
+        LifecycleManager lifecycle = plugin.getPluginLifecycleManager();
+        boolean useJar = plugin.getConfigManager().isUseJarFileNames();
+
+        for (Plugin p : Bukkit.getPluginManager().getPlugins()) {
+            if (filter.test(p)) {
+                if (useJar) {
+                    File f = lifecycle != null ? lifecycle.getPluginFile(p) : null;
+                    if (f != null) {
+                        names.add(f.getName());
+                    } else {
+                        names.add(p.getName());
+                    }
+                } else {
+                    names.add(p.getName());
+                }
+            }
+        }
+        List<String> result = new ArrayList<>(names);
+        result.sort(String.CASE_INSENSITIVE_ORDER);
+        return result;
+    }
+
+    protected List<String> reloadCandidates(Set<String> usedTokens, CommandSender sender) {
+        LifecycleManager lifecycle = plugin != null ? plugin.getPluginLifecycleManager() : null;
+        List<String> list = withAllFlag(usedTokens, loadedPlugins(p -> lifecycle == null || !lifecycle.isProtected(p)));
+        boolean mayReloadConfig = sender != null && sender.hasPermission("plugmanreloaded.config");
+        if (mayReloadConfig && !isFlagUsed("reload", "-cfg", usedTokens) && !isFlagUsed("reload", "--config", usedTokens)) {
+            list.add("--config");
+            list.add("-cfg");
+        }
+        return list;
+    }
+
+    protected List<String> downloadSuggestions() {
+        if (plugin == null) return Collections.emptyList();
+        MainConfig mainConfig = plugin.getConfigManager().getMainConfig();
+        if (!mainConfig.isDownloadSuggestionsEnabled()) {
+            return Collections.emptyList();
+        }
+
+        List<String> popular = mainConfig.getDownloadSuggestedPlugins();
+        if (popular.isEmpty() || !mainConfig.isDownloadSuggestionsHideDownloaded()) {
+            return popular;
+        }
+
+        LifecycleManager lifecycle = plugin.getPluginLifecycleManager();
+        Set<String> presentKeys = new HashSet<>();
+        if (Bukkit.getServer() != null) {
+            for (Plugin p : Bukkit.getPluginManager().getPlugins()) {
+                presentKeys.add(p.getName().toLowerCase(Locale.ROOT));
+            }
+        }
+        if (lifecycle != null && lifecycle.getJarIndex() != null) {
+            for (PluginJarIndex.JarInfo entry : lifecycle.getJarIndex().getEntries()) {
+                if (entry.declaredName() != null) {
+                    presentKeys.add(entry.declaredName().toLowerCase(Locale.ROOT));
+                }
+                String base = entry.file().getName().toLowerCase(Locale.ROOT);
+                if (base.endsWith(".jar")) {
+                    base = base.substring(0, base.length() - 4);
+                }
+                presentKeys.add(base);
+                int dash = base.indexOf('-');
+                if (dash > 0) {
+                    presentKeys.add(base.substring(0, dash));
+                }
+            }
+        }
+
+        List<String> result = new ArrayList<>(popular.size());
+        for (String name : popular) {
+            if (name == null || name.isBlank()) continue;
+            String lower = name.toLowerCase(Locale.ROOT);
+            if (!presentKeys.contains(lower)) {
+                result.add(name);
+            }
+        }
+        return result;
     }
 }
 

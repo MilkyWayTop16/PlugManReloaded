@@ -25,6 +25,8 @@ import ru.milkyway.plugmanreloaded.bridge.PlatformDetector;
 import ru.milkyway.plugmanreloaded.utils.ErrorAnalyzer;
 import ru.milkyway.plugmanreloaded.utils.JarValidator;
 import ru.milkyway.plugmanreloaded.utils.Log;
+import ru.milkyway.plugmanreloaded.utils.PluginJarIndex;
+import ru.milkyway.plugmanreloaded.utils.PluginMetaHelper;
 
 import java.io.File;
 import java.io.IOException;
@@ -45,9 +47,9 @@ public final class LifecycleManager {
 
     private final PlugManReloaded plugin;
     private final PlatformBridge bridge;
-    private final DependencyGraph dependencyGraph;
-    private final UnloadSafetyChecker safetyAdvisor;
-    private final PluginCleanup pluginCleanup;
+    private final DependencyManager dependencyManager;
+    private final SafetyManager safetyManager;
+    private final SanitizerManager sanitizerManager;
     private final BrigadierManager brigadierManager;
     private final PluginJarIndex jarIndex;
     private final Map<Plugin, File> pluginFileCache = Collections.synchronizedMap(new WeakHashMap<>());
@@ -55,17 +57,17 @@ public final class LifecycleManager {
     public LifecycleManager(PlugManReloaded plugin) {
         this.plugin = plugin;
         this.brigadierManager = new BrigadierManager(plugin);
-        this.pluginCleanup = new PluginCleanup(plugin);
-        this.dependencyGraph = new DependencyGraph(plugin);
-        this.safetyAdvisor = new UnloadSafetyChecker(plugin);
+        this.sanitizerManager = new SanitizerManager(plugin);
+        this.dependencyManager = new DependencyManager(plugin);
+        this.safetyManager = new SafetyManager(plugin);
         this.jarIndex = new PluginJarIndex(plugin);
 
         if (PlatformDetector.isFolia()) {
-            this.bridge = new FoliaBridge(plugin, brigadierManager, pluginCleanup);
+            this.bridge = new FoliaBridge(plugin, brigadierManager, sanitizerManager);
         } else if (PlatformDetector.isModernPaper()) {
-            this.bridge = new ModernPaperBridge(plugin, brigadierManager, pluginCleanup);
+            this.bridge = new ModernPaperBridge(plugin, brigadierManager, sanitizerManager);
         } else {
-            this.bridge = new LegacyBukkitBridge(plugin, brigadierManager, pluginCleanup);
+            this.bridge = new LegacyBukkitBridge(plugin, brigadierManager, sanitizerManager);
         }
     }
 
@@ -191,7 +193,7 @@ public final class LifecycleManager {
             return PluginResult.ofError(protectedReason(targetPlugin), "plugin", targetPlugin != null ? targetPlugin.getName() : "null");
         }
         if (!deep && targetPlugin != null) {
-            Set<String> dependents = dependencyGraph.getDependents(targetPlugin.getName());
+            Set<String> dependents = dependencyManager.getDependents(targetPlugin.getName());
             if (!dependents.isEmpty()) {
                 return PluginResult.ofError(FailureReason.HAS_DEPENDENTS, "plugin", targetPlugin.getName(), "dependents", String.join(", ", dependents));
             }
@@ -345,7 +347,7 @@ public final class LifecycleManager {
 
     private CascadePlan planCascade(Plugin targetPlugin) {
         List<String> order = new ArrayList<>();
-        for (String name : dependencyGraph.calculateCascadeOrder(targetPlugin.getName(), true)) {
+        for (String name : dependencyManager.calculateCascadeOrder(targetPlugin.getName(), true)) {
             Plugin p = getPlugin(name);
             if (p == null || !isProtected(p)) {
                 order.add(name);
@@ -433,7 +435,7 @@ public final class LifecycleManager {
     private List<String> loadAll(CascadePlan plan) {
         List<String> failedPlugins = new ArrayList<>();
         Set<String> failedNames = new HashSet<>();
-        Map<String, DependencyNode> graph = dependencyGraph.buildGraph(true);
+        Map<String, DependencyNode> graph = dependencyManager.buildGraph(true);
 
         for (String pluginName : plan.reloadOrder()) {
             if (dependencyAlreadyFailed(graph, pluginName, failedNames)) {
@@ -560,7 +562,7 @@ public final class LifecycleManager {
         if (targetPlugin == null) return null;
         File file = getPluginFile(targetPlugin);
         boolean isPaper = bridge.isPaperPlugin(file);
-        return PluginInfo.fromPlugin(targetPlugin, file, isPaper);
+        return PluginMetaHelper.fromPlugin(targetPlugin, file, isPaper);
     }
 
     public BulkOperationResult bulkLoadJars(@Nullable List<PluginJarIndex.JarInfo> jars) {
@@ -569,7 +571,7 @@ public final class LifecycleManager {
         }
 
         long start = System.currentTimeMillis();
-        List<PluginJarIndex.JarInfo> sorted = dependencyGraph.sortUnloadedJarsTopologically(jars);
+        List<PluginJarIndex.JarInfo> sorted = dependencyManager.sortUnloadedJarsTopologically(jars);
         List<String> successful = new ArrayList<>();
         List<String> failed = new ArrayList<>();
         Map<String, String> failureReasons = new LinkedHashMap<>();
@@ -623,7 +625,7 @@ public final class LifecycleManager {
         }
 
         long start = System.currentTimeMillis();
-        List<Plugin> order = dependencyGraph.sortPluginsTopologically(targets);
+        List<Plugin> order = dependencyManager.sortPluginsTopologically(targets);
         Collections.reverse(order);
 
         List<String> successful = new ArrayList<>();
@@ -659,7 +661,7 @@ public final class LifecycleManager {
         }
 
         long start = System.currentTimeMillis();
-        List<Plugin> order = dependencyGraph.sortPluginsTopologically(targets);
+        List<Plugin> order = dependencyManager.sortPluginsTopologically(targets);
 
         List<String> successful = new ArrayList<>();
         List<String> failed = new ArrayList<>();
@@ -690,7 +692,7 @@ public final class LifecycleManager {
         }
 
         long start = System.currentTimeMillis();
-        List<Plugin> order = dependencyGraph.sortPluginsTopologically(targets);
+        List<Plugin> order = dependencyManager.sortPluginsTopologically(targets);
         Collections.reverse(order);
 
         List<String> successful = new ArrayList<>();
@@ -742,7 +744,7 @@ public final class LifecycleManager {
                     System.currentTimeMillis() - start);
         }
 
-        List<String> reloadOrder = dependencyGraph.sortPluginsTopologically(plan.valid())
+        List<String> reloadOrder = dependencyManager.sortPluginsTopologically(plan.valid())
                 .stream().map(Plugin::getName).toList();
         List<String> unloaded = unloadForBulk(reloadOrder, failed, reasons);
         List<String> successful = loadForBulk(reloadOrder, unloaded, plan, failed, reasons);
@@ -807,7 +809,7 @@ public final class LifecycleManager {
         Set<String> failedNames = failed.stream()
                 .map(name -> name.toLowerCase(Locale.ROOT))
                 .collect(Collectors.toCollection(HashSet::new));
-        Map<String, DependencyNode> graph = dependencyGraph.buildGraph(true);
+        Map<String, DependencyNode> graph = dependencyManager.buildGraph(true);
 
         for (String pluginName : reloadOrder) {
             if (!unloaded.contains(pluginName)) {
@@ -841,6 +843,4 @@ public final class LifecycleManager {
         }
         return successful;
     }
-
 }
-

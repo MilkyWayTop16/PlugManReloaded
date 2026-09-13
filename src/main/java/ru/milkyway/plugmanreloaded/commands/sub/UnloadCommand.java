@@ -7,11 +7,13 @@ import ru.milkyway.plugmanreloaded.PlugManReloaded;
 import ru.milkyway.plugmanreloaded.api.PluginResult;
 import ru.milkyway.plugmanreloaded.commands.AbstractSubCommand;
 import ru.milkyway.plugmanreloaded.commands.CommandContext;
-import ru.milkyway.plugmanreloaded.managers.UnloadSafetyChecker;
+import ru.milkyway.plugmanreloaded.managers.LifecycleManager;
+import ru.milkyway.plugmanreloaded.managers.SafetyManager;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class UnloadCommand extends AbstractSubCommand {
 
@@ -54,7 +56,7 @@ public class UnloadCommand extends AbstractSubCommand {
         String targetName = ctx.target();
         Plugin targetPlugin = plugin.getPluginLifecycleManager().getPlugin(targetName);
         if (targetPlugin == null) {
-            sendAction(sender, "errors.plugin-not-found", Map.of("plugin", targetName));
+            sendPluginNotFound(sender, targetName);
             return true;
         }
 
@@ -62,9 +64,9 @@ public class UnloadCommand extends AbstractSubCommand {
             return true;
         }
 
-        UnloadSafetyChecker.SafetyAssessment assessment =
-                plugin.getPluginLifecycleManager().getSafetyAdvisor().assess(targetPlugin);
-        if (assessment.riskLevel() == UnloadSafetyChecker.PluginRiskLevel.CRITICAL_PROTECTED) {
+        SafetyManager.SafetyAssessment assessment =
+                plugin.getPluginLifecycleManager().getSafetyManager().assess(targetPlugin);
+        if (assessment.riskLevel() == SafetyManager.PluginRiskLevel.CRITICAL_PROTECTED) {
             sendAction(sender, "errors.critical-protected", getPluginPlaceholders(targetPlugin));
             return true;
         }
@@ -84,7 +86,7 @@ public class UnloadCommand extends AbstractSubCommand {
         Map<String, String> pluginPh = getPluginPlaceholders(targetPlugin);
         pluginPh.put("cmd-type", "unload");
 
-        boolean risky = assessment.riskLevel() != UnloadSafetyChecker.PluginRiskLevel.SAFE;
+        boolean risky = assessment.riskLevel() != SafetyManager.PluginRiskLevel.SAFE;
         if (plugin.getConfigManager().isSafeModeEnabled() && !force && risky) {
             return askRiskConfirmation(sender, targetPlugin, "unload", assessment, pluginPh);
         }
@@ -107,5 +109,14 @@ public class UnloadCommand extends AbstractSubCommand {
         sendAction(sender, "unload.all-start");
         sendBulkReport(sender, "unload", plugin.getPluginLifecycleManager().bulkUnload(plugins));
         return true;
+    }
+
+    @Override
+    public List<String> tabCandidates(int argLength, String previousToken, Set<String> usedTokens, CommandSender sender) {
+        if (argLength == 2) {
+            LifecycleManager lifecycle = plugin != null ? plugin.getPluginLifecycleManager() : null;
+            return withAllFlag(usedTokens, loadedPlugins(p -> lifecycle == null || !lifecycle.isProtected(p)));
+        }
+        return suggestFlags(usedTokens);
     }
 }

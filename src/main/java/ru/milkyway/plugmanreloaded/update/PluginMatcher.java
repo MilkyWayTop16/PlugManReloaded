@@ -19,12 +19,12 @@ public final class PluginMatcher {
 
     private PluginMatcher() {}
 
-    public static PluginEdition detectEdition(File jar, String pluginName, String version, String mainClass, String website) {
-        return detect(jar, pluginName, version, mainClass, website);
+    public static PluginEdition detect(File jar, String pluginName, String version, String mainClass, String website) {
+        return isPremium(jar, pluginName, version, mainClass, website) ? PluginEdition.PREMIUM : PluginEdition.FREE;
     }
 
-    public static String normalize(@Nullable String value) {
-        return normalizeAsset(value);
+    public static PluginEdition detectEdition(File jar, String pluginName, String version, String mainClass, String website) {
+        return detect(jar, pluginName, version, mainClass, website);
     }
 
     public static double similarity(@Nullable String left, String right) {
@@ -35,7 +35,6 @@ public final class PluginMatcher {
         return rawSimilarity(left, right);
     }
 
-
     private static final Pattern EDITION_TOKEN_PATTERN = Pattern.compile(
             "(?i)(?:^|[._\\-\\[\\(])(prem|premium|paid|pro|plus|elite|ultimate|full)(?:[._\\-\\]\\)\\d]|\\.jar$|$)"
     );
@@ -43,15 +42,6 @@ public final class PluginMatcher {
     private static final Pattern STRICT_PREMIUM_TOKEN_PATTERN = Pattern.compile(
             "(?i)(?:^|[._\\-\\[\\(])(prem|premium|paid)(?:[._\\-\\]\\)\\d]|\\.jar$|$)"
     );
-
-    
-
-    public static PluginEdition detect(File jar, String pluginName, String version, String mainClass, String website) {
-        if (isPremium(jar, pluginName, version, mainClass, website)) {
-            return PluginEdition.PREMIUM;
-        }
-        return PluginEdition.FREE;
-    }
 
     private static boolean isPremium(File jar, String pluginName, String version, String mainClass, String website) {
         String normalizedName = normalizeName(pluginName);
@@ -103,10 +93,6 @@ public final class PluginMatcher {
         }
         return text;
     }
-
-
-
-    
 
     private static final Set<String> NON_RUNTIME_CLASSIFIERS = Set.of(
             "javadoc", "sources", "source", "plain", "original", "tests", "test", "shaded-sources", "cli"
@@ -288,13 +274,29 @@ public final class PluginMatcher {
             if (!result.contains("essentialsx")) {
                 result.add("essentialsx");
             }
+        } else if (normalized.startsWith("essentialsx")) {
+            String sub = normalized.substring("essentialsx".length());
+            String nonXVariant = "essentials" + sub;
+            if (!result.contains(nonXVariant)) {
+                result.add(nonXVariant);
+            }
+            if (!result.contains("essentials")) {
+                result.add("essentials");
+            }
         }
 
-        List<String> known = KNOWN_ALIASES.get(normalized);
-        if (known != null) {
-            for (String alias : known) {
-                if (!result.contains(alias)) {
-                    result.add(alias);
+        for (Map.Entry<String, List<String>> entry : KNOWN_ALIASES.entrySet()) {
+            if (entry.getKey().equalsIgnoreCase(normalized)) {
+                for (String alias : entry.getValue()) {
+                    if (!result.contains(alias)) {
+                        result.add(alias);
+                    }
+                }
+            } else {
+                for (String val : entry.getValue()) {
+                    if (val.equalsIgnoreCase(normalized) && !result.contains(entry.getKey())) {
+                        result.add(entry.getKey());
+                    }
                 }
             }
         }
@@ -440,14 +442,60 @@ public final class PluginMatcher {
         return title.trim();
     }
 
+    public static boolean isExactOrCleanMatch(@Nullable String pluginName, @Nullable String resourceTitle) {
+        return isExactOrCleanMatch(pluginName, resourceTitle, null);
+    }
+
+    public static boolean isExactOrCleanMatch(@Nullable String pluginName, @Nullable String resourceTitle, @Nullable String slug) {
+        if (pluginName == null || pluginName.isBlank()) {
+            return false;
+        }
+        List<String> candidates = getSearchAliases(pluginName);
+        for (String candidate : candidates) {
+            String norm = normalizeName(candidate);
+            if (norm.isEmpty()) continue;
+
+            if (resourceTitle != null && !resourceTitle.isBlank()) {
+                if (norm.equalsIgnoreCase(normalizeName(resourceTitle))) {
+                    return true;
+                }
+                String primary = primaryResourceName(resourceTitle);
+                if (!primary.isBlank() && norm.equalsIgnoreCase(normalizeName(primary))) {
+                    return true;
+                }
+                String clean = cleanResourceTitle(resourceTitle);
+                if (!clean.isBlank() && norm.equalsIgnoreCase(normalizeName(clean))) {
+                    return true;
+                }
+            }
+            if (slug != null && !slug.isBlank()) {
+                if (norm.equalsIgnoreCase(normalizeName(slug))) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     public static double resourceNameSimilarity(String pluginName, String resourceTitle) {
-        String plugin = normalizeName(pluginName);
-        if (plugin.isEmpty() || resourceTitle == null || resourceTitle.isBlank()) {
+        if (pluginName == null || pluginName.isBlank() || resourceTitle == null || resourceTitle.isBlank()) {
             return 0.0;
         }
-        double full = rawSimilarity(plugin, normalizeName(resourceTitle));
-        double primary = rawSimilarity(plugin, normalizeName(primaryResourceName(resourceTitle)));
-        return Math.max(full, primary);
+        if (isExactOrCleanMatch(pluginName, resourceTitle)) {
+            return 1.0;
+        }
+        double best = 0.0;
+        for (String alias : getSearchAliases(pluginName)) {
+            String norm = normalizeName(alias);
+            if (norm.isEmpty()) continue;
+            double full = rawSimilarity(norm, normalizeName(resourceTitle));
+            double primary = rawSimilarity(norm, normalizeName(primaryResourceName(resourceTitle)));
+            double score = Math.max(full, primary);
+            if (score > best) {
+                best = score;
+            }
+        }
+        return best;
     }
 
     public static boolean isDistinctive(String normalizedName) {

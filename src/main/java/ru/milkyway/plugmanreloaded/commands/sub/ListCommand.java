@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 import ru.milkyway.plugmanreloaded.PlugManReloaded;
 import ru.milkyway.plugmanreloaded.commands.AbstractSubCommand;
 import ru.milkyway.plugmanreloaded.commands.CommandContext;
-import ru.milkyway.plugmanreloaded.managers.PluginJarIndex;
+import ru.milkyway.plugmanreloaded.utils.PluginJarIndex;
 import ru.milkyway.plugmanreloaded.utils.HexColors;
 import ru.milkyway.plugmanreloaded.utils.Log;
 import ru.milkyway.plugmanreloaded.utils.PluginMetaHelper;
@@ -312,6 +312,11 @@ public class ListCommand extends AbstractSubCommand {
 
     private String trim(String value) {
         return value.length() <= MAX_AUTHORS_LENGTH ? value : value.substring(0, MAX_AUTHORS_LENGTH - 1) + "…";
+    }
+
+    @Override
+    public List<String> tabCandidates(int argLength, String previousToken, Set<String> usedTokens, CommandSender sender) {
+        return suggestFlags(usedTokens);
     }
 }
 

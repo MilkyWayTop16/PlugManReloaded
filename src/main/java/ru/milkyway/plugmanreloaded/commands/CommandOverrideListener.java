@@ -1,4 +1,4 @@
-package ru.milkyway.plugmanreloaded.listeners;
+package ru.milkyway.plugmanreloaded.commands;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.event.EventHandler;
@@ -109,7 +109,7 @@ public class CommandOverrideListener implements Listener {
         return lower.equals("pl") || lower.equals("plugins");
     }
 
-    boolean canServeList(CommandSender sender) {
+    public boolean canServeList(CommandSender sender) {
         return sender != null
                 && (sender.hasPermission("plugmanreloaded.list") || sender.hasPermission("plugmanreloaded.admin"));
     }
@@ -132,7 +132,7 @@ public class CommandOverrideListener implements Listener {
             System.arraycopy(tokens, 1, listArgs, 1, tokens.length - 1);
         }
 
-        TaskScheduler.runSync(plugin, () -> plugin.getCommandsHandler().executeSubCommand(sender, "list", listArgs));
+        TaskScheduler.runSync(plugin, () -> plugin.getCommandHandler().executeSubCommand(sender, "list", listArgs));
     }
 }
 

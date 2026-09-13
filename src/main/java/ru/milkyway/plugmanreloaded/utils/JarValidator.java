@@ -390,9 +390,21 @@ public final class JarValidator {
         }
     }
 
-    private static void addIfNotEmpty(List<String> list, String value) {
-        if (value != null && !value.isBlank() && !list.contains(value.trim())) {
-            list.add(value.trim());
+    private static void addIfNotEmpty(List<String> list, @Nullable String value) {
+        if (value == null || value.isBlank()) return;
+        String trimmed = value.trim();
+        if (!list.contains(trimmed)) {
+            list.add(trimmed);
+        }
+    }
+
+    private static void readYamlStringOrList(YamlConfiguration yaml, String path, List<String> target) {
+        if (yaml.isList(path)) {
+            for (String item : yaml.getStringList(path)) {
+                addIfNotEmpty(target, item);
+            }
+        } else if (yaml.isString(path)) {
+            addIfNotEmpty(target, yaml.getString(path));
         }
     }
 
@@ -414,19 +426,7 @@ public final class JarValidator {
             JarEntry pluginYml = jar.getJarEntry("plugin.yml");
             if (pluginYml != null) {
                 try (InputStream is = jar.getInputStream(pluginYml)) {
-                    YamlConfiguration yaml = loadSafeYaml(is);
-                    if (yaml.isList("depend")) {
-                        for (String dep : yaml.getStringList("depend")) {
-                            if (dep != null && !dep.isBlank() && !required.contains(dep.trim())) {
-                                required.add(dep.trim());
-                            }
-                        }
-                    } else if (yaml.isString("depend")) {
-                        String s = yaml.getString("depend");
-                        if (s != null && !s.isBlank() && !required.contains(s.trim())) {
-                            required.add(s.trim());
-                        }
-                    }
+                    readYamlStringOrList(loadSafeYaml(is), "depend", required);
                 }
             }
 
@@ -436,17 +436,15 @@ public final class JarValidator {
                     YamlConfiguration yaml = loadSafeYaml(is);
                     if (yaml.isConfigurationSection("dependencies.server")) {
                         for (String key : yaml.getConfigurationSection("dependencies.server").getKeys(false)) {
-                            boolean isRequired = yaml.getBoolean("dependencies.server." + key + ".required", true);
-                            if (isRequired && !required.contains(key.trim())) {
-                                required.add(key.trim());
+                            if (yaml.getBoolean("dependencies.server." + key + ".required", true)) {
+                                addIfNotEmpty(required, key);
                             }
                         }
                     }
                     if (yaml.isConfigurationSection("dependencies.bootstrap")) {
                         for (String key : yaml.getConfigurationSection("dependencies.bootstrap").getKeys(false)) {
-                            boolean isRequired = yaml.getBoolean("dependencies.bootstrap." + key + ".required", true);
-                            if (isRequired && !required.contains(key.trim())) {
-                                required.add(key.trim());
+                            if (yaml.getBoolean("dependencies.bootstrap." + key + ".required", true)) {
+                                addIfNotEmpty(required, key);
                             }
                         }
                     }
@@ -467,32 +465,13 @@ public final class JarValidator {
             JarEntry pluginYml = jar.getJarEntry("plugin.yml");
             if (pluginYml != null) {
                 try (InputStream is = jar.getInputStream(pluginYml)) {
-                    YamlConfiguration yaml = loadSafeYaml(is);
-                    if (yaml.isList("provides")) {
-                        for (String p : yaml.getStringList("provides")) {
-                            if (p != null && !p.isBlank() && !provides.contains(p.trim())) {
-                                provides.add(p.trim());
-                            }
-                        }
-                    } else if (yaml.isString("provides")) {
-                        String s = yaml.getString("provides");
-                        if (s != null && !s.isBlank() && !provides.contains(s.trim())) {
-                            provides.add(s.trim());
-                        }
-                    }
+                    readYamlStringOrList(loadSafeYaml(is), "provides", provides);
                 }
             }
             JarEntry paperYml = jar.getJarEntry("paper-plugin.yml");
             if (paperYml != null) {
                 try (InputStream is = jar.getInputStream(paperYml)) {
-                    YamlConfiguration yaml = loadSafeYaml(is);
-                    if (yaml.isList("provides")) {
-                        for (String p : yaml.getStringList("provides")) {
-                            if (p != null && !p.isBlank() && !provides.contains(p.trim())) {
-                                provides.add(p.trim());
-                            }
-                        }
-                    }
+                    readYamlStringOrList(loadSafeYaml(is), "provides", provides);
                 }
             }
             return provides;
@@ -508,19 +487,7 @@ public final class JarValidator {
             JarEntry pluginYml = jar.getJarEntry("plugin.yml");
             if (pluginYml != null) {
                 try (InputStream is = jar.getInputStream(pluginYml)) {
-                    YamlConfiguration yaml = loadSafeYaml(is);
-                    if (yaml.isList("softdepend")) {
-                        for (String dep : yaml.getStringList("softdepend")) {
-                            if (dep != null && !dep.isBlank() && !optional.contains(dep.trim())) {
-                                optional.add(dep.trim());
-                            }
-                        }
-                    } else if (yaml.isString("softdepend")) {
-                        String s = yaml.getString("softdepend");
-                        if (s != null && !s.isBlank() && !optional.contains(s.trim())) {
-                            optional.add(s.trim());
-                        }
-                    }
+                    readYamlStringOrList(loadSafeYaml(is), "softdepend", optional);
                 }
             }
             JarEntry paperYml = jar.getJarEntry("paper-plugin.yml");
@@ -529,9 +496,8 @@ public final class JarValidator {
                     YamlConfiguration yaml = loadSafeYaml(is);
                     if (yaml.isConfigurationSection("dependencies.server")) {
                         for (String key : yaml.getConfigurationSection("dependencies.server").getKeys(false)) {
-                            boolean isRequired = yaml.getBoolean("dependencies.server." + key + ".required", true);
-                            if (!isRequired && !optional.contains(key.trim())) {
-                                optional.add(key.trim());
+                            if (!yaml.getBoolean("dependencies.server." + key + ".required", true)) {
+                                addIfNotEmpty(optional, key);
                             }
                         }
                     }
@@ -586,8 +552,7 @@ public final class JarValidator {
                             }
                         }
                     }
-                } catch (Throwable ignored) {
-                }
+                } catch (Exception ignored) {}
             }
         }
         return false;

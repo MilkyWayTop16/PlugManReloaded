@@ -1,22 +1,25 @@
 package ru.milkyway.plugmanreloaded.utils;
 
-import org.jetbrains.annotations.Nullable;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class GameVersionFormatter {
 
-    private static final Pattern VERSION_PATTERN = Pattern.compile("^v?(\\d+)(?:\\.(\\d+))?(?:\\.(\\d+))?(?:\\.(\\d+))?(.*)$", Pattern.CASE_INSENSITIVE);
-
     private GameVersionFormatter() {}
+
+    private static final Pattern GAME_VERSION_PATTERN = Pattern.compile("^v?(\\d+)(?:\\.(\\d+))?(?:\\.(\\d+))?(?:\\.(\\d+))?(.*)$", Pattern.CASE_INSENSITIVE);
 
     public static String formatRanges(Collection<String> versions) {
         return formatRanges(versions, "Any");
     }
 
-    public static String formatRanges(@Nullable Collection<String> versions, String defaultIfEmpty) {
+    public static String formatRanges(Collection<String> versions, String defaultIfEmpty) {
         if (versions == null || versions.isEmpty()) {
             return defaultIfEmpty != null ? defaultIfEmpty : "Any";
         }
@@ -32,11 +35,11 @@ public final class GameVersionFormatter {
             return defaultIfEmpty != null ? defaultIfEmpty : "Any";
         }
 
-        List<ParsedVersion> parsed = new ArrayList<>();
+        List<ParsedGameVersion> parsed = new ArrayList<>();
         List<String> unparseable = new ArrayList<>();
 
         for (String raw : unique) {
-            ParsedVersion pv = parse(raw);
+            ParsedGameVersion pv = parseGameVersion(raw);
             if (pv != null) {
                 parsed.add(pv);
             } else {
@@ -46,8 +49,8 @@ public final class GameVersionFormatter {
 
         parsed.sort(Comparator.naturalOrder());
 
-        List<ParsedVersion> deduplicated = new ArrayList<>();
-        for (ParsedVersion pv : parsed) {
+        List<ParsedGameVersion> deduplicated = new ArrayList<>();
+        for (ParsedGameVersion pv : parsed) {
             if (deduplicated.isEmpty() || !deduplicated.get(deduplicated.size() - 1).isSameVersion(pv)) {
                 deduplicated.add(pv);
             }
@@ -56,13 +59,13 @@ public final class GameVersionFormatter {
         List<String> ranges = new ArrayList<>();
         int i = 0;
         while (i < deduplicated.size()) {
-            ParsedVersion start = deduplicated.get(i);
-            ParsedVersion prev = start;
+            ParsedGameVersion start = deduplicated.get(i);
+            ParsedGameVersion prev = start;
             int j = i + 1;
 
             while (j < deduplicated.size()) {
-                ParsedVersion next = deduplicated.get(j);
-                if (isContiguous(prev, next)) {
+                ParsedGameVersion next = deduplicated.get(j);
+                if (isContiguousGameVersion(prev, next)) {
                     prev = next;
                     j++;
                 } else {
@@ -70,11 +73,11 @@ public final class GameVersionFormatter {
                 }
             }
 
-            ParsedVersion end = prev;
+            ParsedGameVersion end = prev;
             if (start.equals(end)) {
                 ranges.add(start.raw);
             } else {
-                ranges.add(start.raw + " – " + end.raw);
+                ranges.add(start.raw + " \u2013 " + end.raw);
             }
 
             i = j;
@@ -89,7 +92,7 @@ public final class GameVersionFormatter {
         return String.join(", ", ranges);
     }
 
-    private static boolean isContiguous(ParsedVersion a, ParsedVersion b) {
+    private static boolean isContiguousGameVersion(ParsedGameVersion a, ParsedGameVersion b) {
         if (a.major == b.major) {
             if (a.minor == b.minor) {
                 return (b.patch - a.patch) <= 1 || (a.patch == 0 && b.patch <= 2);
@@ -100,10 +103,6 @@ public final class GameVersionFormatter {
             return false;
         }
 
-        if (a.major == 1 && a.minor >= 20 && b.major == 26) {
-            return true;
-        }
-
         if (b.major - a.major == 1 && b.minor <= 1) {
             return true;
         }
@@ -111,9 +110,9 @@ public final class GameVersionFormatter {
         return false;
     }
 
-    private static @Nullable ParsedVersion parse(String raw) {
+    private static ParsedGameVersion parseGameVersion(String raw) {
         String clean = raw.trim().replaceFirst("^[vV]+", "");
-        Matcher matcher = VERSION_PATTERN.matcher(clean);
+        Matcher matcher = GAME_VERSION_PATTERN.matcher(clean);
         if (!matcher.matches()) {
             return null;
         }
@@ -125,13 +124,13 @@ public final class GameVersionFormatter {
             int build = matcher.group(4) != null ? Integer.parseInt(matcher.group(4)) : 0;
             String suffix = matcher.group(5) != null ? matcher.group(5).trim() : "";
 
-            return new ParsedVersion(clean, major, minor, patch, build, suffix);
+            return new ParsedGameVersion(clean, major, minor, patch, build, suffix);
         } catch (NumberFormatException e) {
             return null;
         }
     }
 
-    private static final class ParsedVersion implements Comparable<ParsedVersion> {
+    private static final class ParsedGameVersion implements Comparable<ParsedGameVersion> {
         private final String raw;
         private final int major;
         private final int minor;
@@ -139,7 +138,7 @@ public final class GameVersionFormatter {
         private final int build;
         private final String suffix;
 
-        private ParsedVersion(String raw, int major, int minor, int patch, int build, String suffix) {
+        private ParsedGameVersion(String raw, int major, int minor, int patch, int build, String suffix) {
             this.raw = raw;
             this.major = major;
             this.minor = minor;
@@ -148,7 +147,7 @@ public final class GameVersionFormatter {
             this.suffix = suffix != null ? suffix : "";
         }
 
-        public boolean isSameVersion(ParsedVersion o) {
+        public boolean isSameVersion(ParsedGameVersion o) {
             return this.major == o.major
                     && this.minor == o.minor
                     && this.patch == o.patch
@@ -157,7 +156,7 @@ public final class GameVersionFormatter {
         }
 
         @Override
-        public int compareTo(ParsedVersion o) {
+        public int compareTo(ParsedGameVersion o) {
             if (this.major != o.major) return Integer.compare(this.major, o.major);
             if (this.minor != o.minor) return Integer.compare(this.minor, o.minor);
             if (this.patch != o.patch) return Integer.compare(this.patch, o.patch);
@@ -168,7 +167,7 @@ public final class GameVersionFormatter {
         @Override
         public boolean equals(Object obj) {
             if (this == obj) return true;
-            if (!(obj instanceof ParsedVersion other)) return false;
+            if (!(obj instanceof ParsedGameVersion other)) return false;
             return this.raw.equals(other.raw);
         }
 
@@ -178,4 +177,3 @@ public final class GameVersionFormatter {
         }
     }
 }
-

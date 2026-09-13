@@ -13,6 +13,8 @@ import ru.milkyway.plugmanreloaded.utils.TaskScheduler;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public class DownloadService {
@@ -203,12 +205,16 @@ public class DownloadService {
     }
 
     public static class DownloadLocks {
-        private final java.util.concurrent.ConcurrentHashMap<String, Long> activeLocks = new java.util.concurrent.ConcurrentHashMap<>();
-        private static final long LOCK_TIMEOUT_MS = java.util.concurrent.TimeUnit.SECONDS.toMillis(60);
+        private final Map<String, Long> activeLocks = new ConcurrentHashMap<>();
+        private static final long LOCK_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(60);
+
+        private String normalize(String name) {
+            return name.trim().toLowerCase(Locale.ROOT);
+        }
 
         public boolean tryLock(@Nullable String pluginName) {
             if (pluginName == null || pluginName.isBlank()) return false;
-            String key = pluginName.toLowerCase(java.util.Locale.ROOT).trim();
+            String key = normalize(pluginName);
             long now = System.currentTimeMillis();
 
             boolean[] acquired = {false};
@@ -225,12 +231,12 @@ public class DownloadService {
 
         public void unlock(@Nullable String pluginName) {
             if (pluginName == null || pluginName.isBlank()) return;
-            activeLocks.remove(pluginName.toLowerCase(java.util.Locale.ROOT).trim());
+            activeLocks.remove(normalize(pluginName));
         }
 
         public boolean isLocked(@Nullable String pluginName) {
             if (pluginName == null || pluginName.isBlank()) return false;
-            Long existing = activeLocks.get(pluginName.toLowerCase(java.util.Locale.ROOT).trim());
+            Long existing = activeLocks.get(normalize(pluginName));
             return existing != null && (System.currentTimeMillis() - existing) < LOCK_TIMEOUT_MS;
         }
     }

@@ -11,7 +11,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.jetbrains.annotations.Nullable;
 import ru.milkyway.plugmanreloaded.PlugManReloaded;
 import ru.milkyway.plugmanreloaded.update.HttpJson;
-import ru.milkyway.plugmanreloaded.update.VersionUtil;
+import ru.milkyway.plugmanreloaded.update.VersionCompare;
 
 import java.util.HashMap;
 import java.util.List;
@@ -104,7 +104,7 @@ public class UpdateChecker implements Listener {
                         String tag = PluginMetaHelper.cleanVersion(obj.get("tag_name").getAsString());
                         this.latestVersion = tag;
                         String current = PluginMetaHelper.getVersion(plugin);
-                        if (VersionUtil.isNewer(tag, current)) {
+                        if (VersionCompare.isNewer(tag, current)) {
                             this.updateAvailable = true;
                             if (announce) {
                                 announceUpdate();

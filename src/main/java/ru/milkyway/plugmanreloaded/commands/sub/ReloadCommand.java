@@ -67,7 +67,7 @@ public class ReloadCommand extends AbstractReloadCommand {
 
     @Override
     protected boolean handleOwnFlags(CommandContext ctx) {
-        boolean configReload = ctx.hasFlag("config") || (ctx.hasFlag("c") && !ctx.hasTarget());
+        boolean configReload = ctx.hasFlag("config") || ctx.hasFlag("cfg") || (ctx.hasFlag("c") && !ctx.hasTarget());
         if (!configReload || ctx.isAll()) {
             return false;
         }
@@ -88,5 +88,13 @@ public class ReloadCommand extends AbstractReloadCommand {
                 "ms", String.valueOf(elapsed)
         ));
         return true;
+    }
+
+    @Override
+    public List<String> tabCandidates(int argLength, String previousToken, java.util.Set<String> usedTokens, CommandSender sender) {
+        if (argLength == 2) {
+            return reloadCandidates(usedTokens, sender);
+        }
+        return suggestFlags(usedTokens);
     }
 }

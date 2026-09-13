@@ -7,16 +7,17 @@ import org.jetbrains.annotations.Nullable;
 import ru.milkyway.plugmanreloaded.PlugManReloaded;
 import ru.milkyway.plugmanreloaded.api.DependencyNode;
 import ru.milkyway.plugmanreloaded.utils.Log;
+import ru.milkyway.plugmanreloaded.utils.PluginJarIndex;
 import ru.milkyway.plugmanreloaded.utils.ReflectionHelper;
 
 import java.util.*;
 import java.util.function.Function;
 
-public class DependencyGraph {
+public class DependencyManager {
 
     private final PlugManReloaded plugin;
 
-    public DependencyGraph(PlugManReloaded plugin) {
+    public DependencyManager(PlugManReloaded plugin) {
         this.plugin = plugin;
     }
 
@@ -223,7 +224,7 @@ public class DependencyGraph {
     }
 
     public static Set<String> resolveDependentsWithFallback(@Nullable Set<String> directDependents,
-                                                              DependencyGraph graphManager,
+                                                              DependencyManager graphManager,
                                                               String pluginName) {
         if (directDependents == null) directDependents = Collections.emptySet();
         if (!directDependents.isEmpty() || graphManager == null) {

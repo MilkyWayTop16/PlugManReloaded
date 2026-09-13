@@ -9,13 +9,13 @@ import ru.milkyway.plugmanreloaded.utils.TaskScheduler;
 
 import java.util.*;
 
-public class CommandsHandler implements CommandExecutor {
+public class CommandHandler implements CommandExecutor {
 
     private final PlugManReloaded plugin;
     private final Map<String, SubCommand> subCommands = new HashMap<>();
     private final List<SubCommand> mainSubCommands = new ArrayList<>();
 
-    public CommandsHandler(PlugManReloaded plugin) {
+    public CommandHandler(PlugManReloaded plugin) {
         this.plugin = plugin;
 
         register(new HelpCommand(plugin));
@@ -30,11 +30,10 @@ public class CommandsHandler implements CommandExecutor {
         register(new UsageCommand(plugin));
         register(new DumpCommand(plugin));
         register(new HotSwapCommand(plugin));
-        register(new ConfigSubCommand(plugin));
+        register(new ConfigCommand(plugin));
         register(new UpdateCommand(plugin));
         register(new DeleteCommand(plugin));
         register(new DownloadCommand(plugin));
-
     }
 
     private void register(SubCommand command) {
@@ -52,26 +51,13 @@ public class CommandsHandler implements CommandExecutor {
     }
 
     private void dispatch(CommandSender sender, String[] args) {
-        if (args.length == 0) {
-            SubCommand help = subCommands.get("help");
-            if (help != null) {
-                help.execute(sender, args);
-            }
-            return;
+        SubCommand target = args.length > 0 ? subCommands.get(args[0].toLowerCase(Locale.ROOT)) : null;
+        if (target == null) {
+            target = subCommands.get("help");
         }
-
-        String subName = args[0].toLowerCase(Locale.ROOT);
-        SubCommand subCommand = subCommands.get(subName);
-
-        if (subCommand == null) {
-            SubCommand help = subCommands.get("help");
-            if (help != null) {
-                help.execute(sender, args);
-            }
-            return;
+        if (target != null) {
+            target.execute(sender, args);
         }
-
-        subCommand.execute(sender, args);
     }
 
     public List<SubCommand> getMainSubCommands() {
@@ -90,4 +76,3 @@ public class CommandsHandler implements CommandExecutor {
         return false;
     }
 }
-

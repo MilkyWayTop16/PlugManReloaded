@@ -8,14 +8,14 @@ import ru.milkyway.plugmanreloaded.PlugManReloaded;
 import ru.milkyway.plugmanreloaded.api.FailureReason;
 import ru.milkyway.plugmanreloaded.api.PluginResult;
 import ru.milkyway.plugmanreloaded.managers.BrigadierManager;
-import ru.milkyway.plugmanreloaded.managers.PluginCleanup;
+import ru.milkyway.plugmanreloaded.managers.SanitizerManager;
 import ru.milkyway.plugmanreloaded.utils.Log;
 import ru.milkyway.plugmanreloaded.utils.ReflectionHelper;
 
 public class FoliaBridge extends ModernPaperBridge {
 
-    public FoliaBridge(PlugManReloaded plugin, BrigadierManager brigadierManager, PluginCleanup pluginCleanup) {
-        super(plugin, brigadierManager, pluginCleanup);
+    public FoliaBridge(PlugManReloaded plugin, BrigadierManager brigadierManager, SanitizerManager sanitizerManager) {
+        super(plugin, brigadierManager, sanitizerManager);
     }
 
     @Override

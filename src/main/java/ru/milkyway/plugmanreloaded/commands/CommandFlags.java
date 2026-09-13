@@ -12,7 +12,7 @@ public final class CommandFlags {
         register("reload",
                 Flag.of("cascade", "-c", "--cascade"),
                 Flag.of("force", "-f", "--force"),
-                Flag.of("config", "-c", "--config"));
+                Flag.of("config", "-cfg", "--config"));
         register("restart",
                 Flag.of("cascade", "-c", "--cascade"),
                 Flag.of("force", "-f", "--force"));
@@ -29,7 +29,8 @@ public final class CommandFlags {
                 Flag.of("force", "-f", "--force"),
                 Flag.of("refresh", "-r", "--refresh"),
                 Flag.of("single", "-s", "--single"),
-                Flag.of("cascade", "-c", "--cascade"));
+                Flag.of("cascade", "-c", "--cascade"),
+                Flag.of("prerelease", "-pre", "--prerelease", "--beta"));
         register("download",
                 Flag.of("yes", "-y", "--yes"),
                 Flag.of("force", "-f", "--force"),

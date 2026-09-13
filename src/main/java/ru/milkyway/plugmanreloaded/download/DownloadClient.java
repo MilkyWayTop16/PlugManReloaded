@@ -1,4 +1,4 @@
-package ru.milkyway.plugmanreloaded.update.install;
+package ru.milkyway.plugmanreloaded.download;
 
 import ru.milkyway.plugmanreloaded.update.PluginMatcher;
 

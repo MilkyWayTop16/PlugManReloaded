@@ -43,6 +43,8 @@ logs:
     hangar-search-failed: "[PluginSearch] Поиск в Hangar не удался для {query}"
     spiget-fetch-failed: "[PluginSearch] Не удалось получить ресурс Spiget по ID {id}"
     spiget-search-failed: "[PluginSearch] Поиск в Spiget не удался для {query}"
+    spiget-author-failed: "[PluginSearch] Не удалось определить автора ресурса Spiget"
+    spiget-stars-failed: "[PluginSearch] Не удалось разобрать рейтинг ресурса Spiget"
     github-repo-fetch-failed: "[PluginSearch] Не удалось получить репозиторий GitHub {repo}"
     github-rate-limited: "[PluginSearch] GitHub Search API: превышен лимит запросов (Rate Limit 403). Укажите github-token в config.yml"
     github-search-failed: "[PluginSearch] Поиск в GitHub не удался для {query}"
@@ -403,9 +405,9 @@ logs:
     jar-list-failed: "[ListCommand] Не удалось получить список jar"
     unloaded-jar-list-failed: "[ListCommand] Не удалось получить список незагруженных jar"
 
-  unloadsafetychecker:
-    marker-check-failed: "[UnloadSafetyChecker] Ошибка проверки маркера {marker} для {plugin}"
-    servicesmanager-scan-failed: "[UnloadSafetyChecker] Не удалось просканировать ServicesManager для {plugin}"
+  safetychecker:
+    marker-check-failed: "[SafetyChecker] Ошибка проверки маркера {marker} для {plugin}"
+    servicesmanager-scan-failed: "[SafetyChecker] Не удалось просканировать ServicesManager для {plugin}"
 
   manualsourcelistener:
     hide-message-failed: "[ManualSourceListener] Не удалось скрыть сообщение от других игроков"
@@ -433,6 +435,24 @@ logs:
 
   updatecommand:
     reloading-dependents: "Перезагрузка зависимых плагинов после пакетного обновления ({count} шт.): {plugins}"
+
+  updateinstaller:
+    dependency-update-available: "[UpdateInstaller] Внимание: плагин {plugin} зависит от {dependency}, для которого также доступно обновление ({newVersion})! Рекомендуется обновить {dependency}"
+    jar-overwrite-failed: "[UpdateInstaller] Не удалось перезаписать jar-файл для {plugin}"
+    new-version-load-failed: "[UpdateInstaller] Не удалось загрузить новую версию {plugin}"
+    jarindex-invalidate-failed: "[UpdateInstaller] Не удалось сбросить кэш JarIndex"
+    updated: "[UpdateInstaller] Плагин {plugin} успешно обновлён с v{from} до v{to}"
+    staged-for-restart: "[UpdateInstaller] Новая версия {plugin} (v{to}) скопирована в update/ и будет применена после перезапуска"
+    stage-for-restart-failed: "[UpdateInstaller] Не удалось сохранить обновление {plugin} в папку update/: {error}"
+    dependents-collect-failed: "[UpdateInstaller] Не удалось собрать зависимые плагины для {plugin}"
+    restarting-dependents: "[UpdateInstaller] Перезапуск зависимых плагинов ({count} шт.) для {plugin}"
+    dependent-load-failed: "[UpdateInstaller] Не удалось загрузить зависимый плагин {dependent} для {plugin}"
+    rollback-failed: "[UpdateInstaller] Ошибка отката бэкапа для {file}"
+    rollback-load-failed: "[UpdateInstaller] Ошибка загрузки восстановленного плагина {plugin}"
+    move-attempt-failed: "[UpdateInstaller] Попытка перемещения {source} -> {destination} (#{attempt}) не удалась"
+    delete-attempt-failed: "[UpdateInstaller] Попытка удаления {file} (#{attempt}) не удалась"
+    empty-folder-cleanup-failed: "[UpdateInstaller] Не удалось удалить пустую директорию {folder}"
+    temp-file-delete-failed: "[UpdateInstaller] Не удалось удалить временный файл {file}"
 
   chatbuttonfactory:
     url-looks-like-markup: "[ChatButtonFactory] Значение url похоже на разметку, а не на ссылку, кнопка не станет кликабельной: {value}"

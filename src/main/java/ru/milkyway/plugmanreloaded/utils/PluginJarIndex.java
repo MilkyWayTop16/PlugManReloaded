@@ -1,14 +1,10 @@
-package ru.milkyway.plugmanreloaded.managers;
+package ru.milkyway.plugmanreloaded.utils;
 
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.Nullable;
 import ru.milkyway.plugmanreloaded.PlugManReloaded;
-import ru.milkyway.plugmanreloaded.utils.JarValidator;
-import ru.milkyway.plugmanreloaded.utils.Log;
-import ru.milkyway.plugmanreloaded.utils.PluginMetaHelper;
-import ru.milkyway.plugmanreloaded.utils.TaskScheduler;
 
 import java.io.File;
 import java.io.IOException;

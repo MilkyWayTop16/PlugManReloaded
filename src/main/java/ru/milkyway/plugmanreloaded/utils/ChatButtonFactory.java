@@ -1,13 +1,10 @@
-package ru.milkyway.plugmanreloaded.configs;
+package ru.milkyway.plugmanreloaded.utils;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.jetbrains.annotations.Nullable;
-import ru.milkyway.plugmanreloaded.utils.HexColors;
-import ru.milkyway.plugmanreloaded.utils.Log;
-import ru.milkyway.plugmanreloaded.utils.PluginMetaHelper;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -15,7 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-final class ChatButtonFactory {
+public final class ChatButtonFactory {
 
     private record RenderCtx(
             FileConfiguration config,
@@ -36,9 +33,11 @@ final class ChatButtonFactory {
         DEPS_BUTTON("{deps-button}") {
             @Override
             Component render(RenderCtx ctx) {
+                boolean isPre = "true".equalsIgnoreCase(ctx.placeholders().get("is-prerelease"));
+                String preFlag = isPre ? " -pre" : "";
                 String command = ctx.cmdType().equals("download")
                         ? "/plm download " + ctx.pluginName() + " confirm" + ctx.tokenSuffix()
-                        : "/plm " + ctx.cmdType() + " " + ctx.pluginName() + (ctx.cmdType().equals("update") ? " -y" : " -c") + ctx.tokenSuffix();
+                        : "/plm " + ctx.cmdType() + " " + ctx.pluginName() + (ctx.cmdType().equals("update") ? " -y" + preFlag : " -c") + ctx.tokenSuffix();
                 return buildCommandButton(ctx, ctx.cmdType(), "deps", null, command);
             }
         },
@@ -53,7 +52,9 @@ final class ChatButtonFactory {
                     command = "/plm download " + ctx.pluginName() + " confirm" + ctx.tokenSuffix();
                 } else if (ctx.cmdType().equals("update")) {
                     boolean isDeps = ctx.actionKey() != null && ctx.actionKey().contains("dependents");
-                    command = "/plm update " + ctx.pluginName() + (isDeps ? " -y -single" : " -y") + ctx.tokenSuffix();
+                    boolean isPre = "true".equalsIgnoreCase(ctx.placeholders().get("is-prerelease"));
+                    String preFlag = isPre ? " -pre" : "";
+                    command = "/plm update " + ctx.pluginName() + (isDeps ? " -y -single" : " -y") + preFlag + ctx.tokenSuffix();
                 } else {
                     command = "/plm " + (ctx.cmdType().equals("safe-mode") ? "safe-mode" : ctx.cmdType()) + " " + ctx.pluginName() + " -f" + ctx.tokenSuffix();
                 }
@@ -273,8 +274,10 @@ final class ChatButtonFactory {
         ALL_BUTTON("{all-button}") {
             @Override
             Component render(RenderCtx ctx) {
+                boolean isPre = "true".equalsIgnoreCase(ctx.placeholders().get("is-prerelease"));
+                String preFlag = isPre ? " -pre" : "";
                 return buildCommandButton(ctx, "update", "all", "actions.update.confirm-all-buttons.all",
-                        "/plm update -all -y" + ctx.tokenSuffix());
+                        "/plm update -all -y" + preFlag + ctx.tokenSuffix());
             }
         },
 
@@ -304,7 +307,7 @@ final class ChatButtonFactory {
     }
 
     private static final Map<String, ButtonToken> TOKEN_MAP;
-    static final String[] BUTTON_TOKENS;
+    public static final String[] BUTTON_TOKENS;
 
     static {
         Map<String, ButtonToken> map = new LinkedHashMap<>();
@@ -321,7 +324,7 @@ final class ChatButtonFactory {
     private ChatButtonFactory() {
     }
 
-    static boolean hasButtonToken(String text) {
+    public static boolean hasButtonToken(String text) {
         if (text == null || text.isEmpty()) return false;
         for (String token : BUTTON_TOKENS) {
             if (text.contains(token)) return true;
@@ -329,7 +332,7 @@ final class ChatButtonFactory {
         return false;
     }
 
-    static Component renderInteractiveLine(FileConfiguration config, String line, Map<String, String> placeholders, String actionKey) {
+    public static Component renderInteractiveLine(FileConfiguration config, String line, Map<String, String> placeholders, String actionKey) {
         Component message = Component.empty();
         String remaining = line;
 
@@ -376,7 +379,7 @@ final class ChatButtonFactory {
         return message;
     }
 
-    static Component createButton(FileConfiguration config, String token, Map<String, String> placeholders, String actionKey) {
+    public static Component createButton(FileConfiguration config, String token, Map<String, String> placeholders, String actionKey) {
         ButtonToken buttonToken = TOKEN_MAP.get(token);
         if (buttonToken == null) {
             return Component.empty();

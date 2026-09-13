@@ -214,6 +214,7 @@ public final class ModrinthSource implements UpdateSource {
                     continue;
                 }
 
+                boolean exactNameMatch = PluginMatcher.isExactOrCleanMatch(identity.pluginName(), title, slug);
                 boolean authorMatch = PluginMatcher.authorsMatch(identity.authors(), string(hit, "author"));
                 boolean brandMatch = PluginMatcher.hasBrandCorroboration(identity, slug, title, string(hit, "description"));
                 String remoteAuthor = string(hit, "author");
@@ -223,10 +224,9 @@ public final class ModrinthSource implements UpdateSource {
                         continue;
                     }
                 }
-                boolean distinctive = PluginMatcher.isDistinctive(normalizedPlugin)
-                        && !PluginMatcher.isGeneric(identity.pluginName());
+                boolean safeExact = exactNameMatch && !PluginMatcher.isGeneric(identity.pluginName());
 
-                if (!authorMatch && !brandMatch && !distinctive) {
+                if (!safeExact && !authorMatch && !brandMatch) {
                     Log.debug("modrinthsource.candidate-no-corroboration", "slug", slug);
                     continue;
                 }

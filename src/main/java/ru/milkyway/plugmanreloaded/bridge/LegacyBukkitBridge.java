@@ -10,8 +10,8 @@ import ru.milkyway.plugmanreloaded.PlugManReloaded;
 import ru.milkyway.plugmanreloaded.api.FailureReason;
 import ru.milkyway.plugmanreloaded.api.PluginResult;
 import ru.milkyway.plugmanreloaded.managers.BrigadierManager;
-import ru.milkyway.plugmanreloaded.managers.PluginCleanup;
-import ru.milkyway.plugmanreloaded.managers.PluginJarIndex;
+import ru.milkyway.plugmanreloaded.managers.SanitizerManager;
+import ru.milkyway.plugmanreloaded.utils.PluginJarIndex;
 import ru.milkyway.plugmanreloaded.utils.ErrorAnalyzer;
 import ru.milkyway.plugmanreloaded.utils.JarValidator;
 import ru.milkyway.plugmanreloaded.utils.Log;
@@ -30,12 +30,12 @@ public class LegacyBukkitBridge implements PlatformBridge {
 
     protected final PlugManReloaded plugin;
     protected final BrigadierManager brigadierManager;
-    protected final PluginCleanup pluginCleanup;
+    protected final SanitizerManager sanitizerManager;
 
-    public LegacyBukkitBridge(PlugManReloaded plugin, BrigadierManager brigadierManager, PluginCleanup pluginCleanup) {
+    public LegacyBukkitBridge(PlugManReloaded plugin, BrigadierManager brigadierManager, SanitizerManager sanitizerManager) {
         this.plugin = plugin;
         this.brigadierManager = brigadierManager;
-        this.pluginCleanup = pluginCleanup;
+        this.sanitizerManager = sanitizerManager;
     }
 
     @Override
@@ -151,7 +151,7 @@ public class LegacyBukkitBridge implements PlatformBridge {
 
             brigadierManager.unregisterPluginCommands(targetPlugin);
 
-            pluginCleanup.cleanup(targetPlugin);
+            sanitizerManager.cleanup(targetPlugin);
 
             PluginManager pm = Bukkit.getPluginManager();
             if (pm instanceof SimplePluginManager spm) {

@@ -24,13 +24,8 @@ public final class Log {
     }
 
     public static void console(String key, String... placeholders) {
-        PlugManReloaded plugin = PlugManReloaded.getInstance();
         String message = LogCatalog.get(key, placeholders);
-        if (plugin != null) {
-            plugin.console(message);
-        } else {
-            toStandalone(STANDALONE_INFO_PREFIX + message, Level.INFO, message);
-        }
+        sendRaw(message, Level.INFO, message);
     }
 
     public static void info(String key, String... placeholders) {
@@ -75,60 +70,68 @@ public final class Log {
     private static void sendInfo(@Nullable String message) {
         if (message == null) return;
         PlugManReloaded plugin = PlugManReloaded.getInstance();
-        if (plugin != null) {
-            plugin.log(message);
-        } else {
-            toStandalone(STANDALONE_INFO_PREFIX + message, Level.INFO, message);
+        if (plugin != null && plugin.getConfigManager() != null && !plugin.getConfigManager().isConsoleLogsEnabled()) {
+            return;
         }
+        send(plugin != null ? LogCatalog.get("prefix.info") + message : null,
+                STANDALONE_INFO_PREFIX + message, Level.INFO, message);
     }
 
     private static void sendSuccess(@Nullable String message) {
         if (message == null) return;
         PlugManReloaded plugin = PlugManReloaded.getInstance();
-        if (plugin != null) {
-            plugin.success(message);
-        } else {
-            toStandalone(STANDALONE_SUCCESS_PREFIX + message, Level.INFO, message);
+        if (plugin != null && plugin.getConfigManager() != null && !plugin.getConfigManager().isConsoleLogsEnabled()) {
+            return;
         }
+        send(plugin != null ? LogCatalog.get("prefix.success") + message : null,
+                STANDALONE_SUCCESS_PREFIX + message, Level.INFO, message);
     }
 
     private static void sendWarn(@Nullable String message) {
         if (message == null) return;
-        PlugManReloaded plugin = PlugManReloaded.getInstance();
-        if (plugin != null) {
-            plugin.warn(message);
-        } else {
-            toStandalone(STANDALONE_WARN_PREFIX + message, Level.WARNING, message);
-        }
+        send(LogCatalog.get("prefix.warn") + message,
+                STANDALONE_WARN_PREFIX + message, Level.WARNING, message);
     }
 
     private static void sendError(@Nullable String message) {
         if (message == null) return;
-        PlugManReloaded plugin = PlugManReloaded.getInstance();
-        if (plugin != null) {
-            plugin.error(message);
-        } else {
-            toStandalone(STANDALONE_ERROR_PREFIX + message, Level.SEVERE, message);
-        }
+        send(LogCatalog.get("prefix.error") + message,
+                STANDALONE_ERROR_PREFIX + message, Level.SEVERE, message);
     }
 
     private static void sendDebug(@Nullable String message) {
         if (message == null) return;
         PlugManReloaded plugin = PlugManReloaded.getInstance();
-        if (plugin == null || plugin.getConfigManager() == null) return;
-        if (!plugin.getConfigManager().isDebugEnabled()) return;
-
-        plugin.console(DEBUG_PREFIX + message);
+        if (plugin == null || plugin.getConfigManager() == null || !plugin.getConfigManager().isDebugEnabled()) {
+            return;
+        }
+        sendRaw(DEBUG_PREFIX + message, Level.INFO, message);
     }
 
     private static void sendDebugPlain(@Nullable String message) {
         if (message == null) return;
         PlugManReloaded plugin = PlugManReloaded.getInstance();
-        if (plugin == null || plugin.getConfigManager() == null) return;
-        if (!plugin.getConfigManager().isDebugEnabled()) return;
-        if (Bukkit.getServer() == null) return;
-
+        if (plugin == null || plugin.getConfigManager() == null || !plugin.getConfigManager().isDebugEnabled()) {
+            return;
+        }
+        if (Bukkit.getServer() == null || Bukkit.getConsoleSender() == null) {
+            STANDALONE_LOGGER.log(Level.INFO, DEBUG_PLAIN_PREFIX + message);
+            return;
+        }
         Bukkit.getConsoleSender().sendMessage(Component.text(DEBUG_PLAIN_PREFIX + message));
+    }
+
+    private static void send(@Nullable String pluginMsg, String standaloneMsg, Level level, String plain) {
+        String toSend = pluginMsg != null ? pluginMsg : standaloneMsg;
+        sendRaw(toSend, level, plain);
+    }
+
+    private static void sendRaw(String colored, Level level, String plain) {
+        if (Bukkit.getServer() == null || Bukkit.getConsoleSender() == null) {
+            STANDALONE_LOGGER.log(level, HexColors.stripColors(plain));
+            return;
+        }
+        Bukkit.getConsoleSender().sendMessage(HexColors.translateForConsole(colored));
     }
 
     private static String withDetail(String message, @Nullable Throwable t) {
@@ -151,13 +154,5 @@ public final class Log {
             return;
         }
         plugin.getLogger().log(level, key, t);
-    }
-
-    private static void toStandalone(String colored, Level level, String plain) {
-        if (Bukkit.getServer() == null || Bukkit.getConsoleSender() == null) {
-            STANDALONE_LOGGER.log(level, HexColors.stripColors(plain));
-            return;
-        }
-        Bukkit.getConsoleSender().sendMessage(HexColors.translateForConsole(colored));
     }
 }

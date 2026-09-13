@@ -1,39 +1,34 @@
 package ru.milkyway.plugmanreloaded;
 
-import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.jetbrains.annotations.Nullable;
 import ru.milkyway.plugmanreloaded.api.PlugManAPI;
 import ru.milkyway.plugmanreloaded.api.PlugManProvider;
-import ru.milkyway.plugmanreloaded.api.impl.PlugManAPIImpl;
 import ru.milkyway.plugmanreloaded.bridge.PlatformDetector;
-import ru.milkyway.plugmanreloaded.commands.CommandsHandler;
-import ru.milkyway.plugmanreloaded.commands.CommandsTabCompleter;
+import ru.milkyway.plugmanreloaded.commands.CommandHandler;
+import ru.milkyway.plugmanreloaded.commands.CommandTabCompleter;
 import ru.milkyway.plugmanreloaded.download.DownloadService;
-import ru.milkyway.plugmanreloaded.listeners.CommandOverrideListener;
+import ru.milkyway.plugmanreloaded.commands.CommandOverrideListener;
 import ru.milkyway.plugmanreloaded.managers.ConfigManager;
-import ru.milkyway.plugmanreloaded.managers.HotSwapManager;
 import ru.milkyway.plugmanreloaded.managers.ConfirmationManager;
+import ru.milkyway.plugmanreloaded.managers.HotSwapManager;
 import ru.milkyway.plugmanreloaded.managers.LifecycleManager;
+import ru.milkyway.plugmanreloaded.update.UpdateNotifyListener;
 import ru.milkyway.plugmanreloaded.update.UpdateService;
-import ru.milkyway.plugmanreloaded.update.input.ManualSources.ManualSourceListener;
 import ru.milkyway.plugmanreloaded.update.input.ManualSources;
+import ru.milkyway.plugmanreloaded.update.input.ManualSources.ManualSourceListener;
 import ru.milkyway.plugmanreloaded.utils.BStats;
 import ru.milkyway.plugmanreloaded.utils.HexColors;
 import ru.milkyway.plugmanreloaded.utils.Log;
-import ru.milkyway.plugmanreloaded.utils.LogCatalog;
 import ru.milkyway.plugmanreloaded.utils.PluginMetaHelper;
 import ru.milkyway.plugmanreloaded.utils.ReflectionHelper;
 import ru.milkyway.plugmanreloaded.utils.UpdateChecker;
 
-@Getter
 public final class PlugManReloaded extends JavaPlugin {
 
-    @Getter
     private static PlugManReloaded instance;
 
     private ConfigManager configManager;
@@ -44,7 +39,7 @@ public final class PlugManReloaded extends JavaPlugin {
     private UpdateService updateService;
     private DownloadService downloadService;
     private ManualSources manualSources;
-    private CommandsHandler commandsHandler;
+    private CommandHandler commandHandler;
     private PlugManAPI api;
     private boolean initialized = false;
 
@@ -77,29 +72,29 @@ public final class PlugManReloaded extends JavaPlugin {
     private boolean initializePlugin() {
         try {
             console("&f");
-            Log.console("startup.reading-config");
+            Log.debug("startup.reading-config");
             configManager = new ConfigManager(this);
 
-            Log.console("startup.detecting-platform", "platform", PlatformDetector.getPlatformName());
+            Log.debug("startup.detecting-platform", "platform", PlatformDetector.getPlatformName());
             PlatformDetector.flushDiagnostics();
 
-            Log.console("startup.init-core");
+            Log.debug("startup.init-core");
             pluginLifecycleManager = new LifecycleManager(this);
             confirmationManager = new ConfirmationManager(this);
             getServer().getPluginManager().registerEvents(confirmationManager, this);
 
-            Log.console("startup.registering-commands");
-            commandsHandler = new CommandsHandler(this);
-            CommandsTabCompleter tabCompleter = new CommandsTabCompleter(this, commandsHandler);
+            Log.debug("startup.registering-commands");
+            commandHandler = new CommandHandler(this);
+            CommandTabCompleter tabCompleter = new CommandTabCompleter(this, commandHandler);
 
-            registerCommand("plugmanreloaded", commandsHandler, tabCompleter);
+            registerCommand("plugmanreloaded", commandHandler, tabCompleter);
 
-            Log.console("startup.init-hotswap");
+            Log.debug("startup.init-hotswap");
             hotSwapManager = new HotSwapManager(this, pluginLifecycleManager);
 
-            Log.console("startup.init-updates");
+            Log.debug("startup.init-updates");
             updateService = new UpdateService(this);
-            getServer().getPluginManager().registerEvents(updateService, this);
+            getServer().getPluginManager().registerEvents(new UpdateNotifyListener(this, updateService), this);
             updateService.checkOnStartIfEnabled();
             String downloadUserAgent = "PlugManReloaded/" + PluginMetaHelper.getVersion(this);
             downloadService = new DownloadService(this, updateService.getServerProfile(), updateService.getCatalog(), downloadUserAgent);
@@ -109,7 +104,7 @@ public final class PlugManReloaded extends JavaPlugin {
             getServer().getPluginManager().registerEvents(updateChecker, this);
             getServer().getPluginManager().registerEvents(new CommandOverrideListener(this), this);
 
-            Log.console("startup.registering-api");
+            Log.debug("startup.registering-api");
             api = new PlugManAPIImpl(this);
             PlugManProvider.register(api);
             getServer().getServicesManager().register(PlugManAPI.class, api, this, ServicePriority.Normal);
@@ -121,7 +116,7 @@ public final class PlugManReloaded extends JavaPlugin {
         }
     }
 
-    private void registerCommand(String name, CommandsHandler handler, CommandsTabCompleter completer) {
+    private void registerCommand(String name, CommandHandler handler, CommandTabCompleter completer) {
         PluginCommand cmd = getCommand(name);
         if (cmd != null) {
             cmd.setExecutor(handler);
@@ -129,13 +124,17 @@ public final class PlugManReloaded extends JavaPlugin {
         }
     }
 
-    private void logStartupInfo(long loadTime) {
+    private void printBannerHeader() {
         console("&#ffff00 ");
         console("&#ffff00  █▀█ █░░ █░█ █▀▀ █▀▄▀█ ▄▀█ █▄░█ █▀█ █▀▀ █░░ █▀█ ▄▀█ █▀▄ █▀▀ █▀▄");
         console("&#ffff00  █▀▀ █▄▄ █▄█ █▄█ █░▀░█ █▀█ █░▀█ █▀▄ ██▄ █▄▄ █▄█ █▀█ █▄▀ ██▄ █▄▀");
         console("&#ffff00 ");
         console("&f                     (By MilkyWay for everyone)");
         console("&#ffff00 ");
+    }
+
+    private void logStartupInfo(long loadTime) {
+        printBannerHeader();
         Log.console("startup.banner-enabled");
         console("&#ffff00 ");
         Log.console("startup.banner-version", "version", PluginMetaHelper.getVersion(this));
@@ -150,16 +149,16 @@ public final class PlugManReloaded extends JavaPlugin {
         long startTime = System.currentTimeMillis();
 
         if (initialized) {
-            Log.console("shutdown.starting");
+            Log.debug("shutdown.starting");
         }
 
         if (hotSwapManager != null) {
-            if (initialized) Log.console("shutdown.stopping-hotswap");
+            if (initialized) Log.debug("shutdown.stopping-hotswap");
             hotSwapManager.stop();
         }
 
         if (updateChecker != null) {
-            if (initialized) Log.console("shutdown.stopping-updatechecker");
+            if (initialized) Log.debug("shutdown.stopping-updatechecker");
             updateChecker.shutdown();
         }
 
@@ -176,9 +175,11 @@ public final class PlugManReloaded extends JavaPlugin {
         }
 
         if (initialized) {
-            Log.console("shutdown.clearing-caches");
+            Log.debug("shutdown.clearing-caches");
         }
-        getServer().getServicesManager().unregisterAll(this);
+        if (getServer() != null && getServer().getServicesManager() != null) {
+            getServer().getServicesManager().unregisterAll(this);
+        }
         PlugManProvider.unregister();
         api = null;
         ReflectionHelper.clearCache();
@@ -194,12 +195,7 @@ public final class PlugManReloaded extends JavaPlugin {
     }
 
     private void logShutdownInfo(long unloadTime) {
-        console("&#ffff00 ");
-        console("&#ffff00  █▀█ █░░ █░█ █▀▀ █▀▄▀█ ▄▀█ █▄░█ █▀█ █▀▀ █░░ █▀█ ▄▀█ █▀▄ █▀▀ █▀▄");
-        console("&#ffff00  █▀▀ █▄▄ █▄█ █▄█ █░▀░█ █▀█ █░▀█ █▀▄ ██▄ █▄▄ █▄█ █▀█ █▄▀ ██▄ █▄▀");
-        console("&#ffff00 ");
-        console("&f                     (By MilkyWay for everyone)");
-        console("&#ffff00 ");
+        printBannerHeader();
         Log.console("shutdown.banner-disabled");
         console("&#ffff00 ");
         Log.console("shutdown.banner-version", "version", PluginMetaHelper.getVersion(this));
@@ -207,33 +203,11 @@ public final class PlugManReloaded extends JavaPlugin {
         console("&#ffff00 ");
     }
 
-    public void console(@Nullable String message) {
+    public void console(String message) {
         if (message == null) return;
-        Bukkit.getConsoleSender().sendMessage(HexColors.translateForConsole(message));
-    }
-
-    public void log(String message) {
-        if (configManager != null && configManager.isConsoleLogsEnabled()) {
-            console(LogCatalog.get("prefix.info") + message);
+        if (Bukkit.getServer() != null && Bukkit.getConsoleSender() != null) {
+            Bukkit.getConsoleSender().sendMessage(HexColors.translateForConsole(message));
         }
-    }
-
-    public void success(String message) {
-        if (configManager != null && configManager.isConsoleLogsEnabled()) {
-            console(LogCatalog.get("prefix.success") + message);
-        }
-    }
-
-    public void info(String message) {
-        log(message);
-    }
-
-    public void warn(String message) {
-        Bukkit.getConsoleSender().sendMessage(HexColors.translateForConsole(LogCatalog.get("prefix.warn") + message));
-    }
-
-    public void error(String message) {
-        Bukkit.getConsoleSender().sendMessage(HexColors.translateForConsole(LogCatalog.get("prefix.error") + message));
     }
 
     @Override
@@ -252,6 +226,58 @@ public final class PlugManReloaded extends JavaPlugin {
         } else {
             super.reloadConfig();
         }
+    }
+
+    public static PlugManReloaded getInstance() {
+        return instance;
+    }
+
+    public ConfigManager getConfigManager() {
+        return configManager;
+    }
+
+    public LifecycleManager getPluginLifecycleManager() {
+        return pluginLifecycleManager;
+    }
+
+    public ConfirmationManager getConfirmationManager() {
+        return confirmationManager;
+    }
+
+    public HotSwapManager getHotSwapManager() {
+        return hotSwapManager;
+    }
+
+    public UpdateChecker getUpdateChecker() {
+        return updateChecker;
+    }
+
+    public UpdateService getUpdateService() {
+        return updateService;
+    }
+
+    public DownloadService getDownloadService() {
+        return downloadService;
+    }
+
+    public ManualSources getManualSources() {
+        return manualSources;
+    }
+
+    public CommandHandler getCommandHandler() {
+        return commandHandler;
+    }
+
+    public CommandHandler getCommandsHandler() {
+        return commandHandler;
+    }
+
+    public PlugManAPI getApi() {
+        return api;
+    }
+
+    public boolean isInitialized() {
+        return initialized;
     }
 }
 

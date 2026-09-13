@@ -10,8 +10,8 @@ import ru.milkyway.plugmanreloaded.commands.AbstractSubCommand;
 import ru.milkyway.plugmanreloaded.commands.CommandContext;
 import ru.milkyway.plugmanreloaded.managers.ConfirmationManager;
 import ru.milkyway.plugmanreloaded.update.ServerProfile;
-import ru.milkyway.plugmanreloaded.update.source.UpdateSource;
 import ru.milkyway.plugmanreloaded.utils.GameVersionFormatter;
+import ru.milkyway.plugmanreloaded.update.source.UpdateSource;
 import ru.milkyway.plugmanreloaded.utils.HexColors;
 import ru.milkyway.plugmanreloaded.utils.PluginMetaHelper;
 import ru.milkyway.plugmanreloaded.utils.TaskScheduler;
@@ -573,6 +573,19 @@ public class DownloadCommand extends AbstractSubCommand {
             return sub;
         }
         return "21";
+    }
+
+    private static final List<String> DOWNLOAD_SOURCES = List.of("modrinth", "hangar", "spigot", "github");
+
+    @Override
+    public List<String> tabCandidates(int argLength, String previousToken, Set<String> usedTokens, CommandSender sender) {
+        if (previousToken.equals("-s") || previousToken.equals("--source")) {
+            return filterUnused("download", DOWNLOAD_SOURCES, usedTokens);
+        }
+        if (argLength == 2) {
+            return new ArrayList<>(downloadSuggestions());
+        }
+        return suggestFlags(usedTokens);
     }
 }
 

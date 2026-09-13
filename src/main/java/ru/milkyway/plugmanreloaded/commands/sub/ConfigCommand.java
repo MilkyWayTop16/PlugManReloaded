@@ -5,11 +5,14 @@ import ru.milkyway.plugmanreloaded.PlugManReloaded;
 import ru.milkyway.plugmanreloaded.commands.AbstractSubCommand;
 import ru.milkyway.plugmanreloaded.commands.CommandContext;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-public class ConfigSubCommand extends AbstractSubCommand {
+public class ConfigCommand extends AbstractSubCommand {
 
-    public ConfigSubCommand(PlugManReloaded plugin) {
+    public ConfigCommand(PlugManReloaded plugin) {
         super(plugin);
     }
 
@@ -46,9 +49,13 @@ public class ConfigSubCommand extends AbstractSubCommand {
                     "ms", String.valueOf(elapsed)
             ));
         } else {
-            sendAction(sender, "config-reload.failed", Map.of());
+            sendAction(sender, "config-reload.failed");
         }
         return true;
     }
-}
 
+    @Override
+    public List<String> tabCandidates(int argLength, String previousToken, Set<String> usedTokens, CommandSender sender) {
+        return argLength == 2 ? List.of("reload") : Collections.emptyList();
+    }
+}

@@ -1,22 +1,20 @@
 package ru.milkyway.plugmanreloaded.managers;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Keyed;
 import org.bukkit.NamespacedKey;
 import org.bukkit.boss.KeyedBossBar;
 import org.bukkit.entity.Player;
+import org.bukkit.event.HandlerList;
 import org.bukkit.help.HelpMap;
 import org.bukkit.help.HelpTopic;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.Recipe;
 import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionAttachment;
 import org.bukkit.permissions.PermissionAttachmentInfo;
-import ru.milkyway.plugmanreloaded.utils.PluginMetaHelper;
-import ru.milkyway.plugmanreloaded.utils.TaskScheduler;
-import java.util.concurrent.atomic.AtomicInteger;
-import org.bukkit.Bukkit;
-import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.SimplePluginManager;
@@ -26,7 +24,10 @@ import ru.milkyway.plugmanreloaded.PlugManReloaded;
 import ru.milkyway.plugmanreloaded.bridge.PlatformDetector;
 import ru.milkyway.plugmanreloaded.utils.Log;
 import ru.milkyway.plugmanreloaded.utils.MetaspaceCleanup;
+import ru.milkyway.plugmanreloaded.utils.NettyGuard;
+import ru.milkyway.plugmanreloaded.utils.PluginMetaHelper;
 import ru.milkyway.plugmanreloaded.utils.ReflectionHelper;
+import ru.milkyway.plugmanreloaded.utils.TaskScheduler;
 
 import java.beans.Introspector;
 import java.io.Closeable;
@@ -36,12 +37,13 @@ import java.net.URLClassLoader;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
-public class PluginCleanup {
+public class SanitizerManager {
 
     private final PlugManReloaded plugin;
 
-    public PluginCleanup(PlugManReloaded plugin) {
+    public SanitizerManager(PlugManReloaded plugin) {
         this.plugin = plugin;
     }
 
@@ -553,7 +555,7 @@ public class PluginCleanup {
         if (Bukkit.class.getClassLoader() != null && loader == Bukkit.class.getClassLoader()) {
             return false;
         }
-        if (PluginCleanup.class.getClassLoader() != null && loader == PluginCleanup.class.getClassLoader()) {
+        if (SanitizerManager.class.getClassLoader() != null && loader == SanitizerManager.class.getClassLoader()) {
             return false;
         }
         for (ClassLoader parent = targetPlugin.getClass().getClassLoader(); parent != null; parent = parent.getParent()) {
@@ -614,7 +616,7 @@ public class PluginCleanup {
             TaskScheduler.runForEntity(plugin, player, () -> {
                 try {
                     if (!player.isOnline()) return;
-                    org.bukkit.inventory.InventoryView view = player.getOpenInventory();
+                    InventoryView view = player.getOpenInventory();
                     if (view == null) return;
                     Inventory top = view.getTopInventory();
                     if (top == null) return;

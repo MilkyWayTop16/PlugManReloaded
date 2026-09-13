@@ -7,7 +7,7 @@ import ru.milkyway.plugmanreloaded.api.BulkOperationResult;
 import ru.milkyway.plugmanreloaded.api.PluginResult;
 import ru.milkyway.plugmanreloaded.commands.AbstractSubCommand;
 import ru.milkyway.plugmanreloaded.commands.CommandContext;
-import ru.milkyway.plugmanreloaded.managers.UnloadSafetyChecker;
+import ru.milkyway.plugmanreloaded.managers.SafetyManager;
 
 import java.util.HashMap;
 import java.util.List;
@@ -58,7 +58,7 @@ abstract class AbstractReloadCommand extends AbstractSubCommand {
         String targetName = ctx.target();
         Plugin targetPlugin = plugin.getPluginLifecycleManager().getPlugin(targetName);
         if (targetPlugin == null) {
-            sendAction(sender, "errors.plugin-not-found", Map.of("plugin", targetName));
+            sendPluginNotFound(sender, targetName);
             return true;
         }
 
@@ -71,9 +71,9 @@ abstract class AbstractReloadCommand extends AbstractSubCommand {
             return true;
         }
 
-        UnloadSafetyChecker.SafetyAssessment assessment =
-                plugin.getPluginLifecycleManager().getSafetyAdvisor().assess(targetPlugin);
-        if (assessment.riskLevel() == UnloadSafetyChecker.PluginRiskLevel.CRITICAL_PROTECTED) {
+        SafetyManager.SafetyAssessment assessment =
+                plugin.getPluginLifecycleManager().getSafetyManager().assess(targetPlugin);
+        if (assessment.riskLevel() == SafetyManager.PluginRiskLevel.CRITICAL_PROTECTED) {
             sendAction(sender, "errors.critical-protected", getPluginPlaceholders(targetPlugin));
             return true;
         }
@@ -120,13 +120,13 @@ abstract class AbstractReloadCommand extends AbstractSubCommand {
         return true;
     }
 
-    private static boolean isRisky(UnloadSafetyChecker.SafetyAssessment assessment) {
+    private static boolean isRisky(SafetyManager.SafetyAssessment assessment) {
         return !assessment.dependents().isEmpty()
-                || assessment.riskLevel() == UnloadSafetyChecker.PluginRiskLevel.LOW_LEVEL_NETWORK
-                || assessment.riskLevel() == UnloadSafetyChecker.PluginRiskLevel.API_PROVIDER;
+                || assessment.riskLevel() == SafetyManager.PluginRiskLevel.LOW_LEVEL_NETWORK
+                || assessment.riskLevel() == SafetyManager.PluginRiskLevel.API_PROVIDER;
     }
 
-    private String riskReason(UnloadSafetyChecker.SafetyAssessment assessment) {
+    private String riskReason(SafetyManager.SafetyAssessment assessment) {
         Set<String> dependents = assessment.dependents();
         return dependents.isEmpty()
                 ? detailText(riskReasonKey("unload", assessment))
@@ -134,7 +134,7 @@ abstract class AbstractReloadCommand extends AbstractSubCommand {
     }
 
     private void runCascadeAndReport(CommandSender sender, Plugin targetPlugin) {
-        List<String> order = plugin.getPluginLifecycleManager().getDependencyGraph()
+        List<String> order = plugin.getPluginLifecycleManager().getDependencyManager()
                 .calculateCascadeOrder(targetPlugin.getName(), true);
 
         Map<String, String> startPlaceholders = new HashMap<>(getPluginPlaceholders(targetPlugin));

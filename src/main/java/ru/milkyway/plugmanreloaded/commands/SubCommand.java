@@ -22,5 +22,9 @@ public interface SubCommand {
     default List<CommandFlags.Flag> getFlags() {
         return CommandFlags.forCommand(getName());
     }
+
+    default List<String> tabComplete(CommandSender sender, String[] args) {
+        return Collections.emptyList();
+    }
 }
 

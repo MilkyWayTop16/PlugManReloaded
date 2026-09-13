@@ -7,6 +7,7 @@ import ru.milkyway.plugmanreloaded.PlugManReloaded;
 import ru.milkyway.plugmanreloaded.api.PluginInfo;
 import ru.milkyway.plugmanreloaded.commands.AbstractSubCommand;
 import ru.milkyway.plugmanreloaded.commands.CommandContext;
+import ru.milkyway.plugmanreloaded.utils.PluginMetaHelper;
 
 import java.io.File;
 import java.util.HashMap;
@@ -57,13 +58,13 @@ public class InfoCommand extends AbstractSubCommand {
         } else {
             File jar = plugin.getPluginLifecycleManager().findJarFile(targetName);
             if (jar != null && jar.exists()) {
-                info = PluginInfo.fromJarFile(jar);
+                info = PluginMetaHelper.fromJarFile(jar);
                 isUnloaded = true;
             }
         }
 
         if (info == null) {
-            sendAction(sender, "errors.plugin-not-found", Map.of("plugin", targetName));
+            sendPluginNotFound(sender, targetName);
             return true;
         }
 
@@ -139,6 +140,11 @@ public class InfoCommand extends AbstractSubCommand {
 
         sendAction(sender, actionPath, placeholders);
         return true;
+    }
+
+    @Override
+    public List<String> tabCandidates(int argLength, String previousToken, java.util.Set<String> usedTokens, CommandSender sender) {
+        return argLength == 2 ? allInspectablePlugins() : java.util.Collections.emptyList();
     }
 }
 

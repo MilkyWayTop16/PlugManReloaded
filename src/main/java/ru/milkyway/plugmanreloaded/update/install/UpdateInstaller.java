@@ -6,14 +6,16 @@ import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.Nullable;
 import ru.milkyway.plugmanreloaded.PlugManReloaded;
 import ru.milkyway.plugmanreloaded.api.PluginResult;
-import ru.milkyway.plugmanreloaded.managers.UnloadSafetyChecker;
-import ru.milkyway.plugmanreloaded.managers.PluginCleanup;
+import ru.milkyway.plugmanreloaded.download.DownloadClient;
+import ru.milkyway.plugmanreloaded.managers.SafetyManager;
+import ru.milkyway.plugmanreloaded.managers.SanitizerManager;
 import ru.milkyway.plugmanreloaded.update.UpdateModels.PluginIdentity;
 import ru.milkyway.plugmanreloaded.update.UpdateModels.RemoteVersion;
 import ru.milkyway.plugmanreloaded.update.UpdateModels.UpdateCandidate;
 import ru.milkyway.plugmanreloaded.utils.JarValidator;
 import ru.milkyway.plugmanreloaded.utils.Log;
 import ru.milkyway.plugmanreloaded.utils.MetaspaceCleanup;
+import ru.milkyway.plugmanreloaded.utils.PluginJarIndex;
 import ru.milkyway.plugmanreloaded.utils.TaskScheduler;
 
 import java.io.File;
@@ -42,7 +44,7 @@ public final class UpdateInstaller {
         TaskScheduler.runAsync(plugin, this.backups::pruneAll);
     }
 
-    private record Preparation(InstallResult error, Path jarBackup, Path folderBackup, Path staged) {}
+    private record Preparation(InstallResult error, Path jarBackup, Path folderBackup, Path staged, List<String> dependencyWarnings) {}
 
     public void install(UpdateCandidate candidate, Consumer<InstallResult> callback) {
         install(candidate, true, callback);
@@ -75,7 +77,7 @@ public final class UpdateInstaller {
                 TaskScheduler.runSync(plugin, () -> wrappedCallback.accept(prep.error()));
                 return;
             }
-            TaskScheduler.runSync(plugin, () -> wrappedCallback.accept(swap(identity, version, prep.staged(), prep.jarBackup(), prep.folderBackup(), restartDependents)));
+            TaskScheduler.runSync(plugin, () -> wrappedCallback.accept(swap(identity, version, prep.staged(), prep.jarBackup(), prep.folderBackup(), restartDependents, prep.dependencyWarnings())));
         });
     }
 
@@ -95,13 +97,13 @@ public final class UpdateInstaller {
 
         DownloadClient.Downloaded downloaded = DownloadClient.download(version.downloadUrl(), staged, userAgent);
         if (downloaded == null) {
-            return new Preparation(InstallResult.failed(InstallStatus.DOWNLOAD_FAILED, identity.pluginName(), "actions.update.details.download-failed"), null, null, null);
+            return new Preparation(InstallResult.failed(InstallStatus.DOWNLOAD_FAILED, identity.pluginName(), "actions.update.details.download-failed"), null, null, null, List.of());
         }
 
         String hashProblem = verifyHash(version, downloaded);
         if (hashProblem != null) {
             deleteQuietly(staged);
-            return new Preparation(InstallResult.failed(InstallStatus.HASH_MISMATCH, identity.pluginName(), hashProblem), null, null, null);
+            return new Preparation(InstallResult.failed(InstallStatus.HASH_MISMATCH, identity.pluginName(), hashProblem), null, null, null, List.of());
         }
 
         JarValidator.PreFlightReport report = JarValidator.validatePreFlight(staged.toFile(), identity.pluginName(), false);
@@ -113,14 +115,14 @@ public final class UpdateInstaller {
                 case MISSING_DEPENDENCIES -> InstallStatus.MISSING_DEPENDENCY;
                 default -> InstallStatus.NOT_INSTALLABLE;
             };
-            return new Preparation(InstallResult.failed(outcome, identity.pluginName(), report.errorMessage()), null, null, null);
+            return new Preparation(InstallResult.failed(outcome, identity.pluginName(), report.errorMessage()), null, null, null, List.of());
         }
 
         Path jarBackup = backups.backup(identity.pluginName(), identity.currentVersion(), identity.jarFile());
         if (jarBackup == null) {
             deleteQuietly(staged);
             return new Preparation(InstallResult.failed(InstallStatus.NOT_INSTALLABLE, identity.pluginName(),
-                    "actions.update.details.backup-failed"), null, null, null);
+                    "actions.update.details.backup-failed"), null, null, null, List.of());
         }
 
         Plugin loadedPlugin = plugin.getPluginLifecycleManager().getPlugin(identity.pluginName());
@@ -128,7 +130,46 @@ public final class UpdateInstaller {
                 ? backups.backupFolder(identity.pluginName(), loadedPlugin.getDataFolder())
                 : null;
 
-        return new Preparation(null, jarBackup, folderBackup, staged);
+        PluginJarIndex.JarDescriptor stagedDesc = PluginJarIndex.readDescriptor(staged.toFile());
+        List<String> warnings = List.of();
+        if (stagedDesc != null && stagedDesc.depend() != null && !stagedDesc.depend().isEmpty()) {
+            warnings = checkDependencyUpdates(identity.pluginName(), stagedDesc.depend());
+        }
+
+        return new Preparation(null, jarBackup, folderBackup, staged, warnings);
+    }
+
+    private List<String> checkDependencyUpdates(String pluginName, List<String> dependencies) {
+        if (dependencies == null || dependencies.isEmpty() || plugin == null) return List.of();
+        List<String> warnings = new ArrayList<>();
+        List<UpdateCandidate> recent = plugin.getUpdateService().getLastResults();
+        for (String dep : dependencies) {
+            Plugin installedDep = plugin.getPluginLifecycleManager().getPlugin(dep);
+            if (installedDep == null) continue;
+            UpdateCandidate candidate = null;
+            if (recent != null) {
+                for (UpdateCandidate c : recent) {
+                    if (c.identity().pluginName().equalsIgnoreCase(dep)) {
+                        candidate = c;
+                        break;
+                    }
+                }
+            }
+            if (candidate == null) {
+                try {
+                    candidate = plugin.getUpdateService().checkSync(installedDep, false);
+                } catch (Throwable ignored) {}
+            }
+            if (candidate != null && candidate.status().hasNewerVersion() && candidate.version() != null) {
+                String newVer = candidate.version().versionNumber();
+                Log.warn("updateinstaller.dependency-update-available",
+                        "plugin", pluginName,
+                        "dependency", dep,
+                        "newVersion", newVer);
+                warnings.add(dep + ":" + newVer);
+            }
+        }
+        return warnings;
     }
 
     private @Nullable String verifyHash(RemoteVersion version, DownloadClient.Downloaded downloaded) {
@@ -146,7 +187,7 @@ public final class UpdateInstaller {
         return null;
     }
 
-    private InstallResult swap(PluginIdentity identity, RemoteVersion version, Path staged, Path jarBackup, Path folderBackup, boolean restartDependents) {
+    private InstallResult swap(PluginIdentity identity, RemoteVersion version, Path staged, Path jarBackup, Path folderBackup, boolean restartDependents, List<String> dependencyWarnings) {
         File oldTarget = identity.jarFile();
         String from = identity.currentVersion();
         String to = version.versionNumber();
@@ -154,17 +195,18 @@ public final class UpdateInstaller {
         File target = determineTargetFile(oldTarget, version, identity, plugin.getDataFolder().getParentFile());
 
         Plugin loaded = plugin.getPluginLifecycleManager().getPlugin(identity.pluginName());
-        boolean isUnsafe = loaded != null && (
-                plugin.getPluginLifecycleManager().getSafetyAdvisor().assess(loaded).riskLevel() == UnloadSafetyChecker.PluginRiskLevel.UNLOADABLE_HOSTILE
-                || plugin.getPluginLifecycleManager().getSafetyAdvisor().assess(loaded).riskLevel() == UnloadSafetyChecker.PluginRiskLevel.CRITICAL_PROTECTED
-                || plugin.getConfigManager().isUnsafeToUnload(identity.pluginName())
-        );
+        SafetyManager.PluginRiskLevel risk = loaded != null
+                ? plugin.getPluginLifecycleManager().getSafetyManager().assess(loaded).riskLevel()
+                : SafetyManager.PluginRiskLevel.SAFE;
+        boolean isUnsafe = risk == SafetyManager.PluginRiskLevel.UNLOADABLE_HOSTILE
+                || risk == SafetyManager.PluginRiskLevel.CRITICAL_PROTECTED
+                || plugin.getConfigManager().isUnsafeToUnload(identity.pluginName());
 
         if (isUnsafe) {
-            return stageForRestart(identity, version, staged, oldTarget, from, to);
+            return stageForRestart(identity, version, staged, oldTarget, from, to, dependencyWarnings);
         }
 
-        PluginCleanup.closeAllOnlineInventories();
+        SanitizerManager.closeAllOnlineInventories();
 
         List<DependentInfo> dependents = restartDependents ? collectDependentInfos(identity.pluginName()) : List.of();
 
@@ -185,7 +227,7 @@ public final class UpdateInstaller {
                 if (restartDependents && !dependents.isEmpty()) {
                     loadDependents(identity.pluginName(), dependents);
                 }
-                return stageForRestart(identity, version, staged, oldTarget, from, to);
+                return stageForRestart(identity, version, staged, oldTarget, from, to, dependencyWarnings);
             }
         }
 
@@ -203,7 +245,7 @@ public final class UpdateInstaller {
             if (restartDependents && !dependents.isEmpty()) {
                 loadDependents(identity.pluginName(), dependents);
             }
-            return stageForRestart(identity, version, staged, oldTarget, from, to);
+            return stageForRestart(identity, version, staged, oldTarget, from, to, dependencyWarnings);
         }
 
         cleanUpEmptyParent(staged);
@@ -228,7 +270,7 @@ public final class UpdateInstaller {
                 loadDependents(identity.pluginName(), dependents);
             }
             Log.warn("updateinstaller.new-version-load-failed", loadResult.error(), "plugin", identity.pluginName());
-            return InstallResult.failed(InstallStatus.ROLLED_BACK, identity.pluginName(), "actions.update.details.rolled-back");
+            return InstallResult.failed(InstallStatus.ROLLED_BACK, identity.pluginName(), "actions.update.details.rolled-back", dependencyWarnings);
         }
 
         try {
@@ -241,10 +283,10 @@ public final class UpdateInstaller {
             loadDependents(identity.pluginName(), dependents);
         }
         Log.info("updateinstaller.updated", "plugin", identity.pluginName(), "from", from, "to", to);
-        return InstallResult.of(InstallStatus.INSTALLED, identity.pluginName(), from, to);
+        return InstallResult.of(InstallStatus.INSTALLED, identity.pluginName(), from, to, dependencyWarnings);
     }
 
-    private InstallResult stageForRestart(PluginIdentity identity, RemoteVersion version, Path staged, File oldTarget, String from, String to) {
+    private InstallResult stageForRestart(PluginIdentity identity, RemoteVersion version, Path staged, File oldTarget, String from, String to, List<String> dependencyWarnings) {
         try {
             File pluginsDir = plugin.getDataFolder().getParentFile();
             File updateFolder = new File(pluginsDir, "update");
@@ -256,12 +298,12 @@ public final class UpdateInstaller {
             Files.move(staged, updateTarget.toPath(), StandardCopyOption.REPLACE_EXISTING);
             cleanUpEmptyParent(staged);
             Log.info("updateinstaller.staged-for-restart", "plugin", identity.pluginName(), "from", from, "to", to);
-            return InstallResult.of(InstallStatus.PENDING_RESTART, identity.pluginName(), from, to);
+            return InstallResult.of(InstallStatus.PENDING_RESTART, identity.pluginName(), from, to, dependencyWarnings);
         } catch (Throwable t) {
             Log.error("updateinstaller.stage-for-restart-failed", t, "plugin", identity.pluginName(), "error", t.getMessage());
             deleteQuietly(staged);
             return InstallResult.failed(InstallStatus.NOT_INSTALLABLE, identity.pluginName(),
-                    "actions.update.details.update-folder-write-failed");
+                    "actions.update.details.update-folder-write-failed", dependencyWarnings);
         }
     }
 
@@ -287,7 +329,7 @@ public final class UpdateInstaller {
     private List<DependentInfo> collectDependentInfos(String pluginName) {
         try {
             List<String> order = plugin.getPluginLifecycleManager()
-                    .getDependencyGraph()
+                    .getDependencyManager()
                     .calculateCascadeOrder(pluginName, true);
             List<DependentInfo> result = new ArrayList<>();
             for (String name : order) {

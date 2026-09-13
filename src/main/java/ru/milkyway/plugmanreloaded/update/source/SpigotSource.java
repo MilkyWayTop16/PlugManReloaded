@@ -130,11 +130,11 @@ public final class SpigotSource implements UpdateSource {
                 continue;
             }
 
+            boolean exactNameMatch = PluginMatcher.isExactOrCleanMatch(identity.pluginName(), title);
             boolean brandMatch = PluginMatcher.hasBrandCorroboration(identity, title, string(hit, "tag"));
-            boolean distinctive = PluginMatcher.isDistinctive(normalizedPlugin)
-                    && !PluginMatcher.isGeneric(identity.pluginName());
+            boolean safeExact = exactNameMatch && !PluginMatcher.isGeneric(identity.pluginName());
 
-            if (!brandMatch && !distinctive) {
+            if (!safeExact && !brandMatch) {
                 Log.debug("spigotsource.candidate-no-brand", "title", title);
                 continue;
             }

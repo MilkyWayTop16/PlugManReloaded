@@ -432,5 +432,10 @@ public class UsageCommand extends AbstractSubCommand {
 
         return new ArrayList<>(all);
     }
+
+    @Override
+    public List<String> tabCandidates(int argLength, String previousToken, Set<String> usedTokens, CommandSender sender) {
+        return argLength == 2 ? getAllCommandAndPermissionNames() : Collections.emptyList();
+    }
 }
 

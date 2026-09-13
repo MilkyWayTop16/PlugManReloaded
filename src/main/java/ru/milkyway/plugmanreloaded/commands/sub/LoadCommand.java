@@ -7,12 +7,15 @@ import ru.milkyway.plugmanreloaded.api.BulkOperationResult;
 import ru.milkyway.plugmanreloaded.api.PluginResult;
 import ru.milkyway.plugmanreloaded.commands.AbstractSubCommand;
 import ru.milkyway.plugmanreloaded.commands.CommandContext;
-import ru.milkyway.plugmanreloaded.managers.PluginJarIndex;
+import ru.milkyway.plugmanreloaded.managers.LifecycleManager;
+import ru.milkyway.plugmanreloaded.utils.PluginJarIndex;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class LoadCommand extends AbstractSubCommand {
 
@@ -91,6 +94,16 @@ public class LoadCommand extends AbstractSubCommand {
 
         sendAction(sender, result.messageKey(), placeholders);
         return true;
+    }
+
+    @Override
+    public List<String> tabCandidates(int argLength, String previousToken, Set<String> usedTokens, CommandSender sender) {
+        if (argLength == 2) {
+            LifecycleManager lifecycle = plugin != null ? plugin.getPluginLifecycleManager() : null;
+            boolean useJar = plugin != null && plugin.getConfigManager().isUseJarFileNames();
+            return withAllFlag(usedTokens, lifecycle != null ? lifecycle.getLoadableNames(useJar) : Collections.emptyList());
+        }
+        return Collections.emptyList();
     }
 }
 

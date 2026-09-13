@@ -439,7 +439,9 @@ public class PluginSearch {
                 String a = r.get("author").getAsString();
                 if (!a.isBlank()) return a;
             }
-        } catch (Exception ignored) {}
+        } catch (Exception t) {
+            Log.debug("pluginsearch.spiget-author-failed", t);
+        }
         return "SpigotMC";
     }
 
@@ -450,7 +452,9 @@ public class PluginSearch {
             int avg = (int) Math.round(doubleVal(rating, "average", 0.0));
             if (avg > 0) return avg;
             return intVal(rating, "count", 0);
-        } catch (Exception ignored) {}
+        } catch (Exception t) {
+            Log.debug("pluginsearch.spiget-stars-failed", t);
+        }
         return 0;
     }
 

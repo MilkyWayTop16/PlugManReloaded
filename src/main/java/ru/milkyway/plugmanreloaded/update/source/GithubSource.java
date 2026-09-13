@@ -11,6 +11,11 @@ import ru.milkyway.plugmanreloaded.update.HttpJson;
 import ru.milkyway.plugmanreloaded.update.UpdateCache;
 import ru.milkyway.plugmanreloaded.utils.Log;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+
+import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.URLEncoder;
@@ -281,27 +286,27 @@ public final class GithubSource implements UpdateSource {
             HttpJson.RawResponse response = HttpJson.getRaw(url);
             if (!response.ok()) return versions;
 
-            javax.xml.parsers.DocumentBuilderFactory factory = javax.xml.parsers.DocumentBuilderFactory.newInstance();
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-            org.w3c.dom.Document doc;
+            Document doc;
             try (InputStream is = new ByteArrayInputStream(response.body().getBytes(StandardCharsets.UTF_8))) {
                 doc = factory.newDocumentBuilder().parse(is);
             }
 
-            org.w3c.dom.NodeList entries = doc.getElementsByTagName("entry");
+            NodeList entries = doc.getElementsByTagName("entry");
             String pluginName = match.pluginName() != null ? match.pluginName() : pluginNameFromRef(match.projectRef());
 
             for (int i = 0; i < entries.getLength(); i++) {
-                org.w3c.dom.Element entry = (org.w3c.dom.Element) entries.item(i);
-                org.w3c.dom.NodeList linkNodes = entry.getElementsByTagName("link");
+                Element entry = (Element) entries.item(i);
+                NodeList linkNodes = entry.getElementsByTagName("link");
                 if (linkNodes.getLength() == 0) continue;
-                String href = ((org.w3c.dom.Element) linkNodes.item(0)).getAttribute("href");
+                String href = ((Element) linkNodes.item(0)).getAttribute("href");
                 int tagIndex = href.lastIndexOf("/tag/");
                 if (tagIndex < 0) continue;
                 String tag = href.substring(tagIndex + 5);
 
                 String rawUpdated = "";
-                org.w3c.dom.NodeList updatedNodes = entry.getElementsByTagName("updated");
+                NodeList updatedNodes = entry.getElementsByTagName("updated");
                 if (updatedNodes.getLength() > 0) {
                     rawUpdated = updatedNodes.item(0).getTextContent();
                 }

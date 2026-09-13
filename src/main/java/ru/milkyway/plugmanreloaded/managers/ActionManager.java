@@ -1,4 +1,4 @@
-package ru.milkyway.plugmanreloaded.configs;
+package ru.milkyway.plugmanreloaded.managers;
 
 import net.kyori.adventure.title.Title;
 import net.kyori.adventure.util.Ticks;
@@ -10,7 +10,9 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 import ru.milkyway.plugmanreloaded.PlugManReloaded;
 import ru.milkyway.plugmanreloaded.bridge.PlatformDetector;
-import ru.milkyway.plugmanreloaded.managers.ConfigManager;
+import ru.milkyway.plugmanreloaded.configs.ConfigUpdater;
+import ru.milkyway.plugmanreloaded.configs.MainConfig;
+import ru.milkyway.plugmanreloaded.utils.ChatButtonFactory;
 import ru.milkyway.plugmanreloaded.utils.HexColors;
 import ru.milkyway.plugmanreloaded.utils.Log;
 import ru.milkyway.plugmanreloaded.utils.PluginMetaHelper;
@@ -283,8 +285,8 @@ public class ActionManager {
 
     private Map<String, String> sanitizePlaceholders(Map<String, String> placeholders) {
         if (placeholders == null) return null;
-        java.util.Map<String, String> safe = new java.util.HashMap<>();
-        for (java.util.Map.Entry<String, String> entry : placeholders.entrySet()) {
+        Map<String, String> safe = new HashMap<>();
+        for (Map.Entry<String, String> entry : placeholders.entrySet()) {
             if (entry.getValue() == null) continue;
             safe.put(entry.getKey(), entry.getValue().replaceAll("[^a-zA-Z0-9_.-]", ""));
         }

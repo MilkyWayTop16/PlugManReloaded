@@ -1,25 +1,25 @@
-package ru.milkyway.plugmanreloaded.api.impl;
+package ru.milkyway.plugmanreloaded;
 
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import ru.milkyway.plugmanreloaded.PlugManReloaded;
 import ru.milkyway.plugmanreloaded.api.DependencyNode;
 import ru.milkyway.plugmanreloaded.api.FailureReason;
 import ru.milkyway.plugmanreloaded.api.PluginInfo;
 import ru.milkyway.plugmanreloaded.api.PluginResult;
 import ru.milkyway.plugmanreloaded.api.PlugManAPI;
 import ru.milkyway.plugmanreloaded.api.UpdateInfo;
-import ru.milkyway.plugmanreloaded.managers.DependencyGraph;
+import ru.milkyway.plugmanreloaded.managers.DependencyManager;
 import ru.milkyway.plugmanreloaded.managers.HotSwapManager;
-import ru.milkyway.plugmanreloaded.managers.PluginJarIndex;
+import ru.milkyway.plugmanreloaded.utils.PluginJarIndex;
 import ru.milkyway.plugmanreloaded.managers.LifecycleManager;
 import ru.milkyway.plugmanreloaded.update.UpdateModels.UpdateCandidate;
 import ru.milkyway.plugmanreloaded.update.UpdateService;
 import ru.milkyway.plugmanreloaded.update.install.BackupStore;
 import ru.milkyway.plugmanreloaded.utils.PluginMetaHelper;
 import ru.milkyway.plugmanreloaded.utils.TaskScheduler;
+import ru.milkyway.plugmanreloaded.utils.Log;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -27,12 +27,11 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
-import ru.milkyway.plugmanreloaded.utils.Log;
 
 public final class PlugManAPIImpl implements PlugManAPI {
     private final PlugManReloaded plugin;
     private final LifecycleManager lifecycleManager;
-    private final DependencyGraph graphManager;
+    private final DependencyManager graphManager;
     private final PluginJarIndex jarIndex;
     private final UpdateService updateService;
     private final HotSwapManager hotSwapManager;
@@ -40,7 +39,7 @@ public final class PlugManAPIImpl implements PlugManAPI {
     public PlugManAPIImpl(PlugManReloaded plugin) {
         this.plugin = plugin;
         this.lifecycleManager = plugin.getPluginLifecycleManager();
-        this.graphManager = lifecycleManager.getDependencyGraph();
+        this.graphManager = lifecycleManager.getDependencyManager();
         this.jarIndex = lifecycleManager.getJarIndex();
         this.updateService = plugin.getUpdateService();
         this.hotSwapManager = plugin.getHotSwapManager();
@@ -298,7 +297,7 @@ public final class PlugManAPIImpl implements PlugManAPI {
         }
         File jar = jarIndex.find(pluginName);
         if (jar != null && jar.exists()) {
-            return Optional.ofNullable(PluginInfo.fromJarFile(jar));
+            return Optional.ofNullable(PluginMetaHelper.fromJarFile(jar));
         }
         return Optional.empty();
     }
@@ -341,7 +340,7 @@ public final class PlugManAPIImpl implements PlugManAPI {
             if (candidates == null || candidates.isEmpty()) {
                 future.complete(Optional.empty());
             } else {
-                future.complete(Optional.of(UpdateInfo.from(candidates.get(0))));
+                future.complete(Optional.of(candidates.get(0).toUpdateInfo()));
             }
         });
         return future;
@@ -367,7 +366,7 @@ public final class PlugManAPIImpl implements PlugManAPI {
             } else {
                 List<UpdateInfo> list = new ArrayList<>();
                 for (UpdateCandidate c : candidates) {
-                    list.add(UpdateInfo.from(c));
+                    list.add(c.toUpdateInfo());
                 }
                 future.complete(list);
             }

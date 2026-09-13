@@ -5,6 +5,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.jetbrains.annotations.Nullable;
 import ru.milkyway.plugmanreloaded.PlugManReloaded;
+import ru.milkyway.plugmanreloaded.utils.NettyGuard;
 import ru.milkyway.plugmanreloaded.utils.JarValidator;
 import ru.milkyway.plugmanreloaded.utils.Log;
 
@@ -13,7 +14,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-public class UnloadSafetyChecker {
+public class SafetyManager {
 
     public enum PluginRiskLevel {
         SAFE,
@@ -48,7 +49,7 @@ public class UnloadSafetyChecker {
 
     private final PlugManReloaded plugin;
 
-    public UnloadSafetyChecker(PlugManReloaded plugin) {
+    public SafetyManager(PlugManReloaded plugin) {
         this.plugin = plugin;
     }
 
@@ -61,7 +62,7 @@ public class UnloadSafetyChecker {
             return new SafetyAssessment(PluginRiskLevel.CRITICAL_PROTECTED, Collections.emptySet());
         }
 
-        Set<String> dependents = plugin.getPluginLifecycleManager().getDependencyGraph().getDependents(targetPlugin.getName(), true);
+        Set<String> dependents = plugin.getPluginLifecycleManager().getDependencyManager().getDependents(targetPlugin.getName(), true);
 
         if (isKnownHostile(targetPlugin)) {
             return new SafetyAssessment(PluginRiskLevel.UNLOADABLE_HOSTILE, dependents);
@@ -105,7 +106,7 @@ public class UnloadSafetyChecker {
             } catch (ClassNotFoundException | NoClassDefFoundError expected) {
                 continue;
             } catch (Throwable t) {
-                Log.debug("unloadsafetychecker.marker-check-failed", t, "marker", marker, "plugin", targetPlugin.getName());
+                Log.debug("safetychecker.marker-check-failed", t, "marker", marker, "plugin", targetPlugin.getName());
             }
         }
         return false;
@@ -122,7 +123,7 @@ public class UnloadSafetyChecker {
                 }
             }
         } catch (Throwable t) {
-            Log.debug("unloadsafetychecker.servicesmanager-scan-failed", t, "plugin", targetPlugin.getName());
+            Log.debug("safetychecker.servicesmanager-scan-failed", t, "plugin", targetPlugin.getName());
         }
         return services;
     }

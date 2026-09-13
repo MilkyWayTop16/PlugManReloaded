@@ -170,8 +170,8 @@ actions:
       - "[message]   &#FFFF00◆ /plm disable <Плагин> &f— Отключить работающий плагин"
       - "[message]   &#FFFF00◆ /plm usage <Команда/Пермишен> &f— Найти плагин, зарегистрировавший команду или пермишен"
       - "[message]   &#FFFF00◆ /plm dump &f— Создать файл с полным дампом серверного окружения"
-      - "[message]   &#FFFF00◆ /plm update (Плагин/all) (-y/-r/-s) &f— Проверить и установить обновления для плагинов сервера"
-      - "[message]   &#FFFF00◆ /plm download <Плагин/URL> (-s/-y) &f— Найти и автоматически скачать плагин с зависимостями"
+      - "[message]   &#FFFF00◆ /plm update (Плагин/-all) (-y/-r/-s/-c/-pre) &f— Проверить и установить обновления для плагинов сервера"
+      - "[message]   &#FFFF00◆ /plm download <Плагин/URL> (-y/-s/-w) &f— Найти и автоматически скачать плагин с зависимостями"
       - "[message]   &#FFFF00◆ /plm delete <Плагин> (-y/-d) &f— Полностью выгрузить и удалить .jar-файл плагина с диска"
       - "[message]   &#FFFF00◆ /plm hotswap <on/off/status> &f— Авто-слежение за файлами плагинов (авто-загрузка и обновление)"
       - "[message]   &#FFFF00◆ /plm config reload &f— Перезагрузить конфигурацию плагина"
@@ -340,7 +340,7 @@ actions:
       - "[sound] BLOCK_LEVER_CLICK"
     update:
       - "[message] "
-      - "[message]  &#FFFF00▶ &fКоманда: &#FFFF00/plm update (Плагин/-all) (-y/-r/-s)"
+      - "[message]  &#FFFF00▶ &fКоманда: &#FFFF00/plm update (Плагин/-all) (-y/-r/-s/-c/-pre)"
       - "[message] "
       - "[message]  &#FFFF00◆ &fОписание: &#FFFF00Проверяет наличие свежих версий плагинов на Modrinth, Hangar, GitHub, SpigotMC, Jenkins и SpigotMC.ru с возможностью автоматической установки"
       - "[message] "
@@ -350,8 +350,10 @@ actions:
       - "[message]    &#FFFF00-y &fили &#FFFF00--yes &f— Автоматически скачать и установить найденные обновления без подтверждения"
       - "[message]    &#FFFF00-r &fили &#FFFF00--refresh &f— Очистить кэш версий и запросить свежие данные с сайтов"
       - "[message]    &#FFFF00-s &fили &#FFFF00--single &f— Обновить плагин без перезапуска зависимых плагинов"
+      - "[message]    &#FFFF00-c &fили &#FFFF00--cascade &f— Перезапустить плагин вместе со всеми зависимыми от него"
+      - "[message]    &#FFFF00-pre &fили &#FFFF00--prerelease &f— Проверять и скачивать предварительные (бета/альфа) версии плагинов"
       - "[message] "
-      - "[message]  &#FFFF00◆ &fПример команды: &#FFFF00/plm update -all -r"
+      - "[message]  &#FFFF00◆ &fПримеры команд: &#FFFF00/plm update -all -r &fили &#FFFF00/plm update LuckPerms -pre"
       - "[message] "
       - "[sound] BLOCK_LEVER_CLICK"
 
@@ -1187,11 +1189,14 @@ actions:
       - "[message] &#FB8808▶ Ошибочка! &fСкачанный файл &#FB8808не принадлежит &fплагину &#FB8808«{plugin}» &f(&#FB8808{detail}&f), установка &#FB8808отменена&f..."
       - "[sound] BLOCK_ANVIL_LAND"
     missing-dependency:
-      - "[message] &#FB8808▶ Ошибочка! &fДля установки &#FB8808обновления &fплагина &#FB8808«{plugin}» &fтребуется &#FB8808становить &fплагин(ы): &#FB8808{dependencies}"
+      - "[message] &#FB8808▶ Ошибочка! &fДля установки &#FB8808обновления &fплагина &#FB8808«{plugin}» &fтребуется &#FB8808установить &fплагин(ы): &#FB8808{dependencies}"
       - "[sound] BLOCK_ANVIL_LAND"
     pending-restart:
       - "[message] &#FFFF00◆ Готово! &fПлагин &#FFFF00«{plugin}» &fуспешно &#FFFF00обновлён &fс версии &#FFFF00v{from} &fна &#FFFF00v{to}&f, но применится только при &#FFFF00перезапуске &fсервера..."
       - "[sound] ENTITY_PLAYER_LEVELUP"
+    dependency-notice:
+      - "[message] &#FB8808▶ Внимание! &fДля зависимости &#FB8808«{dependency}» &fплагина &#FB8808«{plugin}» &fдоступно обновление до &#FB8808v{dep_version}&f"
+      - "[sound] BLOCK_LEVER_CLICK"
     rolled-back:
       - "[message] "
       - "[message] &#FB8808▶ Внимание! &fЗагрузку &#FB8808новой &fверсии плагина &#FB8808«{plugin}» &fне удалось завершить: &#FB8808{detail}"

@@ -44,6 +44,8 @@ logs:
     hangar-search-failed: "[PluginSearch] Search on Hangar failed for {query}"
     spiget-fetch-failed: "[PluginSearch] Failed to fetch the Spiget resource with ID {id}"
     spiget-search-failed: "[PluginSearch] Search on Spiget failed for {query}"
+    spiget-author-failed: "[PluginSearch] Failed to resolve Spiget resource author"
+    spiget-stars-failed: "[PluginSearch] Failed to parse Spiget resource rating"
     github-repo-fetch-failed: "[PluginSearch] Failed to fetch the GitHub repository {repo}"
     github-rate-limited: "[PluginSearch] GitHub Search API: request limit exceeded (Rate Limit 403). Set github-token in config.yml"
     github-search-failed: "[PluginSearch] Search on GitHub failed for {query}"
@@ -404,9 +406,9 @@ logs:
     jar-list-failed: "[ListCommand] Failed to get the jar list"
     unloaded-jar-list-failed: "[ListCommand] Failed to get the unloaded jar list"
 
-  unloadsafetychecker:
-    marker-check-failed: "[UnloadSafetyChecker] Error checking marker {marker} for {plugin}"
-    servicesmanager-scan-failed: "[UnloadSafetyChecker] Failed to scan the ServicesManager for {plugin}"
+  safetychecker:
+    marker-check-failed: "[SafetyChecker] Error checking marker {marker} for {plugin}"
+    servicesmanager-scan-failed: "[SafetyChecker] Failed to scan the ServicesManager for {plugin}"
 
   manualsourcelistener:
     hide-message-failed: "[ManualSourceListener] Failed to hide the message from other players"
@@ -434,6 +436,24 @@ logs:
 
   updatecommand:
     reloading-dependents: "Reloading dependent plugins after the batch update ({count} total): {plugins}"
+
+  updateinstaller:
+    dependency-update-available: "[UpdateInstaller] Notice: plugin {plugin} depends on {dependency}, which also has an update available ({newVersion})! Updating {dependency} is recommended"
+    jar-overwrite-failed: "[UpdateInstaller] Failed to overwrite jar file for {plugin}"
+    new-version-load-failed: "[UpdateInstaller] Failed to load new version of {plugin}"
+    jarindex-invalidate-failed: "[UpdateInstaller] Failed to invalidate JarIndex cache"
+    updated: "[UpdateInstaller] Plugin {plugin} successfully updated from v{from} to v{to}"
+    staged-for-restart: "[UpdateInstaller] New version of {plugin} (v{to}) placed in update/ and will be applied on restart"
+    stage-for-restart-failed: "[UpdateInstaller] Failed to stage update for {plugin} in update/ folder: {error}"
+    dependents-collect-failed: "[UpdateInstaller] Failed to collect dependent plugins for {plugin}"
+    restarting-dependents: "[UpdateInstaller] Restarting dependent plugins ({count} total) for {plugin}"
+    dependent-load-failed: "[UpdateInstaller] Failed to load dependent plugin {dependent} for {plugin}"
+    rollback-failed: "[UpdateInstaller] Failed to rollback backup for {file}"
+    rollback-load-failed: "[UpdateInstaller] Failed to load restored plugin {plugin}"
+    move-attempt-failed: "[UpdateInstaller] Move attempt #{attempt} ({source} -> {destination}) failed"
+    delete-attempt-failed: "[UpdateInstaller] Delete attempt #{attempt} for {file} failed"
+    empty-folder-cleanup-failed: "[UpdateInstaller] Failed to remove empty folder {folder}"
+    temp-file-delete-failed: "[UpdateInstaller] Failed to remove temporary file {file}"
 
   chatbuttonfactory:
     url-looks-like-markup: "[ChatButtonFactory] The url value looks like markup rather than a link, the button won't be clickable: {value}"

@@ -151,10 +151,10 @@ public class RusPigotSource implements UpdateSource {
                 return match;
             }
 
+            boolean exactNameMatch = PluginMatcher.isExactOrCleanMatch(pluginName, title);
             boolean brandMatch = PluginMatcher.hasBrandCorroboration(identity, title, null);
-            boolean distinctive = PluginMatcher.isDistinctive(PluginMatcher.normalizeName(pluginName))
-                    && !PluginMatcher.isGeneric(pluginName);
-            if (resource.paid() || brandMatch || distinctive) {
+            boolean safeExact = exactNameMatch && !PluginMatcher.isGeneric(pluginName);
+            if (brandMatch || safeExact) {
                 ProjectMatch match = new ProjectMatch(
                         pluginName,
                         pageUrl,
