@@ -16,7 +16,9 @@ import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionAttachment;
 import org.bukkit.permissions.PermissionAttachmentInfo;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
+import org.bukkit.plugin.RegisteredListener;
 import org.bukkit.plugin.SimplePluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
@@ -146,21 +148,23 @@ public class SanitizerManager {
         if (listeners == null) return;
         for (Object val : listeners.values()) {
             if (val instanceof Collection<?> collection) {
-                collection.removeIf(item -> {
-                    Plugin p = ReflectionHelper.getFieldValue(item, "plugin");
-                    return targetPlugin.equals(p);
-                });
+                collection.removeIf(item -> isListenerOf(item, targetPlugin));
             } else if (val instanceof Map<?, ?> mapVal) {
                 for (Object subVal : mapVal.values()) {
                     if (subVal instanceof Collection<?> subCollection) {
-                        subCollection.removeIf(item -> {
-                            Plugin p = ReflectionHelper.getFieldValue(item, "plugin");
-                            return targetPlugin.equals(p);
-                        });
+                        subCollection.removeIf(item -> isListenerOf(item, targetPlugin));
                     }
                 }
             }
         }
+    }
+
+    private static boolean isListenerOf(Object item, Plugin targetPlugin) {
+        if (item instanceof RegisteredListener rl) {
+            return targetPlugin.equals(rl.getPlugin());
+        }
+        Plugin p = ReflectionHelper.getFieldValue(item, "plugin");
+        return targetPlugin.equals(p);
     }
 
     private void cleanPlaceholderAPI(Plugin targetPlugin) {
@@ -224,20 +228,35 @@ public class SanitizerManager {
                 Thread thread = threads[i];
                 if (thread == null || thread == Thread.currentThread() || !thread.isAlive()) continue;
 
-                if (thread.getContextClassLoader() == classLoader || thread.getClass().getClassLoader() == classLoader) {
+                boolean matches = thread.getContextClassLoader() == classLoader
+                        || thread.getClass().getClassLoader() == classLoader
+                        || isThreadTargetLoadedBy(thread, classLoader);
+
+                if (matches) {
                     try {
                         thread.setContextClassLoader(null);
                     } catch (Throwable ignored) {}
                     try {
                         thread.interrupt();
                     } catch (Throwable t) {
-                        Log.debug("plugincleanup.thread-interrupt-failed", t, "thread", thread.getName(), "plugin", targetPlugin.getName());
+                        Log.debug("plugincleanup.thread-interrupt-failed", t, "thread", thread.getName(), "plugin", targetPlugin != null ? targetPlugin.getName() : "null");
                     }
                 }
             }
         } catch (Throwable t) {
-            Log.debug("plugincleanup.threads-failed", t, "plugin", targetPlugin.getName());
+            Log.debug("plugincleanup.threads-failed", t, "plugin", targetPlugin != null ? targetPlugin.getName() : "null");
         }
+    }
+
+    private static boolean isThreadTargetLoadedBy(Thread thread, ClassLoader classLoader) {
+        try {
+            Field targetField = ReflectionHelper.getField(Thread.class, "target");
+            if (targetField != null) {
+                Object target = targetField.get(thread);
+                return target != null && target.getClass().getClassLoader() == classLoader;
+            }
+        } catch (Throwable ignored) {}
+        return false;
     }
 
     private void cleanJdbcDrivers(Plugin targetPlugin, @Nullable ClassLoader classLoader) {
@@ -282,6 +301,14 @@ public class SanitizerManager {
                         transitive.remove(classLoader);
                     }
                 }
+            }
+            Collection<?> myDependencies = ReflectionHelper.getFieldValue(classLoader, "dependencies");
+            if (myDependencies != null) {
+                myDependencies.clear();
+            }
+            Collection<?> myTransitive = ReflectionHelper.getFieldValue(classLoader, "transitiveDependencies");
+            if (myTransitive != null) {
+                myTransitive.clear();
             }
         } catch (Throwable t) {
             Log.debug("plugincleanup.paper-dependencies-failed", t, "plugin", targetPlugin.getName());
@@ -328,7 +355,6 @@ public class SanitizerManager {
     }
 
     @SuppressWarnings("unchecked")
-
     private void closeClassLoader(Plugin targetPlugin, @Nullable ClassLoader classLoader) {
         if (classLoader == null) return;
 
@@ -573,8 +599,12 @@ public class SanitizerManager {
         return true;
     }
 
+    private static boolean canProceed(@Nullable Plugin targetPlugin) {
+        return targetPlugin != null && Bukkit.getServer() != null;
+    }
+
     public static void cleanupServerState(@Nullable Plugin targetPlugin) {
-        if (targetPlugin == null || Bukkit.getServer() == null) return;
+        if (!canProceed(targetPlugin)) return;
         ClassLoader targetCl = targetPlugin.getClass().getClassLoader();
 
         closePluginInventories(targetPlugin, targetCl);
@@ -621,7 +651,9 @@ public class SanitizerManager {
                     Inventory top = view.getTopInventory();
                     if (top == null) return;
                     InventoryHolder holder = top.getHolder();
-                    if (holder != null && holder.getClass().getClassLoader() == targetCl) {
+                    boolean isPluginInventory = (holder != null && holder.getClass().getClassLoader() == targetCl)
+                            || top.getClass().getClassLoader() == targetCl;
+                    if (isPluginInventory) {
                         player.closeInventory();
                     }
                 } catch (Throwable t) {
@@ -631,7 +663,7 @@ public class SanitizerManager {
             });
         }
         if (failed.get() > 0) {
-            Log.debug("serverstatecleanup.inventory-close-failed-count", "count", String.valueOf(failed.get()), "plugin", targetPlugin.getName());
+            Log.debug("serverstatecleanup.inventory-close-failed-count", "count", String.valueOf(failed.get()), "plugin", targetPlugin != null ? targetPlugin.getName() : "null");
         }
     }
 
@@ -644,7 +676,7 @@ public class SanitizerManager {
             TaskScheduler.runForEntity(plugin, player, () -> {
                 try {
                     if (!player.isOnline()) return;
-                    List<PermissionAttachment> toRemove = new ArrayList<>();
+                    Set<PermissionAttachment> toRemove = new HashSet<>();
                     for (PermissionAttachmentInfo info : player.getEffectivePermissions()) {
                         PermissionAttachment attachment = info.getAttachment();
                         if (attachment != null && targetPlugin.equals(attachment.getPlugin())) {
@@ -661,7 +693,7 @@ public class SanitizerManager {
             });
         }
         if (failed.get() > 0) {
-            Log.debug("serverstatecleanup.attachment-cleanup-failed-count", "count", String.valueOf(failed.get()), "plugin", targetPlugin.getName());
+            Log.debug("serverstatecleanup.attachment-cleanup-failed-count", "count", String.valueOf(failed.get()), "plugin", targetPlugin != null ? targetPlugin.getName() : "null");
         }
     }
 
@@ -688,10 +720,30 @@ public class SanitizerManager {
         return prefixes;
     }
 
+    private static List<String> getProvides(Plugin targetPlugin) {
+        if (targetPlugin == null) return Collections.emptyList();
+        try {
+            Object meta = ReflectionHelper.invokeMethod(targetPlugin, "getPluginMeta");
+            if (meta != null) {
+                List<String> provides = ReflectionHelper.invokeMethod(meta, "getProvides");
+                if (provides != null && !provides.isEmpty()) {
+                    return provides;
+                }
+            }
+        } catch (Throwable ignored) {}
+        try {
+            PluginDescriptionFile desc = targetPlugin.getDescription();
+            if (desc != null && desc.getProvides() != null) {
+                return desc.getProvides();
+            }
+        } catch (Throwable ignored) {}
+        return Collections.emptyList();
+    }
+
     private static void cleanPermissions(Plugin targetPlugin) {
         try {
             Set<String> prefixes = permissionPrefixesFor(
-                    targetPlugin.getName(), targetPlugin.getDescription().getProvides());
+                    targetPlugin.getName(), getProvides(targetPlugin));
 
             List<String> permNames = PluginMetaHelper.getPermissionNames(targetPlugin);
             for (String permName : permNames) {
@@ -776,14 +828,18 @@ public class SanitizerManager {
         } catch (Throwable ignored) {}
 
         try {
+            List<NamespacedKey> fallbackKeys = new ArrayList<>();
             Iterator<Recipe> it = Bukkit.recipeIterator();
             while (it.hasNext()) {
                 Recipe recipe = it.next();
                 if (recipe instanceof Keyed keyed) {
                     if (keyed.getKey().getNamespace().equalsIgnoreCase(namespace)) {
-                        it.remove();
+                        fallbackKeys.add(keyed.getKey());
                     }
                 }
+            }
+            for (NamespacedKey key : fallbackKeys) {
+                Bukkit.removeRecipe(key);
             }
         } catch (Throwable t) {
             Log.debug("serverstatecleanup.recipes-cleanup-failed", t, "plugin", targetPlugin.getName());
@@ -824,8 +880,11 @@ public class SanitizerManager {
                         HelpTopic topic = entry.getValue();
                         if (topic == null || entry.getKey() == null) return false;
                         if (entry.getKey().toLowerCase(Locale.ROOT).startsWith(prefix)) return true;
-                        Plugin p = ReflectionHelper.getFieldValue(topic, "plugin");
-                        return targetPlugin.equals(p);
+                        if (topic.getClass().getName().contains("Command")) {
+                            Plugin p = ReflectionHelper.getFieldValue(topic, "plugin");
+                            return targetPlugin.equals(p);
+                        }
+                        return false;
                     });
                 }
             }

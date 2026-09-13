@@ -6,6 +6,7 @@ import com.mojang.brigadier.tree.RootCommandNode;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.command.PluginIdentifiableCommand;
 import org.bukkit.command.SimpleCommandMap;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.Nullable;
@@ -47,16 +48,27 @@ public class BrigadierManager {
     public void syncCommands() {
         if (plugin == null || plugin.getConfigManager() == null || !plugin.getConfigManager().isAutoSyncCommands()) return;
 
+        if (!plugin.isEnabled()) {
+            if (Bukkit.getServer() != null && Bukkit.isPrimaryThread()) {
+                performSyncCommands();
+            }
+            return;
+        }
+
         if (pendingSync.compareAndSet(false, true)) {
-            TaskScheduler.runSync(plugin, () -> {
+            TaskScheduler.runSyncLater(plugin, () -> {
                 pendingSync.set(false);
                 performSyncCommands();
-            });
+            }, 1L);
         }
     }
 
     private void performSyncCommands() {
         if (Bukkit.getServer() == null) return;
+
+        if (syncCommandsHandle == null) {
+            initSyncCommandsHandle();
+        }
 
         if (syncCommandsHandle != null) {
             try {
@@ -83,17 +95,17 @@ public class BrigadierManager {
             SimpleCommandMap commandMap = ReflectionHelper.getFieldValue(Bukkit.getServer(), "commandMap");
             if (commandMap == null) return;
 
+            List<String> removedLabels;
             synchronized (commandMap) {
                 Map<String, Command> knownCommands = ReflectionHelper.getFieldValue(SimpleCommandMap.class, commandMap, "knownCommands");
                 if (knownCommands == null) return;
 
-                List<String> removedLabels;
                 synchronized (knownCommands) {
                     removedLabels = removeMatchingCommands(knownCommands, targetPlugin, pluginPrefix, commandMap);
                 }
-
-                cleanBrigadierDispatcher(targetPlugin, removedLabels);
             }
+
+            cleanBrigadierDispatcher(targetPlugin, removedLabels);
         } catch (Throwable t) {
             Log.debug("brigadiermanager.cleanup-error", t, "plugin", targetPlugin.getName());
         }
@@ -103,13 +115,29 @@ public class BrigadierManager {
                                                 String pluginPrefix, SimpleCommandMap commandMap) {
         Set<String> toRemove = new LinkedHashSet<>();
         if (targetPlugin != null && targetPlugin.getDescription() != null && targetPlugin.getDescription().getCommands() != null) {
-            for (String name : targetPlugin.getDescription().getCommands().keySet()) {
+            for (Map.Entry<String, Map<String, Object>> entry : targetPlugin.getDescription().getCommands().entrySet()) {
+                String name = entry.getKey();
                 if (name != null) {
+                    toRemove.add(name);
                     toRemove.add(name.toLowerCase(Locale.ROOT));
+                    toRemove.add(pluginPrefix + name);
                     toRemove.add(pluginPrefix + name.toLowerCase(Locale.ROOT));
+                }
+                Map<String, Object> details = entry.getValue();
+                if (details != null && details.get("aliases") instanceof List<?> aliases) {
+                    for (Object alias : aliases) {
+                        if (alias instanceof String aliasStr) {
+                            toRemove.add(aliasStr);
+                            toRemove.add(aliasStr.toLowerCase(Locale.ROOT));
+                            toRemove.add(pluginPrefix + aliasStr);
+                            toRemove.add(pluginPrefix + aliasStr.toLowerCase(Locale.ROOT));
+                        }
+                    }
                 }
             }
         }
+
+        ClassLoader targetCl = (targetPlugin != null) ? targetPlugin.getClass().getClassLoader() : null;
 
         for (Map.Entry<String, Command> entry : knownCommands.entrySet()) {
             String cmdLabel = entry.getKey();
@@ -117,25 +145,34 @@ public class BrigadierManager {
 
             boolean match = false;
             if (cmd instanceof PluginCommand pc) {
-                if (targetPlugin.equals(pc.getPlugin())) {
+                if (targetPlugin != null && targetPlugin.equals(pc.getPlugin())) {
                     match = true;
                 }
-            } else if (cmdLabel.toLowerCase(Locale.ROOT).startsWith(pluginPrefix)) {
+            } else if (cmd instanceof PluginIdentifiableCommand pic) {
+                if (targetPlugin != null && targetPlugin.equals(pic.getPlugin())) {
+                    match = true;
+                }
+            } else if (cmdLabel != null && cmdLabel.toLowerCase(Locale.ROOT).startsWith(pluginPrefix)) {
+                match = true;
+            } else if (cmd != null && targetCl != null && cmd.getClass().getClassLoader() == targetCl) {
                 match = true;
             }
 
-            if (match) {
+            if (match && cmdLabel != null) {
                 toRemove.add(cmdLabel);
             }
         }
 
         for (String label : toRemove) {
             Command removed = knownCommands.remove(label);
+            if (removed == null) {
+                removed = knownCommands.remove(label.toLowerCase(Locale.ROOT));
+            }
             if (removed != null) {
                 try {
                     removed.unregister(commandMap);
                 } catch (Throwable t) {
-                    Log.debug("brigadiermanager.unregister-failed", t, "command", label, "plugin", targetPlugin.getName());
+                    Log.debug("brigadiermanager.unregister-failed", t, "command", label, "plugin", targetPlugin != null ? targetPlugin.getName() : "unknown");
                 }
             }
         }
@@ -184,31 +221,51 @@ public class BrigadierManager {
             RootCommandNode<Object> root = dispatcher.getRoot();
             if (root == null) return;
 
+            Set<String> cleanLabels = new HashSet<>();
+            for (String name : commandNames) {
+                if (name == null || name.isBlank()) continue;
+                cleanLabels.add(name);
+                cleanLabels.add(name.toLowerCase(Locale.ROOT));
+                if (name.contains(":")) {
+                    String sub = name.substring(name.indexOf(":") + 1);
+                    cleanLabels.add(sub);
+                    cleanLabels.add(sub.toLowerCase(Locale.ROOT));
+                }
+            }
+
             synchronized (root) {
                 Map<String, CommandNode<Object>> children = ReflectionHelper.getFieldValue(CommandNode.class, root, "children");
                 Map<String, CommandNode<Object>> literals = ReflectionHelper.getFieldValue(CommandNode.class, root, "literals");
 
                 if (children != null) {
                     synchronized (children) {
-                        for (String name : commandNames) {
-                            String cleanName = name.contains(":") ? name.substring(name.indexOf(":") + 1) : name;
-                            children.remove(name.toLowerCase(Locale.ROOT));
-                            children.remove(cleanName.toLowerCase(Locale.ROOT));
+                        for (String label : cleanLabels) {
+                            children.remove(label);
                         }
+                        children.keySet().removeIf(k -> {
+                            for (String label : cleanLabels) {
+                                if (k.equalsIgnoreCase(label)) return true;
+                            }
+                            return false;
+                        });
                     }
                 }
                 if (literals != null) {
                     synchronized (literals) {
-                        for (String name : commandNames) {
-                            String cleanName = name.contains(":") ? name.substring(name.indexOf(":") + 1) : name;
-                            literals.remove(name.toLowerCase(Locale.ROOT));
-                            literals.remove(cleanName.toLowerCase(Locale.ROOT));
+                        for (String label : cleanLabels) {
+                            literals.remove(label);
                         }
+                        literals.keySet().removeIf(k -> {
+                            for (String label : cleanLabels) {
+                                if (k.equalsIgnoreCase(label)) return true;
+                            }
+                            return false;
+                        });
                     }
                 }
             }
         } catch (Throwable t) {
-            Log.debug("brigadiermanager.nodes-cleanup-failed", t, "plugin", targetPlugin.getName());
+            Log.debug("brigadiermanager.nodes-cleanup-failed", t, "plugin", targetPlugin != null ? targetPlugin.getName() : "unknown");
         }
     }
 }

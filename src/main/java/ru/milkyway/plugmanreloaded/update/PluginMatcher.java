@@ -17,6 +17,51 @@ import java.util.regex.Pattern;
 
 public final class PluginMatcher {
 
+    private static final Pattern EDITION_TOKEN_PATTERN = Pattern.compile(
+            "(?i)(?:^|[._\\-\\[\\(])(prem|premium|paid|pro|plus|elite|ultimate|full)(?:[._\\-\\]\\)\\d]|\\.jar$|$)"
+    );
+
+    private static final Pattern STRICT_PREMIUM_TOKEN_PATTERN = Pattern.compile(
+            "(?i)(?:^|[._\\-\\[\\(])(prem|premium|paid)(?:[._\\-\\]\\)\\d]|\\.jar$|$)"
+    );
+
+    private static final Pattern VERSION_SUFFIX_PATTERN = Pattern.compile("[-_.\\s]+v?\\d[a-z0-9.+_-]*$");
+    private static final Pattern JAR_SUFFIX_PATTERN = Pattern.compile("\\.jar$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern SEPARATORS_PATTERN = Pattern.compile("[-_.\\s]+");
+    private static final Pattern NAME_VERSION_PATTERN_1 = Pattern.compile("[-_.\\s]+v?\\d+(\\.\\d+)*$");
+    private static final Pattern NAME_VERSION_PATTERN_2 = Pattern.compile("\\s*v\\d+(\\.\\d+)*$");
+    private static final Pattern NAME_EDITION_SUFFIX_PATTERN = Pattern.compile("(?:premium|free|lite|pro|ultimate|advanced|spigot|paper|mc|plugin|forge|fabric|dev|beta)$");
+    private static final Pattern SPLIT_NON_RUNTIME_PATTERN = Pattern.compile("[-_.]");
+    private static final Pattern AUTHOR_SPLIT_PATTERN = Pattern.compile("[,;/&]");
+    private static final Pattern AUTHOR_BRACKETS_PATTERN = Pattern.compile("[\\[\\]\"]");
+    private static final Pattern AUTHOR_DELIMITERS_PATTERN = Pattern.compile("[_\\-\\s]+");
+    private static final Pattern BRAND_SPLIT_PATTERN = Pattern.compile("[,/&]+");
+    private static final Pattern SLASH_SPLIT_PATTERN = Pattern.compile("/+");
+    private static final Pattern BRAND_AT_PATTERN = Pattern.compile("^@+");
+    private static final Pattern NON_ALPHANUMERIC_MULTI_PATTERN = Pattern.compile("[^a-z0-9]+");
+    private static final Pattern NON_ALPHANUMERIC_SINGLE_PATTERN = Pattern.compile("[^a-z0-9]");
+    private static final Pattern TITLE_DELIMITERS_PATTERN = Pattern.compile(" [-–—»•|] | // ");
+    private static final Pattern WHITESPACE_RUN_PATTERN = Pattern.compile("\\s+");
+    private static final Pattern TITLE_FILTER_CHARS_PATTERN = Pattern.compile("[0-9.\\-–—\\s+vVxX]");
+
+    private static final char[] HEX_CHARS = "0123456789abcdef".toCharArray();
+
+    private static final Set<String> NON_RUNTIME_CLASSIFIERS = Set.of(
+            "javadoc", "sources", "source", "plain", "original", "tests", "test", "shaded-sources", "cli"
+    );
+
+    private static final Set<String> FOREIGN_PLATFORMS = Set.of(
+            "bungee", "bungeecord", "velocity", "waterfall", "fabric", "forge", "neoforge", "quilt", "sponge", "nukkit"
+    );
+
+    private static final List<String> OWN_PLATFORM_SUFFIXES = List.of(
+            "-paper", "_paper", ".paper",
+            "-purpur", "_purpur", ".purpur",
+            "-spigot", "_spigot", ".spigot",
+            "-bukkit", "_bukkit", ".bukkit",
+            "-folia", "_folia", ".folia"
+    );
+
     private PluginMatcher() {}
 
     public static PluginEdition detect(File jar, String pluginName, String version, String mainClass, String website) {
@@ -29,23 +74,13 @@ public final class PluginMatcher {
 
     public static double similarity(@Nullable String left, String right) {
         if (left == null || right == null) return 0.0;
-        if (left.toLowerCase(Locale.ROOT).endsWith(".jar") || right.toLowerCase(Locale.ROOT).endsWith(".jar")) {
+        if (endsWithJarIgnoreCase(left) || endsWithJarIgnoreCase(right)) {
             return assetSimilarity(left, right);
         }
         return rawSimilarity(left, right);
     }
 
-    private static final Pattern EDITION_TOKEN_PATTERN = Pattern.compile(
-            "(?i)(?:^|[._\\-\\[\\(])(prem|premium|paid|pro|plus|elite|ultimate|full)(?:[._\\-\\]\\)\\d]|\\.jar$|$)"
-    );
-
-    private static final Pattern STRICT_PREMIUM_TOKEN_PATTERN = Pattern.compile(
-            "(?i)(?:^|[._\\-\\[\\(])(prem|premium|paid)(?:[._\\-\\]\\)\\d]|\\.jar$|$)"
-    );
-
     private static boolean isPremium(File jar, String pluginName, String version, String mainClass, String website) {
-        String normalizedName = normalizeName(pluginName);
-
         if (pluginName != null && STRICT_PREMIUM_TOKEN_PATTERN.matcher(pluginName).find()) {
             return true;
         }
@@ -63,7 +98,7 @@ public final class PluginMatcher {
 
         if (jar != null) {
             String jarName = jar.getName();
-            if (jarName.toLowerCase(Locale.ROOT).endsWith(".jar")) {
+            if (endsWithJarIgnoreCase(jarName)) {
                 jarName = jarName.substring(0, jarName.length() - 4);
             }
 
@@ -77,7 +112,7 @@ public final class PluginMatcher {
             }
 
             if (STRICT_PREMIUM_TOKEN_PATTERN.matcher(jarName).find()) {
-                if (pluginName == null || !normalizeName(jarName).equals(normalizedName)) {
+                if (pluginName == null || !normalizeName(jarName).equals(normalizeName(pluginName))) {
                     return true;
                 }
             }
@@ -86,39 +121,30 @@ public final class PluginMatcher {
         return false;
     }
 
+    private static boolean endsWithJarIgnoreCase(@Nullable String value) {
+        if (value == null) return false;
+        int len = value.length();
+        return len >= 4 && value.regionMatches(true, len - 4, ".jar", 0, 4);
+    }
+
     private static String stripPrefixIgnoreCase(@Nullable String text, String prefix) {
         if (text == null || prefix == null) return text;
-        if (text.toLowerCase(Locale.ROOT).startsWith(prefix.toLowerCase(Locale.ROOT))) {
+        if (text.length() >= prefix.length() && text.regionMatches(true, 0, prefix, 0, prefix.length())) {
             return text.substring(prefix.length());
         }
         return text;
     }
 
-    private static final Set<String> NON_RUNTIME_CLASSIFIERS = Set.of(
-            "javadoc", "sources", "source", "plain", "original", "tests", "test", "shaded-sources", "cli"
-    );
-
-    private static final Set<String> FOREIGN_PLATFORMS = Set.of(
-            "bungee", "bungeecord", "velocity", "waterfall", "fabric", "forge", "neoforge", "quilt", "sponge", "nukkit"
-    );
-
-    private static final List<String> OWN_PLATFORMS = List.of("paper", "purpur", "spigot", "bukkit", "folia");
-
-    private static final List<String> SEPARATORS = List.of("-", "_", ".");
-
-
-    private static final String VERSION_SUFFIX = "[-_.\\s]+v?\\d[a-z0-9.+_-]*$";
-
     private static String normalizeAsset(@Nullable String value) {
         if (value == null) return "";
-        String result = value.toLowerCase(Locale.ROOT).trim().replaceAll("\\.jar$", "");
+        String result = JAR_SUFFIX_PATTERN.matcher(value.toLowerCase(Locale.ROOT).trim()).replaceAll("");
 
         String previous = null;
         while (!result.equals(previous)) {
             previous = result;
-            result = stripOwnPlatform(result).replaceAll(VERSION_SUFFIX, "");
+            result = VERSION_SUFFIX_PATTERN.matcher(stripOwnPlatform(result)).replaceAll("");
         }
-        return result.replaceAll("[-_.\\s]+", "");
+        return SEPARATORS_PATTERN.matcher(result).replaceAll("");
     }
 
     private static String stripOwnPlatform(String value) {
@@ -126,17 +152,29 @@ public final class PluginMatcher {
         boolean stripped = true;
         while (stripped) {
             stripped = false;
-            for (String platform : OWN_PLATFORMS) {
-                for (String separator : SEPARATORS) {
-                    String suffix = separator + platform;
-                    if (result.length() > suffix.length() && result.endsWith(suffix)) {
-                        result = result.substring(0, result.length() - suffix.length());
-                        stripped = true;
-                    }
+            for (String suffix : OWN_PLATFORM_SUFFIXES) {
+                if (result.length() > suffix.length() && result.endsWith(suffix)) {
+                    result = result.substring(0, result.length() - suffix.length());
+                    stripped = true;
                 }
             }
         }
         return result;
+    }
+
+    public static boolean isNonRuntimeArtifact(@Nullable String assetName) {
+        if (assetName == null) return true;
+        String lower = assetName.toLowerCase(Locale.ROOT);
+        if (lower.endsWith(".jar")) {
+            lower = lower.substring(0, lower.length() - 4);
+        }
+
+        for (String part : SPLIT_NON_RUNTIME_PATTERN.split(lower)) {
+            if (NON_RUNTIME_CLASSIFIERS.contains(part) || FOREIGN_PLATFORMS.contains(part)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static double platformBonus(String assetName) {
@@ -189,21 +227,6 @@ public final class PluginMatcher {
         return false;
     }
 
-    public static boolean isNonRuntimeArtifact(@Nullable String assetName) {
-        if (assetName == null) return true;
-        String lower = assetName.toLowerCase(Locale.ROOT);
-        if (lower.endsWith(".jar")) {
-            lower = lower.substring(0, lower.length() - 4);
-        }
-
-        for (String part : lower.split("[-_.]")) {
-            if (NON_RUNTIME_CLASSIFIERS.contains(part) || FOREIGN_PLATFORMS.contains(part)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     public static double assetSimilarity(String pluginName, String assetName) {
         String plugin = normalizeAsset(pluginName);
         String asset = normalizeAsset(assetName);
@@ -212,11 +235,6 @@ public final class PluginMatcher {
 
         return rawSimilarity(plugin, asset);
     }
-
-
-
-
-    
 
     private static final int DISTINCTIVE_NAME_MIN_LENGTH = 3;
 
@@ -331,16 +349,15 @@ public final class PluginMatcher {
 
     public static String normalizeName(@Nullable String name) {
         if (name == null) return "";
-        return name.toLowerCase(Locale.ROOT).trim()
-                .replaceAll("[-_.\\s]+v?\\d+(\\.\\d+)*$", "")
-                .replaceAll("\\s*v\\d+(\\.\\d+)*$", "")
-                .replaceAll("[-_.\\s]+", "")
-                .replaceAll("(?:premium|free|lite|pro|ultimate|advanced|spigot|paper|mc|plugin|forge|fabric|dev|beta)$", "")
-                .trim();
+        String step1 = name.toLowerCase(Locale.ROOT).trim();
+        String step2 = NAME_VERSION_PATTERN_1.matcher(step1).replaceAll("");
+        String step3 = NAME_VERSION_PATTERN_2.matcher(step2).replaceAll("");
+        String step4 = SEPARATORS_PATTERN.matcher(step3).replaceAll("");
+        return NAME_EDITION_SUFFIX_PATTERN.matcher(step4).replaceAll("").trim();
     }
 
     public static boolean isCompanion(String pluginName, String candidateName) {
-        if (candidateName != null && candidateName.toLowerCase(Locale.ROOT).endsWith(".jar")) {
+        if (endsWithJarIgnoreCase(candidateName)) {
             return isAssetCompanion(pluginName, candidateName);
         }
         String plugin = normalizeName(pluginName);
@@ -358,33 +375,26 @@ public final class PluginMatcher {
     }
 
     private static boolean hasCompanionMarker(String normalizedPlugin, String candidateName) {
-        for (String token : tokenize(candidateName)) {
+        if (candidateName == null || candidateName.isEmpty()) {
+            return false;
+        }
+        int len = candidateName.length();
+        int i = 0;
+        while (i < len) {
+            while (i < len && !Character.isLetterOrDigit(candidateName.charAt(i))) {
+                i++;
+            }
+            if (i >= len) break;
+            int start = i;
+            while (i < len && Character.isLetterOrDigit(candidateName.charAt(i))) {
+                i++;
+            }
+            String token = candidateName.substring(start, i).toLowerCase(Locale.ROOT);
             if (COMPANION_MARKERS.contains(token) && !normalizedPlugin.contains(token)) {
                 return true;
             }
         }
         return false;
-    }
-
-    private static Set<String> tokenize(@Nullable String value) {
-        Set<String> tokens = new HashSet<>();
-        if (value == null || value.isEmpty()) {
-            return tokens;
-        }
-        StringBuilder current = new StringBuilder();
-        for (int i = 0; i < value.length(); i++) {
-            char symbol = Character.toLowerCase(value.charAt(i));
-            if (Character.isLetterOrDigit(symbol)) {
-                current.append(symbol);
-            } else if (current.length() > 0) {
-                tokens.add(current.toString());
-                current.setLength(0);
-            }
-        }
-        if (current.length() > 0) {
-            tokens.add(current.toString());
-        }
-        return tokens;
     }
 
     public static String primaryResourceName(@Nullable String title) {
@@ -405,8 +415,7 @@ public final class PluginMatcher {
             }
         }
 
-        value = value.replace(" - ", "|").replace(" – ", "|").replace(" — ", "|")
-                .replace(" » ", "|").replace(" • ", "|").replace(" // ", "|").replace(" | ", "|");
+        value = TITLE_DELIMITERS_PATTERN.matcher(value).replaceAll("|");
 
         int i = 0;
         int length = value.length();
@@ -420,9 +429,9 @@ public final class PluginMatcher {
             while (end < length && isNamePart(value.charAt(end)) && value.charAt(end) != '|') {
                 end++;
             }
-            String run = stripDecoration(value.substring(i, end)).replaceAll("\\s+", " ");
+            String run = WHITESPACE_RUN_PATTERN.matcher(stripDecoration(value.substring(i, end))).replaceAll(" ");
             if (!run.isEmpty()) {
-                if (run.replaceAll("[0-9.\\-–—\\s+vVxX]", "").isEmpty()) {
+                if (TITLE_FILTER_CHARS_PATTERN.matcher(run).replaceAll("").isEmpty()) {
                     i = end + 1;
                     continue;
                 }
@@ -450,28 +459,42 @@ public final class PluginMatcher {
         if (pluginName == null || pluginName.isBlank()) {
             return false;
         }
+
+        String normTitle = null;
+        String normPrimary = null;
+        String normClean = null;
+        if (resourceTitle != null && !resourceTitle.isBlank()) {
+            normTitle = normalizeName(resourceTitle);
+            String primary = primaryResourceName(resourceTitle);
+            if (!primary.isBlank()) {
+                normPrimary = normalizeName(primary);
+            }
+            String clean = cleanResourceTitle(resourceTitle);
+            if (!clean.isBlank()) {
+                normClean = normalizeName(clean);
+            }
+        }
+
+        String normSlug = (slug != null && !slug.isBlank()) ? normalizeName(slug) : null;
+
         List<String> candidates = getSearchAliases(pluginName);
         for (String candidate : candidates) {
             String norm = normalizeName(candidate);
             if (norm.isEmpty()) continue;
 
-            if (resourceTitle != null && !resourceTitle.isBlank()) {
-                if (norm.equalsIgnoreCase(normalizeName(resourceTitle))) {
+            if (normTitle != null) {
+                if (norm.equalsIgnoreCase(normTitle)) {
                     return true;
                 }
-                String primary = primaryResourceName(resourceTitle);
-                if (!primary.isBlank() && norm.equalsIgnoreCase(normalizeName(primary))) {
+                if (normPrimary != null && norm.equalsIgnoreCase(normPrimary)) {
                     return true;
                 }
-                String clean = cleanResourceTitle(resourceTitle);
-                if (!clean.isBlank() && norm.equalsIgnoreCase(normalizeName(clean))) {
+                if (normClean != null && norm.equalsIgnoreCase(normClean)) {
                     return true;
                 }
             }
-            if (slug != null && !slug.isBlank()) {
-                if (norm.equalsIgnoreCase(normalizeName(slug))) {
-                    return true;
-                }
+            if (normSlug != null && norm.equalsIgnoreCase(normSlug)) {
+                return true;
             }
         }
         return false;
@@ -484,12 +507,15 @@ public final class PluginMatcher {
         if (isExactOrCleanMatch(pluginName, resourceTitle)) {
             return 1.0;
         }
+        String normTitle = normalizeName(resourceTitle);
+        String normPrimary = normalizeName(primaryResourceName(resourceTitle));
+
         double best = 0.0;
         for (String alias : getSearchAliases(pluginName)) {
             String norm = normalizeName(alias);
             if (norm.isEmpty()) continue;
-            double full = rawSimilarity(norm, normalizeName(resourceTitle));
-            double primary = rawSimilarity(norm, normalizeName(primaryResourceName(resourceTitle)));
+            double full = rawSimilarity(norm, normTitle);
+            double primary = rawSimilarity(norm, normPrimary);
             double score = Math.max(full, primary);
             if (score > best) {
                 best = score;
@@ -516,21 +542,22 @@ public final class PluginMatcher {
             return false;
         }
         String resource = resourceAuthor.toLowerCase(Locale.ROOT).trim();
+        String[] resourceParts = AUTHOR_DELIMITERS_PATTERN.split(resource);
 
         for (String raw : pluginAuthors) {
             if (raw == null) continue;
-            for (String part : raw.split("[,;/&]")) {
-                String candidate = part.toLowerCase(Locale.ROOT).replaceAll("[\\[\\]\"]", "").trim();
+            for (String part : AUTHOR_SPLIT_PATTERN.split(raw)) {
+                String candidate = AUTHOR_BRACKETS_PATTERN.matcher(part.toLowerCase(Locale.ROOT)).replaceAll("").trim();
                 if (candidate.length() < 3) continue;
                 if (resource.contains(candidate) || candidate.contains(resource)) {
                     return true;
                 }
-                for (String sub : candidate.split("[_\\-\\s]+")) {
+                for (String sub : AUTHOR_DELIMITERS_PATTERN.split(candidate)) {
                     if (sub.length() >= 4 && resource.contains(sub)) {
                         return true;
                     }
                 }
-                for (String sub : resource.split("[_\\-\\s]+")) {
+                for (String sub : resourceParts) {
                     if (sub.length() >= 4 && candidate.contains(sub)) {
                         return true;
                     }
@@ -570,7 +597,7 @@ public final class PluginMatcher {
         if (identity.authors() != null) {
             for (String author : identity.authors()) {
                 if (author == null) continue;
-                for (String part : author.split("[,/&]+")) {
+                for (String part : BRAND_SPLIT_PATTERN.split(author)) {
                     String token = normalizeBrandToken(part);
                     if (token != null) brands.add(token);
                 }
@@ -588,7 +615,7 @@ public final class PluginMatcher {
             int schemeEnd = lower.indexOf("://");
             int slash = lower.indexOf('/', schemeEnd >= 0 ? schemeEnd + 3 : 0);
             String hostPath = slash >= 0 ? lower.substring(slash + 1) : "";
-            for (String segment : hostPath.split("[/]+")) {
+            for (String segment : SLASH_SPLIT_PATTERN.split(hostPath)) {
                 String token = normalizeBrandToken(segment);
                 if (token != null) brands.add(token);
             }
@@ -628,11 +655,14 @@ public final class PluginMatcher {
         Set<String> b = bigrams(right);
         if (a.isEmpty() || b.isEmpty()) return 0.0;
 
-        Set<String> intersection = new LinkedHashSet<>(a);
-        intersection.retainAll(b);
-        Set<String> union = new LinkedHashSet<>(a);
-        union.addAll(b);
-        return (double) intersection.size() / union.size();
+        int intersection = 0;
+        for (String s : a) {
+            if (b.contains(s)) {
+                intersection++;
+            }
+        }
+        int union = a.size() + b.size() - intersection;
+        return union == 0 ? 0.0 : (double) intersection / union;
     }
 
     private static Set<String> bigrams(String value) {
@@ -644,6 +674,9 @@ public final class PluginMatcher {
     }
 
     private static int distance(String left, String right) {
+        if (left.length() < right.length()) {
+            return distance(right, left);
+        }
         int[] previous = new int[right.length() + 1];
         int[] current = new int[right.length() + 1];
 
@@ -683,9 +716,9 @@ public final class PluginMatcher {
 
     private static @Nullable String normalizeBrandToken(@Nullable String raw) {
         if (raw == null) return null;
-        String token = raw.trim().toLowerCase(Locale.ROOT)
-                .replaceAll("^@+", "")
-                .replaceAll("[^a-z0-9]+", "");
+        String step1 = raw.trim().toLowerCase(Locale.ROOT);
+        String step2 = BRAND_AT_PATTERN.matcher(step1).replaceAll("");
+        String token = NON_ALPHANUMERIC_MULTI_PATTERN.matcher(step2).replaceAll("");
         if (token.length() < 3 || token.length() > 24) {
             return null;
         }
@@ -718,7 +751,13 @@ public final class PluginMatcher {
         for (String installed : installedAuthors) {
             String installedClean = normalizeAuthor(installed);
             if (installedClean.isEmpty()) continue;
-            if (installedClean.equals(remoteClean) || remoteClean.contains(installedClean) || installedClean.contains(remoteClean)) {
+            if (installedClean.equals(remoteClean)) {
+                return true;
+            }
+            if (installedClean.length() >= 3 && remoteClean.contains(installedClean)) {
+                return true;
+            }
+            if (remoteClean.length() >= 3 && installedClean.contains(remoteClean)) {
                 return true;
             }
         }
@@ -727,20 +766,17 @@ public final class PluginMatcher {
 
     private static String normalizeAuthor(@Nullable String author) {
         if (author == null) return "";
-        return author.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]", "").trim();
+        return NON_ALPHANUMERIC_SINGLE_PATTERN.matcher(author.toLowerCase(Locale.ROOT)).replaceAll("").trim();
     }
 
-
     public static String toHex(@Nullable byte[] digest) {
-        if (digest == null) return "";
-        StringBuilder builder = new StringBuilder(digest.length * 2);
-        for (byte b : digest) {
-            String part = Integer.toHexString(b & 0xFF);
-            if (part.length() == 1) {
-                builder.append('0');
-            }
-            builder.append(part);
+        if (digest == null || digest.length == 0) return "";
+        char[] out = new char[digest.length << 1];
+        for (int i = 0; i < digest.length; i++) {
+            int b = digest[i] & 0xFF;
+            out[i << 1] = HEX_CHARS[b >>> 4];
+            out[(i << 1) + 1] = HEX_CHARS[b & 0x0F];
         }
-        return builder.toString();
+        return new String(out);
     }
 }

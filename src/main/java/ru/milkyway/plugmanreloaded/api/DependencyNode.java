@@ -33,13 +33,13 @@ public class DependencyNode {
     }
 
     public void addHardDependency(String dep) {
-        if (dep != null && !dep.isBlank()) {
+        if (dep != null && !dep.isBlank() && !dep.equalsIgnoreCase(this.pluginName)) {
             this.hardDependencies.add(dep);
         }
     }
 
     public void addSoftDependency(String dep) {
-        if (dep != null && !dep.isBlank()) {
+        if (dep != null && !dep.isBlank() && !dep.equalsIgnoreCase(this.pluginName)) {
             this.softDependencies.add(dep);
         }
     }

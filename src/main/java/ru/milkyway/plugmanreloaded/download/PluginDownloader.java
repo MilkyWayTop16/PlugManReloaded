@@ -7,12 +7,12 @@ import ru.milkyway.plugmanreloaded.download.DownloadModels.*;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.Nullable;
 import ru.milkyway.plugmanreloaded.PlugManReloaded;
 import ru.milkyway.plugmanreloaded.bridge.PlatformDetector;
 import ru.milkyway.plugmanreloaded.utils.PluginJarIndex;
+import ru.milkyway.plugmanreloaded.utils.PluginMetaHelper;
 import ru.milkyway.plugmanreloaded.update.*;
 import ru.milkyway.plugmanreloaded.utils.JarValidator;
 import ru.milkyway.plugmanreloaded.utils.Log;
@@ -20,8 +20,6 @@ import ru.milkyway.plugmanreloaded.utils.TaskScheduler;
 
 import java.io.File;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -29,8 +27,6 @@ import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.util.*;
 import java.util.function.Consumer;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 
 public class PluginDownloader {
 
@@ -210,10 +206,10 @@ public class PluginDownloader {
         }
     }
 
-    private record Progress(List<String> installed, List<Plugin> loaded, List<File> created) {
+    private record Progress(List<String> installed, List<Plugin> loaded, List<File> created, Map<File, Path> backups) {
 
         static Progress empty() {
-            return new Progress(new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
+            return new Progress(new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new LinkedHashMap<>());
         }
     }
 
@@ -277,7 +273,7 @@ public class PluginDownloader {
             }
             return null;
         } catch (Throwable t) {
-            rollbackInstalled(progress.loaded(), progress.created());
+            rollbackInstalled(progress);
             Log.warn("plugindownloader.update-folder-write-failed", t, "plugin", item.declaredName());
             return DownloadResult.failed(DownloadStatus.WRITE_FAILED, item.declaredName(), item.sourceId(),
                     "actions.download.details.update-folder-write-failed");
@@ -288,20 +284,43 @@ public class PluginDownloader {
         plugin.getHotSwapManager().temporarilyIgnore(targetFile.getName(), 5000L);
 
         boolean existedBefore = targetFile.exists();
+        if (existedBefore) {
+            Plugin running = plugin.getPluginLifecycleManager().getPlugin(item.declaredName());
+            if (running != null) {
+                try {
+                    plugin.getPluginLifecycleManager().unload(running, false);
+                } catch (Throwable t) {
+                    Log.debug("plugindownloader.pre-install-unload-failed", t, "plugin", item.declaredName());
+                }
+            }
+
+            Path parentDir = item.stagedPath().getParent();
+            Path backupPath = (parentDir != null ? parentDir : targetFile.toPath().getParent()).resolve("bak_" + targetFile.getName() + "_" + System.nanoTime());
+            try {
+                Files.copy(targetFile.toPath(), backupPath, StandardCopyOption.REPLACE_EXISTING);
+                progress.backups().put(targetFile, backupPath);
+            } catch (Throwable t) {
+                rollbackInstalled(progress);
+                Log.warn("plugindownloader.backup-create-failed", t, "plugin", item.declaredName());
+                return DownloadResult.failed(DownloadStatus.WRITE_FAILED, item.declaredName(), item.sourceId(),
+                        "actions.download.details.disk-write-failed");
+            }
+        }
+
         try {
             Files.move(item.stagedPath(), targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
             if (!existedBefore) {
                 progress.created().add(targetFile);
             }
         } catch (Throwable t) {
-            rollbackInstalled(progress.loaded(), progress.created());
+            rollbackInstalled(progress);
             Log.warn("plugindownloader.disk-write-failed", t, "plugin", item.declaredName());
             return DownloadResult.failed(DownloadStatus.WRITE_FAILED, item.declaredName(), item.sourceId(),
                     "actions.download.details.disk-write-failed");
         }
 
         if (!plugin.getPluginLifecycleManager().load(targetFile).success()) {
-            boolean clean = rollbackInstalled(progress.loaded(), progress.created());
+            boolean clean = rollbackInstalled(progress);
             return DownloadResult.failed(
                     clean ? DownloadStatus.ROLLED_BACK : DownloadStatus.ACTIVATION_FAILED,
                     item.declaredName(), item.sourceId(),
@@ -326,23 +345,36 @@ public class PluginDownloader {
         }
     }
 
-    private boolean rollbackInstalled(List<Plugin> newlyLoaded, List<File> newlyCreated) {
+    private boolean rollbackInstalled(Progress progress) {
         boolean clean = true;
-        Collections.reverse(newlyLoaded);
-        for (Plugin p : newlyLoaded) {
+        Collections.reverse(progress.loaded());
+        for (Plugin p : progress.loaded()) {
             try {
-                plugin.getPluginLifecycleManager().unload(p);
+                plugin.getPluginLifecycleManager().unload(p, false);
             } catch (Throwable t) {
                 clean = false;
                 Log.warn("plugindownloader.rollback-unload-failed", t, "plugin", p.getName());
             }
         }
-        for (File f : newlyCreated) {
+        for (File f : progress.created()) {
             try {
                 Files.deleteIfExists(f.toPath());
             } catch (Throwable t) {
                 clean = false;
                 Log.warn("plugindownloader.rollback-delete-failed", t, "file", f.getName());
+            }
+        }
+        for (Map.Entry<File, Path> entry : progress.backups().entrySet()) {
+            File target = entry.getKey();
+            Path backup = entry.getValue();
+            try {
+                if (Files.exists(backup)) {
+                    Files.move(backup, target.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    plugin.getPluginLifecycleManager().load(target);
+                }
+            } catch (Throwable t) {
+                clean = false;
+                Log.warn("plugindownloader.rollback-restore-failed", t, "file", target.getName());
             }
         }
         return clean;
@@ -358,14 +390,9 @@ public class PluginDownloader {
             } else {
                 File targetFile = plugin.getPluginLifecycleManager().getJarIndex().find(pluginName);
                 if (targetFile != null && targetFile.exists()) {
-                    try (JarFile jar = new JarFile(targetFile)) {
-                        JarEntry entry = jar.getJarEntry("plugin.yml");
-                        if (entry == null) entry = jar.getJarEntry("paper-plugin.yml");
-                        if (entry != null) {
-                            try (Reader r = new InputStreamReader(jar.getInputStream(entry), StandardCharsets.UTF_8)) {
-                                mainClass = YamlConfiguration.loadConfiguration(r).getString("main");
-                            }
-                        }
+                    var info = PluginMetaHelper.fromJarFile(targetFile);
+                    if (info != null && info.mainClass() != null && !info.mainClass().isBlank()) {
+                        mainClass = info.mainClass();
                     }
                 }
             }
@@ -775,15 +802,16 @@ public class PluginDownloader {
     private static void cleanupQuietly(@Nullable Path path) {
         if (path == null || !Files.exists(path)) return;
         try {
+            List<Path> paths;
             try (var stream = Files.walk(path)) {
-                stream.sorted(Comparator.reverseOrder())
-                        .forEach(p -> {
-                            try {
-                                Files.deleteIfExists(p);
-                            } catch (Throwable t) {
-                                Log.debug("plugindownloader.temp-file-delete-failed", t, "file", String.valueOf(p));
-                            }
-                        });
+                paths = stream.sorted(Comparator.reverseOrder()).toList();
+            }
+            for (Path p : paths) {
+                try {
+                    Files.deleteIfExists(p);
+                } catch (Throwable t) {
+                    Log.debug("plugindownloader.temp-file-delete-failed", t, "file", String.valueOf(p));
+                }
             }
         } catch (Throwable t) {
             Log.debug("plugindownloader.staging-cleanup-failed", t);

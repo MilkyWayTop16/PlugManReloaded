@@ -30,6 +30,7 @@ import ru.milkyway.plugmanreloaded.utils.PluginMetaHelper;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -53,6 +54,7 @@ public final class LifecycleManager {
     private final BrigadierManager brigadierManager;
     private final PluginJarIndex jarIndex;
     private final Map<Plugin, File> pluginFileCache = Collections.synchronizedMap(new WeakHashMap<>());
+    private Path cachedPluginsDirPath;
 
     public LifecycleManager(PlugManReloaded plugin) {
         this.plugin = plugin;
@@ -87,18 +89,33 @@ public final class LifecycleManager {
         if (clean.endsWith(".jar")) {
             clean = clean.substring(0, clean.length() - 4);
         }
+        String nameWithJar = clean + ".jar";
 
         for (Plugin plugin : pm.getPlugins()) {
             File f = getPluginFile(plugin);
             if (f != null) {
                 String fName = f.getName().toLowerCase(Locale.ROOT);
-                if (fName.equalsIgnoreCase(name) || fName.equalsIgnoreCase(name + ".jar")) {
+                if (fName.equals(clean) || fName.equals(nameWithJar)) {
                     return plugin;
                 }
                 int dot = fName.lastIndexOf('.');
-                String fStrip = dot > 0 ? fName.substring(0, dot) : fName;
-                if (fStrip.equalsIgnoreCase(clean)) {
+                if (dot == clean.length() && fName.regionMatches(0, clean, 0, dot)) {
                     return plugin;
+                }
+            }
+        }
+
+        List<PluginJarIndex.JarInfo> matches = jarIndex.findAll(name);
+        if (!matches.isEmpty()) {
+            for (PluginJarIndex.JarInfo info : matches) {
+                if (info.declaredName() != null) {
+                    Plugin byDesc = pm.getPlugin(info.declaredName());
+                    if (byDesc != null) return byDesc;
+                    for (Plugin plugin : pm.getPlugins()) {
+                        if (plugin.getName().equalsIgnoreCase(info.declaredName())) {
+                            return plugin;
+                        }
+                    }
                 }
             }
         }
@@ -177,9 +194,12 @@ public final class LifecycleManager {
 
         Log.debug("lifecyclemanager.loading-file", "file", file.getName());
         PluginResult res = bridge.loadPlugin(file);
-        if (res.success() && Bukkit.getServer() != null) {
-            Plugin p = report.declaredName() != null ? Bukkit.getPluginManager().getPlugin(report.declaredName()) : null;
-            Bukkit.getPluginManager().callEvent(new PluginLoadedEvent(p, file));
+        if (res.success()) {
+            jarIndex.invalidate();
+            if (Bukkit.getServer() != null) {
+                Plugin p = report.declaredName() != null ? Bukkit.getPluginManager().getPlugin(report.declaredName()) : null;
+                Bukkit.getPluginManager().callEvent(new PluginLoadedEvent(p, file));
+            }
         }
         return res;
     }
@@ -242,8 +262,11 @@ public final class LifecycleManager {
 
         try {
             PluginResult res = bridge.reloadPlugin(targetPlugin);
-            if (res.success() && Bukkit.getServer() != null) {
-                Bukkit.getPluginManager().callEvent(new PluginReloadedEvent(targetPlugin, res.elapsedMs()));
+            if (res.success()) {
+                invalidatePluginFile(targetPlugin);
+                if (Bukkit.getServer() != null) {
+                    Bukkit.getPluginManager().callEvent(new PluginReloadedEvent(targetPlugin, res.elapsedMs()));
+                }
             }
             return res;
         } catch (Exception | LinkageError t) {
@@ -268,22 +291,28 @@ public final class LifecycleManager {
         }
 
         if (targetPlugin != null && Bukkit.getServer() != null) {
-            PluginPreReloadEvent pre =
-                    new PluginPreReloadEvent(targetPlugin);
+            PluginPreReloadEvent pre = new PluginPreReloadEvent(targetPlugin);
             Bukkit.getPluginManager().callEvent(pre);
             if (pre.isCancelled()) {
                 return PluginResult.ofError(FailureReason.OPERATION_CANCELLED, "plugin", targetPlugin.getName());
             }
         }
 
-        PluginResult res = bridge.restartPlugin(targetPlugin);
-        if (res.success()) {
-            invalidatePluginFile(targetPlugin);
-            if (Bukkit.getServer() != null) {
-                Bukkit.getPluginManager().callEvent(new PluginReloadedEvent(targetPlugin, res.elapsedMs()));
+        Log.debug("lifecyclemanager.reloading", "plugin", targetPlugin != null ? targetPlugin.getName() : "null");
+        try {
+            PluginResult res = bridge.restartPlugin(targetPlugin);
+            if (res.success()) {
+                invalidatePluginFile(targetPlugin);
+                jarIndex.invalidate();
+                if (Bukkit.getServer() != null) {
+                    Bukkit.getPluginManager().callEvent(new PluginReloadedEvent(targetPlugin, res.elapsedMs()));
+                }
             }
+            return res;
+        } catch (Exception | LinkageError t) {
+            ErrorAnalyzer.ErrorDetails details = ErrorAnalyzer.analyze(t, targetPlugin.getName(), file.getName());
+            return PluginResult.ofError(details.reason() == FailureReason.LOAD_FAILED ? FailureReason.RELOAD_FAILED : details.reason(), t, details.placeholders());
         }
-        return res;
     }
 
     public PluginResult cascadeReload(Plugin targetPlugin) {
@@ -295,7 +324,8 @@ public final class LifecycleManager {
     }
 
     private record CascadePlan(List<String> reloadOrder, Map<String, File> files,
-                               Map<String, Boolean> wasEnabled, List<String> skipped) {}
+                               Map<String, Boolean> wasEnabled, List<String> skipped,
+                               Map<String, DependencyNode> graph) {}
 
     private record UnloadPhase(List<String> unloaded, @Nullable String failedPlugin, @Nullable String failedError) {
 
@@ -319,7 +349,14 @@ public final class LifecycleManager {
 
         long startTime = System.currentTimeMillis();
         CascadePlan plan = planCascade(targetPlugin);
-        if (plan.reloadOrder().isEmpty() || plan.skipped().stream().anyMatch(targetPlugin.getName()::equalsIgnoreCase)) {
+        boolean targetSkipped = false;
+        for (String s : plan.skipped()) {
+            if (s.equalsIgnoreCase(targetPlugin.getName())) {
+                targetSkipped = true;
+                break;
+            }
+        }
+        if (plan.reloadOrder().isEmpty() || targetSkipped) {
             return PluginResult.ofError(FailureReason.RELOAD_FAILED, "plugin", targetPlugin.getName(),
                     "error", message("actions.cascade-reload.details.no-jar"));
         }
@@ -358,6 +395,7 @@ public final class LifecycleManager {
         }
         Log.debug("lifecyclemanager.cascade-plan", "plugin", targetPlugin.getName(), "order", String.valueOf(order));
 
+        Map<String, DependencyNode> graph = dependencyManager.buildGraph(true);
         Map<String, File> files = new HashMap<>();
         Map<String, Boolean> wasEnabled = new HashMap<>();
         List<String> reloadOrder = new ArrayList<>();
@@ -386,7 +424,7 @@ public final class LifecycleManager {
             reloadOrder.add(pluginName);
         }
 
-        return new CascadePlan(reloadOrder, files, wasEnabled, skipped);
+        return new CascadePlan(reloadOrder, files, wasEnabled, skipped, graph);
     }
 
     private UnloadPhase unloadAll(List<String> reloadOrder) {
@@ -422,8 +460,16 @@ public final class LifecycleManager {
             if (!bridge.loadPlugin(jarFile).success()) {
                 rollbackFailed.add(pluginName);
                 Log.warn("lifecyclemanager.cascade-rollback-failed", "plugin", pluginName);
+                continue;
+            }
+            Plugin restored = getPlugin(pluginName);
+            if (restored != null && restored.isEnabled() && !plan.wasEnabled().getOrDefault(pluginName, true)) {
+                bridge.disablePlugin(restored);
             }
         }
+
+        jarIndex.invalidate();
+        brigadierManager.syncCommands();
 
         String note = rollbackFailed.isEmpty()
                 ? message("actions.cascade-reload.details.rollback-done")
@@ -435,7 +481,7 @@ public final class LifecycleManager {
     private List<String> loadAll(CascadePlan plan) {
         List<String> failedPlugins = new ArrayList<>();
         Set<String> failedNames = new HashSet<>();
-        Map<String, DependencyNode> graph = dependencyManager.buildGraph(true);
+        Map<String, DependencyNode> graph = plan.graph();
 
         for (String pluginName : plan.reloadOrder()) {
             if (dependencyAlreadyFailed(graph, pluginName, failedNames)) {
@@ -502,9 +548,14 @@ public final class LifecycleManager {
     private boolean isValidPluginsPath(@Nullable File file) {
         if (file == null || plugin == null || plugin.getDataFolder() == null) return false;
         try {
-            File pluginsDir = plugin.getDataFolder().getParentFile();
-            if (pluginsDir == null) return false;
-            return file.getCanonicalFile().toPath().startsWith(pluginsDir.getCanonicalFile().toPath());
+            Path pluginsPath = cachedPluginsDirPath;
+            if (pluginsPath == null) {
+                File pluginsDir = plugin.getDataFolder().getParentFile();
+                if (pluginsDir == null) return false;
+                pluginsPath = pluginsDir.getCanonicalFile().toPath();
+                cachedPluginsDirPath = pluginsPath;
+            }
+            return file.getCanonicalFile().toPath().startsWith(pluginsPath);
         } catch (IOException e) {
             Log.warn("lifecyclemanager.canonical-path-check-failed", e, "file", file.getName());
             return false;
@@ -538,7 +589,7 @@ public final class LifecycleManager {
     public FailureReason protectedReason(@Nullable String pluginName) {
         if (pluginName == null) return FailureReason.PLUGIN_IGNORED;
         boolean self = pluginName.equalsIgnoreCase("plugmanreloaded")
-                || pluginName.equalsIgnoreCase(plugin.getName());
+                || (plugin != null && pluginName.equalsIgnoreCase(plugin.getName()));
         return self ? FailureReason.SELF_PROTECTED : FailureReason.PLUGIN_IGNORED;
     }
 
@@ -619,7 +670,12 @@ public final class LifecycleManager {
             return BulkOperationResult.empty();
         }
 
-        List<Plugin> targets = plugins.stream().filter(p -> p != null && !isProtected(p)).toList();
+        List<Plugin> targets = new ArrayList<>(plugins.size());
+        for (Plugin p : plugins) {
+            if (p != null && !isProtected(p)) {
+                targets.add(p);
+            }
+        }
         if (targets.isEmpty()) {
             return BulkOperationResult.empty();
         }
@@ -655,7 +711,12 @@ public final class LifecycleManager {
             return BulkOperationResult.empty();
         }
 
-        List<Plugin> targets = plugins.stream().filter(p -> p != null && !p.isEnabled()).toList();
+        List<Plugin> targets = new ArrayList<>(plugins.size());
+        for (Plugin p : plugins) {
+            if (p != null && !p.isEnabled()) {
+                targets.add(p);
+            }
+        }
         if (targets.isEmpty()) {
             return BulkOperationResult.empty();
         }
@@ -686,7 +747,12 @@ public final class LifecycleManager {
             return BulkOperationResult.empty();
         }
 
-        List<Plugin> targets = plugins.stream().filter(p -> p != null && p.isEnabled() && !isProtected(p)).toList();
+        List<Plugin> targets = new ArrayList<>(plugins.size());
+        for (Plugin p : plugins) {
+            if (p != null && p.isEnabled() && !isProtected(p)) {
+                targets.add(p);
+            }
+        }
         if (targets.isEmpty()) {
             return BulkOperationResult.empty();
         }
@@ -715,21 +781,27 @@ public final class LifecycleManager {
     }
 
     public BulkOperationResult bulkReload(List<Plugin> plugins) {
-        return reloadAll(plugins);
+        return reloadAll(plugins, false);
     }
 
     public BulkOperationResult bulkRestart(List<Plugin> plugins) {
-        return reloadAll(plugins);
+        return reloadAll(plugins, true);
     }
 
-    private record BulkPlan(List<Plugin> valid, Map<String, File> files, Map<String, Boolean> wasEnabled) {}
+    private record BulkPlan(List<Plugin> valid, Map<String, File> files,
+                            Map<String, Boolean> wasEnabled, Map<String, DependencyNode> graph) {}
 
-    private BulkOperationResult reloadAll(@Nullable List<Plugin> plugins) {
+    private BulkOperationResult reloadAll(@Nullable List<Plugin> plugins, boolean isRestart) {
         if (plugins == null || plugins.isEmpty()) {
             return BulkOperationResult.empty();
         }
 
-        List<Plugin> targets = plugins.stream().filter(p -> p != null && !isProtected(p)).toList();
+        List<Plugin> targets = new ArrayList<>(plugins.size());
+        for (Plugin p : plugins) {
+            if (p != null && !isProtected(p)) {
+                targets.add(p);
+            }
+        }
         if (targets.isEmpty()) {
             return BulkOperationResult.empty();
         }
@@ -744,9 +816,13 @@ public final class LifecycleManager {
                     System.currentTimeMillis() - start);
         }
 
-        List<String> reloadOrder = dependencyManager.sortPluginsTopologically(plan.valid())
-                .stream().map(Plugin::getName).toList();
-        List<String> unloaded = unloadForBulk(reloadOrder, failed, reasons);
+        List<Plugin> sorted = dependencyManager.sortPluginsTopologically(plan.valid());
+        List<String> reloadOrder = new ArrayList<>(sorted.size());
+        for (Plugin p : sorted) {
+            reloadOrder.add(p.getName());
+        }
+
+        Set<String> unloaded = unloadForBulk(reloadOrder, failed, reasons);
         List<String> successful = loadForBulk(reloadOrder, unloaded, plan, failed, reasons);
 
         jarIndex.invalidate();
@@ -780,20 +856,22 @@ public final class LifecycleManager {
             wasEnabled.put(target.getName(), target.isEnabled());
             valid.add(target);
         }
-        return new BulkPlan(valid, files, wasEnabled);
+        Map<String, DependencyNode> graph = dependencyManager.buildGraph(true);
+        return new BulkPlan(valid, files, wasEnabled, graph);
     }
 
-    private List<String> unloadForBulk(List<String> reloadOrder, List<String> failed, Map<String, String> reasons) {
+    private Set<String> unloadForBulk(List<String> reloadOrder, List<String> failed, Map<String, String> reasons) {
         List<String> unloadOrder = new ArrayList<>(reloadOrder);
         Collections.reverse(unloadOrder);
 
-        List<String> unloaded = new ArrayList<>();
+        Set<String> unloaded = new HashSet<>();
         for (String pluginName : unloadOrder) {
             Plugin target = getPlugin(pluginName);
             if (target == null) continue;
 
             PluginResult result = bridge.unloadPlugin(target);
             if (result.success()) {
+                invalidatePluginFile(target);
                 unloaded.add(pluginName);
             } else {
                 failed.add(pluginName);
@@ -803,13 +881,14 @@ public final class LifecycleManager {
         return unloaded;
     }
 
-    private List<String> loadForBulk(List<String> reloadOrder, List<String> unloaded, BulkPlan plan,
+    private List<String> loadForBulk(List<String> reloadOrder, Set<String> unloaded, BulkPlan plan,
                                      List<String> failed, Map<String, String> reasons) {
         List<String> successful = new ArrayList<>();
-        Set<String> failedNames = failed.stream()
-                .map(name -> name.toLowerCase(Locale.ROOT))
-                .collect(Collectors.toCollection(HashSet::new));
-        Map<String, DependencyNode> graph = dependencyManager.buildGraph(true);
+        Set<String> failedNames = new HashSet<>();
+        for (String f : failed) {
+            failedNames.add(f.toLowerCase(Locale.ROOT));
+        }
+        Map<String, DependencyNode> graph = plan.graph();
 
         for (String pluginName : reloadOrder) {
             if (!unloaded.contains(pluginName)) {

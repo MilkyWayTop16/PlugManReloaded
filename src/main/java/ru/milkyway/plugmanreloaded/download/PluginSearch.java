@@ -14,17 +14,34 @@ import ru.milkyway.plugmanreloaded.update.HttpJson;
 import ru.milkyway.plugmanreloaded.update.PluginMatcher;
 import ru.milkyway.plugmanreloaded.update.ServerProfile;
 import ru.milkyway.plugmanreloaded.update.SourceCatalog;
+import ru.milkyway.plugmanreloaded.update.input.SourceUrlParser;
 import ru.milkyway.plugmanreloaded.utils.Log;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 public class PluginSearch {
+
+    private static final ExecutorService SEARCH_EXECUTOR = Executors.newFixedThreadPool(
+            Math.max(4, Runtime.getRuntime().availableProcessors()),
+            runnable -> {
+                Thread thread = new Thread(runnable, "PlugManReloaded-SearchWorker");
+                thread.setDaemon(true);
+                return thread;
+            }
+    );
+
+    private static final Map<Integer, String> SPIGET_AUTHORS = CacheBuilder.newBuilder()
+            .maximumSize(500)
+            .expireAfterWrite(1, TimeUnit.HOURS)
+            .<Integer, String>build()
+            .asMap();
 
     private final PlugManReloaded plugin;
     private final ServerProfile serverProfile;
@@ -88,38 +105,31 @@ public class PluginSearch {
         boolean searchAll = preferredSource == null || preferredSource.isBlank() || "all".equalsIgnoreCase(preferredSource);
 
         if (searchAll || "modrinth".equalsIgnoreCase(preferredSource)) {
-            futures.add(CompletableFuture.supplyAsync(() -> searchModrinth(query)));
+            futures.add(CompletableFuture.supplyAsync(() -> searchModrinth(query), SEARCH_EXECUTOR));
         }
         if (searchAll || "hangar".equalsIgnoreCase(preferredSource)) {
-            futures.add(CompletableFuture.supplyAsync(() -> searchHangar(query)));
+            futures.add(CompletableFuture.supplyAsync(() -> searchHangar(query), SEARCH_EXECUTOR));
         }
         if (searchAll || "spigot".equalsIgnoreCase(preferredSource) || "spigotmc".equalsIgnoreCase(preferredSource)) {
-            futures.add(CompletableFuture.supplyAsync(() -> searchSpiget(query)));
+            futures.add(CompletableFuture.supplyAsync(() -> searchSpiget(query), SEARCH_EXECUTOR));
         }
         if (searchAll || "github".equalsIgnoreCase(preferredSource)) {
-            futures.add(CompletableFuture.supplyAsync(() -> searchGithub(query)));
+            futures.add(CompletableFuture.supplyAsync(() -> searchGithub(query), SEARCH_EXECUTOR));
+        }
+
+        try {
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).get(5, TimeUnit.SECONDS);
+        } catch (Exception timeout) {
+            Log.debug("pluginsearch.not-all-sources-responded", timeout);
         }
 
         List<SearchResultEntry> combined = new ArrayList<>();
-        try {
-            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).get(5, TimeUnit.SECONDS);
-            for (CompletableFuture<List<SearchResultEntry>> f : futures) {
-                try {
-                    List<SearchResultEntry> list = f.getNow(Collections.emptyList());
-                    if (list != null) combined.addAll(list);
-                } catch (Exception t) {
-                    Log.debug("pluginsearch.source-no-response", t);
-                }
-            }
-        } catch (Exception timeout) {
-            Log.debug("pluginsearch.not-all-sources-responded", timeout);
-            for (CompletableFuture<List<SearchResultEntry>> f : futures) {
-                try {
-                    List<SearchResultEntry> list = f.getNow(Collections.emptyList());
-                    if (list != null) combined.addAll(list);
-                } catch (Exception t) {
-                    Log.debug("pluginsearch.source-no-response", t);
-                }
+        for (CompletableFuture<List<SearchResultEntry>> f : futures) {
+            try {
+                List<SearchResultEntry> list = f.getNow(Collections.emptyList());
+                if (list != null) combined.addAll(list);
+            } catch (Exception t) {
+                Log.debug("pluginsearch.source-no-response", t);
             }
         }
 
@@ -151,30 +161,30 @@ public class PluginSearch {
 
     private List<SearchResultEntry> enrichVersions(@Nullable List<SearchResultEntry> entries) {
         if (entries == null || entries.isEmpty()) return Collections.emptyList();
-        List<CompletableFuture<SearchResultEntry>> futures = new ArrayList<>();
+        List<CompletableFuture<SearchResultEntry>> futures = new ArrayList<>(entries.size());
         for (SearchResultEntry entry : entries) {
             if (entry.version() != null && !entry.version().isBlank()) {
                 futures.add(CompletableFuture.completedFuture(entry));
             } else {
-                futures.add(CompletableFuture.supplyAsync(() -> fetchLatestVersion(entry)));
+                futures.add(CompletableFuture.supplyAsync(() -> fetchLatestVersion(entry), SEARCH_EXECUTOR));
             }
         }
-        List<SearchResultEntry> out = new ArrayList<>();
+
         try {
             CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).get(2500, TimeUnit.MILLISECONDS);
-            for (CompletableFuture<SearchResultEntry> f : futures) {
-                out.add(f.getNow(null));
-            }
         } catch (Exception t) {
             Log.debug("pluginsearch.version-load-timeout", t);
-            for (int i = 0; i < entries.size(); i++) {
-                try {
-                    SearchResultEntry resolved = futures.get(i).getNow(entries.get(i));
-                    out.add(resolved != null ? resolved : entries.get(i));
-                } catch (Exception fallbackErr) {
-                    Log.debug("pluginsearch.version-fetch-failed", fallbackErr, "project", entries.get(i).projectId());
-                    out.add(entries.get(i));
-                }
+        }
+
+        List<SearchResultEntry> out = new ArrayList<>(entries.size());
+        for (int i = 0; i < entries.size(); i++) {
+            SearchResultEntry fallback = entries.get(i);
+            try {
+                SearchResultEntry resolved = futures.get(i).getNow(fallback);
+                out.add(resolved != null ? resolved : fallback);
+            } catch (Exception fallbackErr) {
+                Log.debug("pluginsearch.version-fetch-failed", fallbackErr, "project", fallback.projectId());
+                out.add(fallback);
             }
         }
         return out;
@@ -299,9 +309,9 @@ public class PluginSearch {
         if (query.isBlank()) return results;
 
         if (query.contains("modrinth.com/")) {
-            var matcher = Pattern.compile("modrinth\\.com/(?:plugin|mod|project|datapack|resourcepack|shader|modpack)/([^/#?]+)").matcher(query);
-            if (matcher.find()) {
-                query = matcher.group(1);
+            var parsed = SourceUrlParser.parse(query);
+            if (parsed.success() && "modrinth".equalsIgnoreCase(parsed.source().sourceId())) {
+                query = parsed.source().ref();
             }
         }
 
@@ -358,9 +368,12 @@ public class PluginSearch {
         if (query.isBlank()) return results;
 
         if (query.contains("hangar.papermc.io/")) {
-            var matcher = Pattern.compile("hangar\\.papermc\\.io/(?:[^/]+/)?([^/#?]+)").matcher(query);
-            if (matcher.find()) {
-                query = matcher.group(1);
+            var parsed = SourceUrlParser.parse(query);
+            if (parsed.success() && "hangar".equalsIgnoreCase(parsed.source().sourceId())) {
+                query = parsed.source().ref();
+                if (query.contains("/")) {
+                    query = query.substring(query.indexOf('/') + 1);
+                }
             }
         }
 
@@ -414,8 +427,6 @@ public class PluginSearch {
         return results;
     }
 
-    private static final Map<Integer, String> SPIGET_AUTHORS = new ConcurrentHashMap<>();
-
     private String resolveSpigetAuthor(@Nullable JsonObject r) {
         if (r == null || !r.has("author")) return "SpigotMC";
         try {
@@ -466,10 +477,10 @@ public class PluginSearch {
         String idCandidate = null;
         if (query.matches("^\\d+$")) {
             idCandidate = query;
-        } else if (query.contains("spigotmc.org/resources/")) {
-            var matcher = Pattern.compile("(?:/|\\.)(\\d+)(?:/|$|\\?|#)").matcher(query);
-            if (matcher.find()) {
-                idCandidate = matcher.group(1);
+        } else if (query.contains("spigotmc.org/")) {
+            var parsed = SourceUrlParser.parse(query);
+            if (parsed.success() && "spigot".equalsIgnoreCase(parsed.source().sourceId())) {
+                idCandidate = parsed.source().ref();
             }
         } else if (query.toLowerCase(Locale.ROOT).startsWith("spigot:")) {
             String sub = query.substring(7).trim();
@@ -565,9 +576,9 @@ public class PluginSearch {
 
         String repoCandidate = null;
         if (query.contains("github.com/")) {
-            var matcher = Pattern.compile("github\\.com/([^/]+/[^/#?]+)").matcher(query);
-            if (matcher.find()) {
-                repoCandidate = matcher.group(1).replaceAll("\\.git$", "");
+            var parsed = SourceUrlParser.parse(query);
+            if (parsed.success() && "github".equalsIgnoreCase(parsed.source().sourceId())) {
+                repoCandidate = parsed.source().ref();
             }
         } else if (query.matches("^[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+$")) {
             repoCandidate = query;

@@ -232,7 +232,7 @@ public class ManualSources {
     private PluginIdentity identityFor(ManualSourceSession session) {
         Plugin target = plugin.getPluginLifecycleManager().getPlugin(session.getPluginName());
         if (target != null) {
-            PluginIdentity identity = plugin.getUpdateService().scanIdentity(target);
+            PluginIdentity identity = plugin.getUpdateService().getIdentityScanner().scanIdentity(target);
             if (identity != null) {
                 return identity;
             }

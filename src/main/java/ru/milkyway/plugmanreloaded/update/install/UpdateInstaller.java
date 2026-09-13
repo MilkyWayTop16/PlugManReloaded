@@ -2,6 +2,7 @@ package ru.milkyway.plugmanreloaded.update.install;
 
 import ru.milkyway.plugmanreloaded.update.UpdateModels.*;
 
+import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.Nullable;
 import ru.milkyway.plugmanreloaded.PlugManReloaded;
@@ -14,7 +15,6 @@ import ru.milkyway.plugmanreloaded.update.UpdateModels.RemoteVersion;
 import ru.milkyway.plugmanreloaded.update.UpdateModels.UpdateCandidate;
 import ru.milkyway.plugmanreloaded.utils.JarValidator;
 import ru.milkyway.plugmanreloaded.utils.Log;
-import ru.milkyway.plugmanreloaded.utils.MetaspaceCleanup;
 import ru.milkyway.plugmanreloaded.utils.PluginJarIndex;
 import ru.milkyway.plugmanreloaded.utils.TaskScheduler;
 
@@ -231,8 +231,6 @@ public final class UpdateInstaller {
             }
         }
 
-        MetaspaceCleanup.runNow();
-
         plugin.getHotSwapManager().temporarilyIgnore(target.getName(), 5000L);
         if (oldTarget != null) {
             plugin.getHotSwapManager().temporarilyIgnore(oldTarget.getName(), 5000L);
@@ -250,12 +248,11 @@ public final class UpdateInstaller {
 
         cleanUpEmptyParent(staged);
 
+        boolean oldTargetNeedsDeleteOnExit = false;
         if (oldTarget != null && !oldTarget.equals(target) && oldTarget.exists()) {
             boolean removed = deleteFileWithRetry(oldTarget);
             if (!removed) {
-                try {
-                    oldTarget.deleteOnExit();
-                } catch (Throwable ignored) {}
+                oldTargetNeedsDeleteOnExit = true;
             }
         }
 
@@ -271,6 +268,12 @@ public final class UpdateInstaller {
             }
             Log.warn("updateinstaller.new-version-load-failed", loadResult.error(), "plugin", identity.pluginName());
             return InstallResult.failed(InstallStatus.ROLLED_BACK, identity.pluginName(), "actions.update.details.rolled-back", dependencyWarnings);
+        }
+
+        if (oldTargetNeedsDeleteOnExit && oldTarget != null && oldTarget.exists()) {
+            try {
+                oldTarget.deleteOnExit();
+            } catch (Throwable ignored) {}
         }
 
         try {
@@ -289,7 +292,15 @@ public final class UpdateInstaller {
     private InstallResult stageForRestart(PluginIdentity identity, RemoteVersion version, Path staged, File oldTarget, String from, String to, List<String> dependencyWarnings) {
         try {
             File pluginsDir = plugin.getDataFolder().getParentFile();
-            File updateFolder = new File(pluginsDir, "update");
+            File updateFolder = null;
+            try {
+                if (Bukkit.getServer() != null) {
+                    updateFolder = Bukkit.getUpdateFolderFile();
+                }
+            } catch (Throwable ignored) {}
+            if (updateFolder == null) {
+                updateFolder = new File(pluginsDir, "update");
+            }
             if (!updateFolder.exists()) {
                 updateFolder.mkdirs();
             }
@@ -315,8 +326,11 @@ public final class UpdateInstaller {
         String oldName = oldTarget.getName();
         String currentVer = identity.currentVersion();
         String newVer = version != null ? version.versionNumber() : null;
+        if (newVer != null) {
+            newVer = newVer.replaceAll("[^A-Za-z0-9._-]", "_");
+        }
         int versionAt = currentVer != null && !currentVer.isBlank() ? oldName.lastIndexOf(currentVer) : -1;
-        if (versionAt >= 0 && newVer != null && !newVer.isBlank()) {
+        if (versionAt >= 0 && newVer != null && !newVer.isBlank() && !newVer.equalsIgnoreCase(currentVer)) {
             String newName = oldName.substring(0, versionAt) + newVer + oldName.substring(versionAt + currentVer.length());
             return new File(oldTarget.getParentFile(), newName);
         }
@@ -358,22 +372,11 @@ public final class UpdateInstaller {
         }
 
         Log.info("updateinstaller.restarting-dependents", "plugin", pluginName, "count", String.valueOf(dependents.size()));
-        scheduleNextDependentLoad(pluginName, dependents, 0);
-    }
-
-    private void scheduleNextDependentLoad(String pluginName, List<DependentInfo> dependents, int index) {
-        if (index >= dependents.size()) {
-            return;
-        }
-
-        DependentInfo info = dependents.get(index);
-        PluginResult result = plugin.getPluginLifecycleManager().load(info.file());
-        if (!result.success()) {
-            Log.warn("updateinstaller.dependent-load-failed", "dependent", info.name(), "plugin", pluginName);
-        }
-
-        if (index + 1 < dependents.size()) {
-            TaskScheduler.runSyncLater(plugin, () -> scheduleNextDependentLoad(pluginName, dependents, index + 1), 2L);
+        for (DependentInfo info : dependents) {
+            PluginResult result = plugin.getPluginLifecycleManager().load(info.file());
+            if (!result.success()) {
+                Log.warn("updateinstaller.dependent-load-failed", "dependent", info.name(), "plugin", pluginName);
+            }
         }
     }
 
@@ -396,19 +399,12 @@ public final class UpdateInstaller {
     }
 
     private boolean moveFileWithRetry(Path source, Path destination) {
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 3; i++) {
             try {
                 Files.move(source, destination, StandardCopyOption.REPLACE_EXISTING);
                 return true;
             } catch (Throwable t) {
                 Log.debug("updateinstaller.move-attempt-failed", t, "attempt", String.valueOf(i + 1), "source", source.getFileName().toString(), "destination", destination.getFileName().toString());
-                MetaspaceCleanup.runNow();
-                try {
-                    Thread.sleep(60L * (i + 1));
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    break;
-                }
             }
         }
         return false;
@@ -416,21 +412,19 @@ public final class UpdateInstaller {
 
     private boolean deleteFileWithRetry(File file) {
         if (!file.isFile()) return !file.exists();
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 3; i++) {
             try {
                 if (Files.deleteIfExists(file.toPath())) {
                     return true;
                 }
             } catch (Throwable t) {
                 Log.debug("updateinstaller.delete-attempt-failed", t, "attempt", String.valueOf(i + 1), "file", file.getName());
-                MetaspaceCleanup.runNow();
             }
             try {
-                Thread.sleep(60L * (i + 1));
-            } catch (InterruptedException interrupted) {
-                Thread.currentThread().interrupt();
-                return !file.exists();
-            }
+                if (file.delete()) {
+                    return true;
+                }
+            } catch (Throwable ignored) {}
         }
         return !file.exists();
     }

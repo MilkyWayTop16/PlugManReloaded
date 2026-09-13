@@ -8,7 +8,6 @@ import ru.milkyway.plugmanreloaded.PlugManReloaded;
 import ru.milkyway.plugmanreloaded.api.PluginResult;
 import ru.milkyway.plugmanreloaded.utils.JarValidator;
 import ru.milkyway.plugmanreloaded.utils.Log;
-import ru.milkyway.plugmanreloaded.utils.MetaspaceCleanup;
 import ru.milkyway.plugmanreloaded.utils.PluginMetaHelper;
 import ru.milkyway.plugmanreloaded.utils.TaskScheduler;
 
@@ -23,6 +22,8 @@ import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -58,7 +59,9 @@ public class HotSwapManager {
 
     public void temporarilyIgnore(@Nullable String fileName, long durationMs) {
         if (fileName == null || fileName.isBlank()) return;
-        ignoredFilesUntil.put(fileName.toLowerCase(Locale.ROOT), System.currentTimeMillis() + durationMs);
+        long now = System.currentTimeMillis();
+        ignoredFilesUntil.entrySet().removeIf(entry -> now > entry.getValue());
+        ignoredFilesUntil.put(fileName.toLowerCase(Locale.ROOT), now + durationMs);
     }
 
     public boolean isTemporarilyIgnored(@Nullable String fileName) {
@@ -80,7 +83,11 @@ public class HotSwapManager {
             if (pluginsDir == null || !pluginsDir.exists()) return;
 
             if (debounceExecutor == null || debounceExecutor.isShutdown()) {
-                debounceExecutor = Executors.newSingleThreadScheduledExecutor();
+                debounceExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
+                    Thread t = new Thread(r, "PlugManReloaded-HotSwap-Debounce");
+                    t.setDaemon(true);
+                    return t;
+                });
             }
 
             watchService = FileSystems.getDefault().newWatchService();
@@ -107,6 +114,10 @@ public class HotSwapManager {
                 }
                 watchService = null;
             }
+            if (debounceExecutor != null) {
+                debounceExecutor.shutdownNow();
+                debounceExecutor = null;
+            }
             Log.error("hotswapmanager.init-failed", t, "error", t.getMessage());
         }
     }
@@ -119,6 +130,7 @@ public class HotSwapManager {
             } catch (IOException e) {
                 Log.error("hotswapmanager.close-error", "error", e.getMessage());
             }
+            watchService = null;
         }
         if (watchThread != null) {
             watchThread.interrupt();
@@ -126,7 +138,9 @@ public class HotSwapManager {
         }
         if (debounceExecutor != null && !debounceExecutor.isShutdown()) {
             debounceExecutor.shutdownNow();
+            debounceExecutor = null;
         }
+        lastModifiedDebounce.clear();
     }
 
     public synchronized void reload() {
@@ -144,50 +158,54 @@ public class HotSwapManager {
     }
 
     private void watchLoop() {
-        while (running) {
-            WatchKey key;
-            try {
-                key = watchService.take();
-            } catch (InterruptedException | ClosedWatchServiceException e) {
-                break;
+        try {
+            while (running) {
+                WatchKey key;
+                try {
+                    key = watchService.take();
+                } catch (InterruptedException | ClosedWatchServiceException e) {
+                    break;
+                }
+
+                for (WatchEvent<?> event : key.pollEvents()) {
+                    WatchEvent.Kind<?> kind = event.kind();
+                    if (kind == StandardWatchEventKinds.OVERFLOW) {
+                        Log.warn("hotswapmanager.overflow");
+                        lifecycleManager.getJarIndex().invalidate();
+                        continue;
+                    }
+
+                    Path path = (Path) event.context();
+                    String fileName = path.toString();
+                    String lower = fileName.toLowerCase(Locale.ROOT);
+
+                    if (!lower.endsWith(".jar") || lower.endsWith(".tmp") || lower.endsWith(".bak")
+                            || lower.endsWith(".old") || lower.endsWith(".part") || lower.endsWith(".crdownload")
+                            || lower.endsWith(".uploading")) {
+                        continue;
+                    }
+
+                    if (fileName.equalsIgnoreCase(plugin.getName() + ".jar") || lower.contains("plugmanreloaded")) {
+                        continue;
+                    }
+
+                    if (isTemporarilyIgnored(fileName)) {
+                        continue;
+                    }
+
+                    if (kind == StandardWatchEventKinds.ENTRY_DELETE) {
+                        handleFileDeleted(fileName);
+                    } else {
+                        scheduleDebouncedReload(fileName);
+                    }
+                }
+
+                if (!key.reset()) {
+                    break;
+                }
             }
-
-            for (WatchEvent<?> event : key.pollEvents()) {
-                WatchEvent.Kind<?> kind = event.kind();
-                if (kind == StandardWatchEventKinds.OVERFLOW) {
-                    Log.warn("hotswapmanager.overflow");
-                    plugin.getPluginLifecycleManager().getJarIndex().invalidate();
-                    continue;
-                }
-
-                Path path = (Path) event.context();
-                String fileName = path.toString();
-                String lower = fileName.toLowerCase(Locale.ROOT);
-
-                if (!lower.endsWith(".jar") || lower.endsWith(".tmp") || lower.endsWith(".bak")
-                        || lower.endsWith(".old") || lower.endsWith(".part") || lower.endsWith(".crdownload")
-                        || lower.endsWith(".uploading")) {
-                    continue;
-                }
-
-                if (fileName.equalsIgnoreCase(plugin.getName() + ".jar") || lower.contains("plugmanreloaded")) {
-                    continue;
-                }
-
-                if (isTemporarilyIgnored(fileName)) {
-                    continue;
-                }
-
-                if (kind == StandardWatchEventKinds.ENTRY_DELETE) {
-                    handleFileDeleted(fileName);
-                } else {
-                    scheduleDebouncedReload(fileName);
-                }
-            }
-
-            if (!key.reset()) {
-                break;
-            }
+        } finally {
+            running = false;
         }
     }
 
@@ -203,9 +221,7 @@ public class HotSwapManager {
             debounceExecutor.schedule(() -> {
                 Long last = lastModifiedDebounce.get(fileName);
                 if (last != null && System.currentTimeMillis() - last >= debounceMs) {
-                    if (lastModifiedDebounce.remove(fileName, last)) {
-                        handleFileChanged(fileName);
-                    }
+                    handleFileChanged(fileName, 0);
                 }
             }, debounceMs + 50L, TimeUnit.MILLISECONDS);
         } catch (RejectedExecutionException e) {
@@ -213,15 +229,33 @@ public class HotSwapManager {
         }
     }
 
-    private void handleFileChanged(String fileName) {
-        if (isTemporarilyIgnored(fileName)) return;
-        File file = new File(plugin.getDataFolder().getParentFile(), fileName);
-        if (!file.exists()) return;
+    private void handleFileChanged(String fileName, int attempt) {
+        if (!running || isTemporarilyIgnored(fileName)) {
+            lastModifiedDebounce.remove(fileName);
+            return;
+        }
 
-        if (!JarValidator.waitForFileWrite(file, 8, 250)) {
+        File file = new File(plugin.getDataFolder().getParentFile(), fileName);
+        if (!file.exists()) {
+            lastModifiedDebounce.remove(fileName);
+            return;
+        }
+
+        if (!JarValidator.isValidPluginJar(file)) {
+            if (attempt < 8) {
+                if (running && debounceExecutor != null && !debounceExecutor.isShutdown()) {
+                    try {
+                        debounceExecutor.schedule(() -> handleFileChanged(fileName, attempt + 1), 250L, TimeUnit.MILLISECONDS);
+                    } catch (RejectedExecutionException ignored) {}
+                }
+                return;
+            }
+            lastModifiedDebounce.remove(fileName);
             Log.debug("hotswapmanager.file-still-writing", "file", fileName);
             return;
         }
+
+        lastModifiedDebounce.remove(fileName);
 
         JarValidator.PreFlightReport preFlight = JarValidator.validatePreFlight(file, null, false);
         if (!preFlight.isValid()) {
@@ -289,23 +323,49 @@ public class HotSwapManager {
                 ? lifecycleManager.getDependencyManager().calculateCascadeOrder(pluginName, true)
                 : null;
 
+        List<String> unloadedDependents = new ArrayList<>();
+        if (cascadeOrder != null && cascadeOrder.size() > 1) {
+            List<String> reverseOrder = new ArrayList<>(cascadeOrder);
+            Collections.reverse(reverseOrder);
+            for (String depName : reverseOrder) {
+                if (depName.equalsIgnoreCase(pluginName)) continue;
+                Plugin depPlugin = Bukkit.getPluginManager().getPlugin(depName);
+                if (depPlugin != null && depPlugin.isEnabled()) {
+                    if (lifecycleManager.unload(depPlugin).success()) {
+                        unloadedDependents.add(depName);
+                    }
+                }
+            }
+        }
+
         PluginResult unloadResult = lifecycleManager.unload(target);
         if (!unloadResult.success()) {
+            for (int i = unloadedDependents.size() - 1; i >= 0; i--) {
+                String depName = unloadedDependents.get(i);
+                Plugin depPlugin = lifecycleManager.getPlugin(depName);
+                File depFile = depPlugin != null ? lifecycleManager.getPluginFile(depPlugin) : null;
+                if (depFile != null) {
+                    lifecycleManager.load(depFile);
+                }
+            }
             Map<String, String> failPh = new HashMap<>(ph);
             failPh.putAll(unloadResult.placeholders());
             announce("hotswap.update-failed", failPh);
             return;
         }
 
+        temporarilyIgnore(oldFile.getName(), 10000L);
         File backupFile = new File(oldFile.getParentFile(), oldFile.getName() + ".old");
+        temporarilyIgnore(backupFile.getName(), 10000L);
+
         boolean backedUp = false;
         if (plugin.getConfigManager().isHotSwapBackupOldVersion() && oldFile.exists()) {
-            backedUp = backupOrRenameOldFile(oldFile, backupFile, 10, 50);
+            backedUp = backupOrRenameOldFile(oldFile, backupFile, 3, 5);
             if (!backedUp) {
                 Log.debug("hotswapmanager.old-move-failed", "file", oldFile.getName());
             }
         } else if (oldFile.exists()) {
-            deleteFileWithRetry(oldFile, 10, 50);
+            deleteFileWithRetry(oldFile, 3, 5);
         }
 
         PluginResult loadResult = lifecycleManager.load(file);
@@ -323,8 +383,11 @@ public class HotSwapManager {
         Log.warn("hotswapmanager.new-version-load-failed", "plugin", pluginName);
         isolateFailedUpload(file, oldFile);
         if (backedUp && backupFile.exists()) {
-            backupOrRenameOldFile(backupFile, oldFile, 10, 50);
+            backupOrRenameOldFile(backupFile, oldFile, 3, 5);
             lifecycleManager.load(oldFile);
+        }
+        if (!unloadedDependents.isEmpty()) {
+            restartDependents(cascadeOrder != null ? cascadeOrder : unloadedDependents, pluginName);
         }
         lifecycleManager.getJarIndex().invalidate();
         announceResult("hotswap.update-failed", ph, loadResult, elapsed);
@@ -416,11 +479,13 @@ public class HotSwapManager {
             if (src.renameTo(dst)) {
                 return true;
             }
-            try {
-                Thread.sleep(sleepMs);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                break;
+            if (sleepMs > 0) {
+                try {
+                    Thread.sleep(sleepMs);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
             }
         }
         return !src.exists() || dst.exists();
@@ -438,40 +503,26 @@ public class HotSwapManager {
             if (file.delete() || !file.exists()) {
                 return true;
             }
-
-            MetaspaceCleanup.runNow();
-            try {
-                Thread.sleep(sleepMs);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                break;
+            if (sleepMs > 0) {
+                try {
+                    Thread.sleep(sleepMs);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
             }
         }
         return !file.exists();
     }
 
-    private @Nullable Plugin findExistingPlugin(String declaredName, String fileName) {
+    private @Nullable Plugin findExistingPlugin(@Nullable String declaredName, String fileName) {
         if (declaredName != null) {
-            Plugin existing = Bukkit.getPluginManager().getPlugin(declaredName);
-            if (existing == null) {
-                for (Plugin p : Bukkit.getPluginManager().getPlugins()) {
-                    if (p.getName().equalsIgnoreCase(declaredName)) {
-                        existing = p;
-                        break;
-                    }
-                }
-            }
+            Plugin existing = lifecycleManager.getPlugin(declaredName);
             if (existing != null) {
                 return existing;
             }
         }
-        for (Plugin p : Bukkit.getPluginManager().getPlugins()) {
-            File pf = lifecycleManager.getPluginFile(p);
-            if (pf != null && pf.getName().equalsIgnoreCase(fileName)) {
-                return p;
-            }
-        }
-        return null;
+        return lifecycleManager.getPlugin(fileName);
     }
 
     private void handleFileDeleted(String fileName) {
@@ -482,21 +533,12 @@ public class HotSwapManager {
         TaskScheduler.runSync(plugin, () -> {
             if (!running || isTemporarilyIgnored(fileName)) return;
 
-            File file = new File(plugin.getDataFolder().getParentFile(), fileName);
+            File pluginsDir = plugin.getDataFolder() != null ? plugin.getDataFolder().getParentFile() : null;
+            if (pluginsDir == null) return;
+            File file = new File(pluginsDir, fileName);
             if (file.exists()) return;
 
-            Plugin existing = null;
-            for (Plugin p : Bukkit.getPluginManager().getPlugins()) {
-                File pf = lifecycleManager.getPluginFile(p);
-                if (pf != null && pf.getName().equalsIgnoreCase(fileName)) {
-                    existing = p;
-                    break;
-                }
-            }
-            if (existing == null) {
-                existing = lifecycleManager.getPlugin(fileName);
-            }
-
+            Plugin existing = lifecycleManager.getPlugin(fileName);
             if (existing == null || lifecycleManager.isProtected(existing)) return;
 
             String pluginName = existing.getName();
@@ -532,4 +574,3 @@ public class HotSwapManager {
         return dot > 0 ? fileName.substring(0, dot) : fileName;
     }
 }
-

@@ -1,17 +1,19 @@
 package ru.milkyway.plugmanreloaded.utils;
 
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelPipeline;
+import io.netty.channel.CombinedChannelDuplexHandler;
 import io.netty.channel.EventLoop;
 import io.netty.util.concurrent.Future;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.Nullable;
-import ru.milkyway.plugmanreloaded.utils.Log;
-import ru.milkyway.plugmanreloaded.utils.ReflectionHelper;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -51,25 +53,14 @@ public final class NettyGuard {
         }
 
         try {
-            Object server = ReflectionHelper.invokeMethod(Bukkit.getServer(), "getServer");
-            if (server != null) {
-                Object serverConnection = ReflectionHelper.invokeMethod(server, "getConnection");
-                if (serverConnection == null) {
-                    serverConnection = ReflectionHelper.getFieldValue(server, "connection");
-                }
-                if (serverConnection != null) {
-                    List<?> connections = ReflectionHelper.getFieldValue(serverConnection, "connections");
-                    if (connections != null) {
-                        for (Object conn : connections) {
-                            try {
-                                Channel channel = (Channel) ReflectionHelper.getFieldValue(conn, "channel");
-                                if (channel != null && channel.isOpen()) {
-                                    cleanPipeline(channel.pipeline(), targetCl, cache, eventLoopsToSync);
-                                }
-                            } catch (Exception | LinkageError t) {
-                                failed++;
-                            }
-                        }
+            Object serverConnection = getServerConnection();
+            if (serverConnection != null) {
+                List<Channel> serverChannels = getServerChannels(serverConnection);
+                for (Channel channel : serverChannels) {
+                    try {
+                        cleanPipeline(channel.pipeline(), targetCl, cache, eventLoopsToSync);
+                    } catch (Exception | LinkageError t) {
+                        failed++;
                     }
                 }
             }
@@ -99,10 +90,8 @@ public final class NettyGuard {
 
         for (String handlerName : names) {
             ChannelHandler handler = pipeline.get(handlerName);
-            if (handler != null) {
-                if (isClassLoadedBy(handler.getClass(), targetCl, cache)) {
-                    toRemove.add(handlerName);
-                }
+            if (handler != null && isHandlerBelongingTo(handler, targetCl, cache)) {
+                toRemove.add(handlerName);
             }
         }
 
@@ -112,7 +101,9 @@ public final class NettyGuard {
 
         for (String name : toRemove) {
             try {
-                pipeline.remove(name);
+                if (pipeline.context(name) != null) {
+                    pipeline.remove(name);
+                }
             } catch (Exception | LinkageError t) {
                 Log.debug("nettyguard.handler-remove-failed", t, "handler", name);
             }
@@ -165,6 +156,7 @@ public final class NettyGuard {
             try {
                 if (!future.await(remainingMs, TimeUnit.MILLISECONDS)) {
                     Log.debug("nettyguard.sync-timeout");
+                    break;
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -186,25 +178,78 @@ public final class NettyGuard {
             try {
                 Channel channel = getPlayerChannel(player);
                 if (channel == null || !channel.isOpen()) continue;
-
-                ChannelPipeline pipeline = channel.pipeline();
-                if (pipeline == null) continue;
-
-                List<String> names;
-                synchronized (pipeline) {
-                    names = new ArrayList<>(pipeline.names());
-                }
-
-                for (String handlerName : names) {
-                    ChannelHandler handler = pipeline.get(handlerName);
-                    if (handler != null && isClassLoadedBy(handler.getClass(), targetCl, cache)) {
-                        return true;
-                    }
+                if (hasInjectedHandler(channel.pipeline(), targetCl, cache)) {
+                    return true;
                 }
             } catch (Exception | LinkageError t) {
                 Log.debug("nettyguard.pipeline-inspect-failed", t);
             }
         }
+
+        try {
+            Object serverConnection = getServerConnection();
+            if (serverConnection != null) {
+                List<Channel> serverChannels = getServerChannels(serverConnection);
+                for (Channel channel : serverChannels) {
+                    try {
+                        if (hasInjectedHandler(channel.pipeline(), targetCl, cache)) {
+                            return true;
+                        }
+                    } catch (Exception | LinkageError t) {
+                        Log.debug("nettyguard.pipeline-inspect-failed", t);
+                    }
+                }
+            }
+        } catch (Throwable t) {
+            Log.debug("nettyguard.pipeline-inspect-failed", t);
+        }
+
+        return false;
+    }
+
+    private static boolean hasInjectedHandler(@Nullable ChannelPipeline pipeline, ClassLoader targetCl, Map<CacheKey, Boolean> cache) {
+        if (pipeline == null) return false;
+        List<String> names;
+        synchronized (pipeline) {
+            names = new ArrayList<>(pipeline.names());
+        }
+        for (String handlerName : names) {
+            ChannelHandler handler = pipeline.get(handlerName);
+            if (handler != null && isHandlerBelongingTo(handler, targetCl, cache)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean isHandlerBelongingTo(@Nullable ChannelHandler handler, ClassLoader targetCl, Map<CacheKey, Boolean> cache) {
+        if (handler == null) return false;
+        if (isClassLoadedBy(handler.getClass(), targetCl, cache)) {
+            return true;
+        }
+
+        if (Proxy.isProxyClass(handler.getClass())) {
+            try {
+                InvocationHandler ih = Proxy.getInvocationHandler(handler);
+                if (ih != null && isClassLoadedBy(ih.getClass(), targetCl, cache)) {
+                    return true;
+                }
+            } catch (Throwable ignored) {}
+        }
+
+        if (handler instanceof CombinedChannelDuplexHandler<?, ?> combined) {
+            try {
+                ChannelHandler inbound = ReflectionHelper.getFieldValue(combined, "inboundHandler");
+                if (inbound != null && isHandlerBelongingTo(inbound, targetCl, cache)) {
+                    return true;
+                }
+                ChannelHandler outbound = ReflectionHelper.getFieldValue(combined, "outboundHandler");
+                if (outbound != null && isHandlerBelongingTo(outbound, targetCl, cache)) {
+                    return true;
+                }
+            } catch (Throwable ignored) {}
+        }
+
         return false;
     }
 
@@ -215,26 +260,103 @@ public final class NettyGuard {
         Boolean cached = cache.get(key);
         if (cached != null) return cached;
 
-        boolean result;
-        if (clazz.getClassLoader() == targetCl) {
-            result = true;
-        } else {
-            result = false;
-            for (Class<?> iface : clazz.getInterfaces()) {
-                if (isClassLoadedBy(iface, targetCl, cache)) {
-                    result = true;
-                    break;
-                }
-            }
-            if (!result) {
-                Class<?> superclass = clazz.getSuperclass();
-                if (superclass != null && superclass != Object.class) {
-                    result = isClassLoadedBy(superclass, targetCl, cache);
-                }
+        boolean result = checkClassLoadedBy(clazz, targetCl, cache);
+        cache.put(key, result);
+        return result;
+    }
+
+    private static boolean checkClassLoadedBy(Class<?> clazz, ClassLoader targetCl, Map<CacheKey, Boolean> cache) {
+        ClassLoader classLoader = clazz.getClassLoader();
+        if (classLoader == null) {
+            return false;
+        }
+
+        if (isClassLoaderDescendant(classLoader, targetCl)) {
+            return true;
+        }
+
+        for (Class<?> iface : clazz.getInterfaces()) {
+            if (isClassLoadedBy(iface, targetCl, cache)) {
+                return true;
             }
         }
 
-        cache.put(key, result);
+        Class<?> superclass = clazz.getSuperclass();
+        if (superclass != null && superclass != Object.class) {
+            return isClassLoadedBy(superclass, targetCl, cache);
+        }
+
+        return false;
+    }
+
+    private static boolean isClassLoaderDescendant(@Nullable ClassLoader loader, ClassLoader targetCl) {
+        for (ClassLoader current = loader; current != null; current = current.getParent()) {
+            if (current == targetCl) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static @Nullable Object getServerConnection() {
+        try {
+            Object server = ReflectionHelper.invokeMethod(Bukkit.getServer(), "getServer");
+            if (server == null) return null;
+            Object serverConnection = ReflectionHelper.invokeMethod(server, "getConnection");
+            if (serverConnection == null) {
+                serverConnection = ReflectionHelper.getFieldValue(server, "connection");
+            }
+            return serverConnection;
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
+    private static List<Channel> getServerChannels(Object serverConnection) {
+        List<Channel> result = new ArrayList<>();
+        try {
+            List<?> channels = ReflectionHelper.getFieldValue(serverConnection, "channels");
+            if (channels != null) {
+                List<?> channelsSnapshot;
+                synchronized (channels) {
+                    channelsSnapshot = new ArrayList<>(channels);
+                }
+                for (Object item : channelsSnapshot) {
+                    if (item instanceof ChannelFuture future) {
+                        Channel ch = future.channel();
+                        if (ch != null && ch.isOpen()) {
+                            result.add(ch);
+                        }
+                    } else if (item instanceof Channel ch) {
+                        if (ch.isOpen()) {
+                            result.add(ch);
+                        }
+                    }
+                }
+            }
+        } catch (Throwable ignored) {}
+
+        try {
+            List<?> connections = ReflectionHelper.getFieldValue(serverConnection, "connections");
+            if (connections != null) {
+                List<?> connectionsSnapshot;
+                synchronized (connections) {
+                    connectionsSnapshot = new ArrayList<>(connections);
+                }
+                for (Object conn : connections) {
+                    try {
+                        Channel channel = ReflectionHelper.getFieldValue(conn, "channel");
+                        if (channel == null) {
+                            channel = ReflectionHelper.getFieldValueOfType(conn, Channel.class);
+                        }
+                        if (channel != null && channel.isOpen()) {
+                            result.add(channel);
+                        }
+                    } catch (Throwable ignored) {}
+                }
+            }
+        } catch (Throwable ignored) {}
+
         return result;
     }
 
@@ -255,10 +377,13 @@ public final class NettyGuard {
             }
             if (networkManager == null) return null;
 
-            return ReflectionHelper.getFieldValue(networkManager, "channel");
+            Channel channel = ReflectionHelper.getFieldValue(networkManager, "channel");
+            if (channel == null) {
+                channel = ReflectionHelper.getFieldValueOfType(networkManager, Channel.class);
+            }
+            return channel;
         } catch (Throwable t) {
             return null;
         }
     }
 }
-

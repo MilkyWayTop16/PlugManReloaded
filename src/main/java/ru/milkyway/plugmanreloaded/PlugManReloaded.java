@@ -95,7 +95,7 @@ public final class PlugManReloaded extends JavaPlugin {
             Log.debug("startup.init-updates");
             updateService = new UpdateService(this);
             getServer().getPluginManager().registerEvents(new UpdateNotifyListener(this, updateService), this);
-            updateService.checkOnStartIfEnabled();
+            updateService.getNotifications().checkOnStartIfEnabled();
             String downloadUserAgent = "PlugManReloaded/" + PluginMetaHelper.getVersion(this);
             downloadService = new DownloadService(this, updateService.getServerProfile(), updateService.getCatalog(), downloadUserAgent);
             manualSources = new ManualSources(this);

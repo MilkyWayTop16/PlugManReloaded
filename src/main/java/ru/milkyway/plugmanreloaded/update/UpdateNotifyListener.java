@@ -33,7 +33,7 @@ public final class UpdateNotifyListener implements Listener {
         if (!updateService.isInitialChecked() || updateService.getLastAvailableCount() <= 0) return;
 
         Player player = event.getPlayer();
-        if (!updateService.canReceiveNotify(player)) return;
+        if (!updateService.getNotifications().canReceiveNotify(player)) return;
 
         TaskScheduler.runSyncLater(plugin, () -> {
             if (player.isOnline()) {
