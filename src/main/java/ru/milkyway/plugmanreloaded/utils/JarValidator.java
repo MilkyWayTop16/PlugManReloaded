@@ -325,6 +325,27 @@ public final class JarValidator {
         }
     }
 
+    public static boolean hasLibraries(@Nullable File file) {
+        if (file == null || !file.isFile()) return false;
+        try (JarFile jar = new JarFile(file)) {
+            if (jar.getJarEntry("paper-libraries.json") != null) {
+                return true;
+            }
+            JarEntry pluginYml = jar.getJarEntry("plugin.yml");
+            if (pluginYml != null) {
+                try (InputStream is = jar.getInputStream(pluginYml)) {
+                    YamlConfiguration yaml = loadSafeYaml(is);
+                    if (yaml.isList("libraries") && !yaml.getStringList("libraries").isEmpty()) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
     public static int readRequiredJavaVersion(@Nullable File file) {
         if (file == null || !file.isFile()) return 0;
         try (JarFile jar = new JarFile(file)) {

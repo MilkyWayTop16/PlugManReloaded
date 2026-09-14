@@ -123,10 +123,20 @@ settings:
   # Дополнительно плагин сам находит такие библиотеки по классам-маркерам,
   # даже если их переименовали или это форк)
   unsafe-to-unload:
+    - "LuckPerms"
+    - "Vault"
+    - "PlaceholderAPI"
+    - "SkinsRestorer"
+    - "FastAsyncWorldEdit"
+    - "WorldEdit"
     - "ProtocolLib"
     - "ViaVersion"
     - "ViaBackwards"
-    - "PacketEvents"
+    - "ViaRewind"
+    - "ProtocolSupport"
+    - "Geyser-Spigot"
+    - "floodgate"
+    - "packetevents"
 
   # Обновление установленных плагинов
   updates:

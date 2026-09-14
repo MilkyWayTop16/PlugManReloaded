@@ -85,6 +85,7 @@ logs:
     timestamp-unparseable: "[BackupStore] Couldn't parse a timestamp from backup name {name}, using the file date instead"
 
   updateinstaller:
+    dependency-update-available: "[UpdateInstaller] Notice: plugin {plugin} depends on {dependency}, which also has an update available ({newVersion})! Updating {dependency} is recommended"
     jar-overwrite-failed: "[UpdateInstaller] Failed to overwrite the JAR for &#FF5D00{plugin}&f, keeping it staged for a restart instead"
     new-version-load-failed: "[UpdateInstaller] The new version of &#ffff00{plugin} &ffailed to load, rolling back"
     jarindex-invalidate-failed: "[UpdateInstaller] Failed to invalidate the jar index cache"
@@ -287,7 +288,7 @@ logs:
     reload-failed: "[LogCatalog] Failed to reload the log catalog - messages will be printed as raw keys"
 
   pluginmetahelper:
-    version-not-substituted: "[PluginMetaHelper] The version in plugin.yml is still a build placeholder: {placeholder}. Resource filtering is not enabled in pom.xml, so the plugin does not know its own version."
+    version-not-substituted: "[PluginMetaHelper] The version in plugin.yml is still a build placeholder: {placeholder}. Resource filtering is not enabled in pom.xml, so the plugin does not know its own version"
     version-pluginmeta-failed: "[PluginMetaHelper] Failed to read the version from PluginMeta for {plugin}"
     version-description-failed: "[PluginMetaHelper] Failed to read the version from PluginDescriptionFile for {plugin}"
     authors-pluginmeta-failed: "[PluginMetaHelper] Failed to read authors from PluginMeta for {plugin}"
@@ -440,24 +441,6 @@ logs:
   updatecommand:
     reloading-dependents: "Reloading dependent plugins after the batch update ({count} total): {plugins}"
 
-  updateinstaller:
-    dependency-update-available: "[UpdateInstaller] Notice: plugin {plugin} depends on {dependency}, which also has an update available ({newVersion})! Updating {dependency} is recommended"
-    jar-overwrite-failed: "[UpdateInstaller] Failed to overwrite jar file for {plugin}"
-    new-version-load-failed: "[UpdateInstaller] Failed to load new version of {plugin}"
-    jarindex-invalidate-failed: "[UpdateInstaller] Failed to invalidate JarIndex cache"
-    updated: "[UpdateInstaller] Plugin {plugin} successfully updated from v{from} to v{to}"
-    staged-for-restart: "[UpdateInstaller] New version of {plugin} (v{to}) placed in update/ and will be applied on restart"
-    stage-for-restart-failed: "[UpdateInstaller] Failed to stage update for {plugin} in update/ folder: {error}"
-    dependents-collect-failed: "[UpdateInstaller] Failed to collect dependent plugins for {plugin}"
-    restarting-dependents: "[UpdateInstaller] Restarting dependent plugins ({count} total) for {plugin}"
-    dependent-load-failed: "[UpdateInstaller] Failed to load dependent plugin {dependent} for {plugin}"
-    rollback-failed: "[UpdateInstaller] Failed to rollback backup for {file}"
-    rollback-load-failed: "[UpdateInstaller] Failed to load restored plugin {plugin}"
-    move-attempt-failed: "[UpdateInstaller] Move attempt #{attempt} ({source} -> {destination}) failed"
-    delete-attempt-failed: "[UpdateInstaller] Delete attempt #{attempt} for {file} failed"
-    empty-folder-cleanup-failed: "[UpdateInstaller] Failed to remove empty folder {folder}"
-    temp-file-delete-failed: "[UpdateInstaller] Failed to remove temporary file {file}"
-
   chatbuttonfactory:
     url-looks-like-markup: "[ChatButtonFactory] The url value looks like markup rather than a link, the button won't be clickable: {value}"
 
@@ -478,28 +461,28 @@ logs:
     hover-fallback: "\n &#FFFF00▶ &fClick to &#FFFF00open &flink\n"
 
   startup:
-    reading-config: "&#00C9FF▶ PlugMan &8| &fReading &#00FF5Aconfig files &fand &#00FF5Aloading &fresources"
-    detecting-platform: "&#00C9FF▶ PlugMan &8| &fDetecting the environment: &#00FF5A{platform}&f"
-    init-core: "&#00C9FF▶ PlugMan &8| &fInitializing the plugin's &#00FF5Alifecycle &fand &#00FF5Amemory &fcore"
-    registering-commands: "&#00C9FF▶ PlugMan &8| &fRegistering &#00FF5Acommands &fand &#00FF5Atab completion&f"
-    init-hotswap: "&#00C9FF▶ PlugMan &8| &fInitializing the &#00FF5AHot-Swap &fsystem"
-    init-updates: "&#00C9FF▶ PlugMan &8| &fInitializing the &#00FF5Aupdate checking &fsystem"
-    registering-api: "&#00C9FF▶ PlugMan &8| &fRegistering the public &#00FF5AAPI&f"
+    reading-config: "&#00FF5A◆ PlugManReloaded &f| Reading &#00FF5Aconfiguration files &fand &#00FF5Aloading &fresources..."
+    detecting-platform: "&#00FF5A◆ PlugManReloaded &f| Detecting environment: &#00FF5A{platform}&f"
+    init-core: "&#00FF5A◆ PlugManReloaded &f| Initializing the plugin's &#00FF5Alifecycle &fand &#00FF5Amemory &fcore..."
+    registering-commands: "&#00FF5A◆ PlugManReloaded &f| Registering &#00FF5Acommands &fand &#00FF5Atab completion&f..."
+    init-hotswap: "&#00FF5A◆ PlugManReloaded &f| Initializing the &#00FF5AHot-Swap &fsystem..."
+    init-updates: "&#00FF5A◆ PlugManReloaded &f| Initializing the &#00FF5Aupdate checking &fsystem..."
+    registering-api: "&#00FF5A◆ PlugManReloaded &f| Registering public &#00FF5AAPI&f..."
     init-failed: "Critical &#FF5D00initialization failure&f: &#FF5D00{error}&f"
-    banner-enabled: "&#00FF5A        ▶ &fPlugin &#00FF5Asuccessfully &floaded and enabled!"
-    banner-version: "&#ffff00               ▶ &fPlugin version: &#ffff00v{version}"
-    banner-platform: "&#ffff00               ▶ &fServer platform: &#ffff00{platform}"
-    banner-plugins: "&#ffff00               ▶ &fPlugins detected: &#ffff00{count}"
-    banner-time: "&#ffff00               ▶ &fLoad time: &#ffff00{ms} ms"
+    banner-enabled: "&#00FF5A           ▶ &fPlugin &#00FF5Asuccessfully &floaded and enabled!"
+    banner-version: "&#ffff00              ◆ &fPlugin version: &#ffff00v{version}"
+    banner-platform: "&#ffff00              ◆ &fServer platform: &#ffff00{platform}"
+    banner-plugins: "&#ffff00              ◆ &fPlugins detected: &#ffff00{count}"
+    banner-time: "&#ffff00             ◆ &fLoad time: &#ffff00{ms} ms"
 
   shutdown:
-    starting: "&#FF5D00▶ PlugMan &8| &fStarting to &#FF5D00unload &fthe plugin"
-    stopping-hotswap: "&#FF5D00▶ PlugMan &8| &fStopping the &#FF5D00Hot-Swap &fservice"
-    stopping-updatechecker: "&#FF5D00▶ PlugMan &8| &fStopping the &#FF5D00UpdateChecker &fservice"
-    clearing-caches: "&#FF5D00▶ PlugMan &8| &fClearing internal &#FF5D00caches &fand resources"
-    banner-disabled: "&#FF5D00     ▶ &fPlugin &#FF5D00successfully &funloaded and disabled"
-    banner-version: "&#ffff00               ▶ &fPlugin version: &#ffff00v{version}"
-    banner-time: "&#ffff00               ▶ &fUnload time: &#ffff00{ms} ms"
+    starting: "&#FF5D00◆ PlugManReloaded &f| Starting plugin &#FF5D00unloading&f..."
+    stopping-hotswap: "&#FF5D00◆ PlugManReloaded &f| Stopping &#FF5D00Hot-Swap &fservice..."
+    stopping-updatechecker: "&#FF5D00◆ PlugManReloaded &f| Stopping &#FF5D00UpdateChecker &fservice..."
+    clearing-caches: "&#FF5D00◆ PlugManReloaded &f| Clearing internal &#FF5D00caches &fand resources..."
+    banner-disabled: "&#FF5D00           ▶ &fPlugin &#FF5D00successfully &funloaded and disabled!"
+    banner-version: "&#ffff00              ◆ &fPlugin version: &#ffff00v{version}"
+    banner-time: "&#ffff00             ◆ &fUnload time: &#ffff00{ms} ms"
 
   configlocalizer:
     applied: "[ConfigLocalizer] Comments in &#ffff00{file} &fwere switched to &#00FF5A{language}&f, all values kept as they were"

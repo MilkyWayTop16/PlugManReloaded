@@ -72,7 +72,7 @@ public final class PlugManReloaded extends JavaPlugin {
     private boolean initializePlugin() {
         try {
             console("&f");
-            Log.debug("startup.reading-config");
+            Log.console("startup.reading-config");
             configManager = new ConfigManager(this);
 
             Log.debug("startup.detecting-platform", "platform", PlatformDetector.getPlatformName());
@@ -92,7 +92,7 @@ public final class PlugManReloaded extends JavaPlugin {
             Log.debug("startup.init-hotswap");
             hotSwapManager = new HotSwapManager(this, pluginLifecycleManager);
 
-            Log.debug("startup.init-updates");
+            Log.console("startup.init-updates");
             updateService = new UpdateService(this);
             getServer().getPluginManager().registerEvents(new UpdateNotifyListener(this, updateService), this);
             updateService.getNotifications().checkOnStartIfEnabled();
@@ -149,7 +149,7 @@ public final class PlugManReloaded extends JavaPlugin {
         long startTime = System.currentTimeMillis();
 
         if (initialized) {
-            Log.debug("shutdown.starting");
+            Log.console("shutdown.starting");
         }
 
         if (hotSwapManager != null) {

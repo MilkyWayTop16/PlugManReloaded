@@ -123,10 +123,20 @@ settings:
   # On top of that the plugin finds such libraries on its own by marker classes,
   # even if they were renamed or it is a fork)
   unsafe-to-unload:
+    - "LuckPerms"
+    - "Vault"
+    - "PlaceholderAPI"
+    - "SkinsRestorer"
+    - "FastAsyncWorldEdit"
+    - "WorldEdit"
     - "ProtocolLib"
     - "ViaVersion"
     - "ViaBackwards"
-    - "PacketEvents"
+    - "ViaRewind"
+    - "ProtocolSupport"
+    - "Geyser-Spigot"
+    - "floodgate"
+    - "packetevents"
 
   # Updating installed plugins
   updates:

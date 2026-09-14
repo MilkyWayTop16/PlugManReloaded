@@ -2,9 +2,11 @@ package ru.milkyway.plugmanreloaded.utils;
 
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.Nullable;
 import ru.milkyway.plugmanreloaded.PlugManReloaded;
 
+import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -19,6 +21,9 @@ public final class Log {
 
     private static final String DEBUG_PREFIX = "&7[DEBUG] &#ffff00PlugManReloaded &8| &7";
     private static final String DEBUG_PLAIN_PREFIX = "[DEBUG] PlugManReloaded | ";
+
+    private static volatile Boolean earlyConsoleLogs;
+    private static volatile Boolean earlyDebug;
 
     private Log() {
     }
@@ -67,22 +72,83 @@ public final class Log {
         sendDebugPlain(LogCatalog.get(key, placeholders));
     }
 
+    public static boolean isConsoleLogsEnabled() {
+        PlugManReloaded plugin = PlugManReloaded.getInstance();
+        if (plugin != null && plugin.getConfigManager() != null) {
+            return plugin.getConfigManager().isConsoleLogsEnabled();
+        }
+        if (plugin != null) {
+            return earlyConsoleLogsEnabled(plugin);
+        }
+        return false;
+    }
+
+    private static boolean earlyConsoleLogsEnabled(PlugManReloaded plugin) {
+        Boolean cached = earlyConsoleLogs;
+        if (cached != null) return cached;
+
+        boolean enabled = false;
+        try {
+            File config = new File(plugin.getDataFolder(), "config.yml");
+            if (config.isFile()) {
+                enabled = YamlConfiguration.loadConfiguration(config)
+                        .getBoolean("settings.logs-in-console.enable", false);
+            }
+        } catch (Exception ignored) {
+        }
+        earlyConsoleLogs = enabled;
+        return enabled;
+    }
+
+    public static boolean isDebugEnabled() {
+        PlugManReloaded plugin = PlugManReloaded.getInstance();
+        if (plugin != null && plugin.getConfigManager() != null) {
+            return plugin.getConfigManager().isDebugEnabled();
+        }
+        if (plugin != null) {
+            return earlyDebugEnabled(plugin);
+        }
+        return false;
+    }
+
+    private static boolean earlyDebugEnabled(PlugManReloaded plugin) {
+        Boolean cached = earlyDebug;
+        if (cached != null) return cached;
+
+        boolean enabled = false;
+        try {
+            File config = new File(plugin.getDataFolder(), "config.yml");
+            if (config.isFile()) {
+                enabled = YamlConfiguration.loadConfiguration(config)
+                        .getBoolean("settings.logs-in-console.debug", false);
+            }
+        } catch (Exception ignored) {
+        }
+        earlyDebug = enabled;
+        return enabled;
+    }
+
+    public static void invalidateEarlyCache() {
+        earlyConsoleLogs = null;
+        earlyDebug = null;
+    }
+
     private static void sendInfo(@Nullable String message) {
         if (message == null) return;
-        PlugManReloaded plugin = PlugManReloaded.getInstance();
-        if (plugin != null && plugin.getConfigManager() != null && !plugin.getConfigManager().isConsoleLogsEnabled()) {
+        if (!isConsoleLogsEnabled()) {
             return;
         }
+        PlugManReloaded plugin = PlugManReloaded.getInstance();
         send(plugin != null ? LogCatalog.get("prefix.info") + message : null,
                 STANDALONE_INFO_PREFIX + message, Level.INFO, message);
     }
 
     private static void sendSuccess(@Nullable String message) {
         if (message == null) return;
-        PlugManReloaded plugin = PlugManReloaded.getInstance();
-        if (plugin != null && plugin.getConfigManager() != null && !plugin.getConfigManager().isConsoleLogsEnabled()) {
+        if (!isConsoleLogsEnabled()) {
             return;
         }
+        PlugManReloaded plugin = PlugManReloaded.getInstance();
         send(plugin != null ? LogCatalog.get("prefix.success") + message : null,
                 STANDALONE_SUCCESS_PREFIX + message, Level.INFO, message);
     }
@@ -101,8 +167,7 @@ public final class Log {
 
     private static void sendDebug(@Nullable String message) {
         if (message == null) return;
-        PlugManReloaded plugin = PlugManReloaded.getInstance();
-        if (plugin == null || plugin.getConfigManager() == null || !plugin.getConfigManager().isDebugEnabled()) {
+        if (!isDebugEnabled()) {
             return;
         }
         sendRaw(DEBUG_PREFIX + message, Level.INFO, message);
@@ -110,8 +175,7 @@ public final class Log {
 
     private static void sendDebugPlain(@Nullable String message) {
         if (message == null) return;
-        PlugManReloaded plugin = PlugManReloaded.getInstance();
-        if (plugin == null || plugin.getConfigManager() == null || !plugin.getConfigManager().isDebugEnabled()) {
+        if (!isDebugEnabled()) {
             return;
         }
         if (Bukkit.getServer() == null || Bukkit.getConsoleSender() == null) {
@@ -150,7 +214,7 @@ public final class Log {
             STANDALONE_LOGGER.log(level, key, t);
             return;
         }
-        if (!always && (plugin.getConfigManager() == null || !plugin.getConfigManager().isDebugEnabled())) {
+        if (!always && !isDebugEnabled()) {
             return;
         }
         plugin.getLogger().log(level, key, t);

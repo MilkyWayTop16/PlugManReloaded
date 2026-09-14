@@ -124,6 +124,7 @@ public final class ConfigManager {
             mainConfig.load();
 
             loadMessages();
+            Log.invalidateEarlyCache();
 
             plugin.getUpdateChecker().reload();
             plugin.getUpdateService().reload();
@@ -192,11 +193,11 @@ public final class ConfigManager {
     }
 
     public boolean isConsoleLogsEnabled() {
-        return mainConfig.isConsoleLogsEnabled();
+        return mainConfig != null && mainConfig.isConsoleLogsEnabled();
     }
 
     public boolean isDebugEnabled() {
-        return mainConfig.isDebugEnabled();
+        return mainConfig != null && mainConfig.isDebugEnabled();
     }
 
     public boolean isAutoSyncCommands() {

@@ -151,6 +151,13 @@ public class MainConfig {
         }
 
         List<String> unsafe = config.getStringList("settings.unsafe-to-unload");
+        if (unsafe.isEmpty()) {
+            unsafe = List.of(
+                    "LuckPerms", "Vault", "PlaceholderAPI", "SkinsRestorer", "FastAsyncWorldEdit",
+                    "WorldEdit", "ProtocolLib", "ViaVersion", "ViaBackwards", "ViaRewind",
+                    "ProtocolSupport", "Geyser-Spigot", "floodgate", "packetevents"
+            );
+        }
         this.unsafeToUnload = new HashSet<>();
         for (String s : unsafe) {
             this.unsafeToUnload.add(s.toLowerCase(Locale.ROOT));

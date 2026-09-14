@@ -1,13 +1,9 @@
 name: PlugManReloaded
-version: '${project.version}'
+version: '1.1-beta'
 main: ru.milkyway.plugmanreloaded.PlugManReloaded
 api-version: 1.16
 author: vkusniy_milkyway
 website: https://github.com/MilkyWayTop16/PlugManReloaded
-description: >
-  Manages plugins without restarting the server: load, unload, reload, enable
-  and disable them, inspect their dependencies, hot-swap jars, and check for
-  and install updates from Modrinth, Hangar, Spigot, GitHub and Jenkins.
 folia-supported: true
 softdepend:
   - PlaceholderAPI
@@ -17,7 +13,6 @@ softdepend:
 
 commands:
   plugmanreloaded:
-    description: Manage the plugins installed on this server.
     usage: /<command> help
     aliases:
       - plugman
@@ -25,7 +20,6 @@ commands:
 
 permissions:
   plugmanreloaded.admin:
-    description: Grants every PlugManReloaded command.
     default: op
     children:
       plugmanreloaded.help: true

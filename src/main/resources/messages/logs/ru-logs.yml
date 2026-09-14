@@ -84,6 +84,7 @@ logs:
     timestamp-unparseable: "[BackupStore] В имени копии {name} нет разбираемой метки времени, берётся дата файла"
 
   updateinstaller:
+    dependency-update-available: "[UpdateInstaller] Внимание: плагин {plugin} зависит от {dependency}, для которого также доступно обновление ({newVersion})! Рекомендуется обновить {dependency}"
     jar-overwrite-failed: "[UpdateInstaller] Не удалось перезаписать JAR для &#FF5D00{plugin}&f, сохраняю для перезапуска"
     new-version-load-failed: "[UpdateInstaller] Новая версия &#ffff00{plugin} &fне загрузилась, выполняется откат"
     jarindex-invalidate-failed: "[UpdateInstaller] Не удалось сбросить кэш индекса jar-файлов"
@@ -286,7 +287,7 @@ logs:
     reload-failed: "[LogCatalog] Не удалось перезагрузить каталог логов — сообщения будут печататься сырыми ключами"
 
   pluginmetahelper:
-    version-not-substituted: "[PluginMetaHelper] Версия в plugin.yml осталась подстановкой сборки: {placeholder}. В pom.xml не включена фильтрация ресурсов — плагин не знает свою версию."
+    version-not-substituted: "[PluginMetaHelper] Версия в plugin.yml осталась подстановкой сборки: {placeholder}. В pom.xml не включена фильтрация ресурсов — плагин не знает свою версию"
     version-pluginmeta-failed: "[PluginMetaHelper] Не удалось прочитать версию из PluginMeta для {plugin}"
     version-description-failed: "[PluginMetaHelper] Не удалось прочитать версию из PluginDescriptionFile для {plugin}"
     authors-pluginmeta-failed: "[PluginMetaHelper] Не удалось прочитать авторов из PluginMeta для {plugin}"
@@ -439,24 +440,6 @@ logs:
   updatecommand:
     reloading-dependents: "Перезагрузка зависимых плагинов после пакетного обновления ({count} шт.): {plugins}"
 
-  updateinstaller:
-    dependency-update-available: "[UpdateInstaller] Внимание: плагин {plugin} зависит от {dependency}, для которого также доступно обновление ({newVersion})! Рекомендуется обновить {dependency}"
-    jar-overwrite-failed: "[UpdateInstaller] Не удалось перезаписать jar-файл для {plugin}"
-    new-version-load-failed: "[UpdateInstaller] Не удалось загрузить новую версию {plugin}"
-    jarindex-invalidate-failed: "[UpdateInstaller] Не удалось сбросить кэш JarIndex"
-    updated: "[UpdateInstaller] Плагин {plugin} успешно обновлён с v{from} до v{to}"
-    staged-for-restart: "[UpdateInstaller] Новая версия {plugin} (v{to}) скопирована в update/ и будет применена после перезапуска"
-    stage-for-restart-failed: "[UpdateInstaller] Не удалось сохранить обновление {plugin} в папку update/: {error}"
-    dependents-collect-failed: "[UpdateInstaller] Не удалось собрать зависимые плагины для {plugin}"
-    restarting-dependents: "[UpdateInstaller] Перезапуск зависимых плагинов ({count} шт.) для {plugin}"
-    dependent-load-failed: "[UpdateInstaller] Не удалось загрузить зависимый плагин {dependent} для {plugin}"
-    rollback-failed: "[UpdateInstaller] Ошибка отката бэкапа для {file}"
-    rollback-load-failed: "[UpdateInstaller] Ошибка загрузки восстановленного плагина {plugin}"
-    move-attempt-failed: "[UpdateInstaller] Попытка перемещения {source} -> {destination} (#{attempt}) не удалась"
-    delete-attempt-failed: "[UpdateInstaller] Попытка удаления {file} (#{attempt}) не удалась"
-    empty-folder-cleanup-failed: "[UpdateInstaller] Не удалось удалить пустую директорию {folder}"
-    temp-file-delete-failed: "[UpdateInstaller] Не удалось удалить временный файл {file}"
-
   chatbuttonfactory:
     url-looks-like-markup: "[ChatButtonFactory] Значение url похоже на разметку, а не на ссылку, кнопка не станет кликабельной: {value}"
 
@@ -477,28 +460,28 @@ logs:
     hover-fallback: "\n &#FFFF00▶ &fНажмите, чтобы &#FFFF00перейти &fпо ссылке\n"
 
   startup:
-    reading-config: "&#00C9FF▶ PlugMan &8| &fЧтение &#00FF5Aфайлов конфигурации &fи &#00FF5Aзагрузка &fресурсов"
-    detecting-platform: "&#00C9FF▶ PlugMan &8| &fОпределение среды: &#00FF5A{platform}&f"
-    init-core: "&#00C9FF▶ PlugMan &8| &fИнициализация ядра &#00FF5Aцикла &fи &#00FF5Aпамяти &fплагина"
-    registering-commands: "&#00C9FF▶ PlugMan &8| &fРегистрация &#00FF5Aкоманд &fи &#00FF5Aавтодополнений&f"
-    init-hotswap: "&#00C9FF▶ PlugMan &8| &fИнициализация системы &#00FF5AHot-Swap&f"
-    init-updates: "&#00C9FF▶ PlugMan &8| &fИнициализация &#00FF5Aсистемы проверки &fобновлений"
-    registering-api: "&#00C9FF▶ PlugMan &8| &fРегистрация публичного &#00FF5AAPI&f"
+    reading-config: "&#00FF5A◆ PlugManReloaded &f| Чтение &#00FF5Aфайлов конфигурации &fи &#00FF5Aзагрузка &fресурсов..."
+    detecting-platform: "&#00FF5A◆ PlugManReloaded &f| Определение среды: &#00FF5A{platform}&f"
+    init-core: "&#00FF5A◆ PlugManReloaded &f| Инициализация ядра &#00FF5Aцикла &fи &#00FF5Aпамяти &fплагина..."
+    registering-commands: "&#00FF5A◆ PlugManReloaded &f| Регистрация &#00FF5Aкоманд &fи &#00FF5Aавтодополнений&f..."
+    init-hotswap: "&#00FF5A◆ PlugManReloaded &f| Инициализация системы &#00FF5AHot-Swap&f..."
+    init-updates: "&#00FF5A◆ PlugManReloaded &f| Инициализация &#00FF5Aсистемы проверки &fобновлений..."
+    registering-api: "&#00FF5A◆ PlugManReloaded &f| Регистрация публичного &#00FF5AAPI&f..."
     init-failed: "Критический &#FF5D00сбой &fинициализации: &#FF5D00{error}&f"
-    banner-enabled: "&#00FF5A          ▶ &fПлагин &#00FF5Aуспешно &fзагружен и включен!"
-    banner-version: "&#ffff00               ▶ &fВерсия плагина: &#ffff00v{version}"
-    banner-platform: "&#ffff00               ▶ &fПлатформа ядра: &#ffff00{platform}"
-    banner-plugins: "&#ffff00               ▶ &fОбнаружено плагинов: &#ffff00{count}"
-    banner-time: "&#ffff00               ▶ &fВремя загрузки: &#ffff00{ms} мс."
+    banner-enabled: "&#00FF5A           ▶ &fПлагин &#00FF5Aуспешно &fзагружен и включен!"
+    banner-version: "&#ffff00              ◆ &fВерсия плагина: &#ffff00v{version}"
+    banner-platform: "&#ffff00              ◆ &fПлатформа ядра: &#ffff00{platform}"
+    banner-plugins: "&#ffff00              ◆ &fОбнаружено плагинов: &#ffff00{count}"
+    banner-time: "&#ffff00             ◆ &fВремя загрузки: &#ffff00{ms} мс."
 
   shutdown:
-    starting: "&#FF5D00▶ PlugMan &8| &fНачало &#FF5D00выгрузки &fплагина"
-    stopping-hotswap: "&#FF5D00▶ PlugMan &8| &fОстановка службы &#FF5D00Hot-Swap&f"
-    stopping-updatechecker: "&#FF5D00▶ PlugMan &8| &fОстановка службы &#FF5D00UpdateChecker&f"
-    clearing-caches: "&#FF5D00▶ PlugMan &8| &fОчистка внутренних &#FF5D00кэшей &fи ресурсов"
-    banner-disabled: "&#FF5D00        ▶ &fПлагин &#FF5D00успешно &fвыгружен и выключен"
-    banner-version: "&#ffff00               ▶ &fВерсия плагина: &#ffff00v{version}"
-    banner-time: "&#ffff00               ▶ &fВремя выгрузки: &#ffff00{ms} мс."
+    starting: "&#FF5D00◆ PlugManReloaded &f| Начало &#FF5D00выгрузки &fплагина..."
+    stopping-hotswap: "&#FF5D00◆ PlugManReloaded &f| Остановка службы &#FF5D00Hot-Swap&f..."
+    stopping-updatechecker: "&#FF5D00◆ PlugManReloaded &f| Остановка службы &#FF5D00UpdateChecker&f..."
+    clearing-caches: "&#FF5D00◆ PlugManReloaded &f| Очистка внутренних &#FF5D00кэшей &fи ресурсов..."
+    banner-disabled: "&#FF5D00           ▶ &fПлагин &#FF5D00успешно &fвыгружен и выключен!"
+    banner-version: "&#ffff00              ◆ &fВерсия плагина: &#ffff00v{version}"
+    banner-time: "&#ffff00             ◆ &fВремя выгрузки: &#ffff00{ms} мс."
 
   configlocalizer:
     applied: "[ConfigLocalizer] Комментарии файла &#ffff00{file} &fпереведены на язык &#00FF5A{language}&f, значения сохранены"

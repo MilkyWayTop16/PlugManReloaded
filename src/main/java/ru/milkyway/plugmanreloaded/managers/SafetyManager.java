@@ -35,7 +35,11 @@ public class SafetyManager {
             "com.viaversion.viarewind.ViaRewind",
             "protocolsupport.ProtocolSupport",
             "org.geysermc.geyser.platform.spigot.GeyserSpigotPlugin",
-            "org.geysermc.floodgate.FloodgatePlugin"
+            "org.geysermc.floodgate.FloodgatePlugin",
+            "net.skinsrestorer.bukkit.SkinsRestorer",
+            "net.skinsrestorer.bukkit.SkinsRestorerBukkit",
+            "com.sk89q.worldedit.WorldEdit",
+            "com.fastasyncworldedit.core.Fawe"
     };
 
     public record SafetyAssessment(

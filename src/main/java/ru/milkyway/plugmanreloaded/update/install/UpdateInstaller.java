@@ -200,6 +200,8 @@ public final class UpdateInstaller {
                 : SafetyManager.PluginRiskLevel.SAFE;
         boolean isUnsafe = risk == SafetyManager.PluginRiskLevel.UNLOADABLE_HOSTILE
                 || risk == SafetyManager.PluginRiskLevel.CRITICAL_PROTECTED
+                || risk == SafetyManager.PluginRiskLevel.API_PROVIDER
+                || risk == SafetyManager.PluginRiskLevel.LOW_LEVEL_NETWORK
                 || plugin.getConfigManager().isUnsafeToUnload(identity.pluginName());
 
         if (isUnsafe) {
@@ -387,7 +389,6 @@ public final class UpdateInstaller {
         if (jarBackup != null && target != null) {
             if (!backups.restore(jarBackup, target)) {
                 Log.error("updateinstaller.rollback-failed", "file", target.getName());
-                return;
             }
         }
         if (target != null && target.exists()) {

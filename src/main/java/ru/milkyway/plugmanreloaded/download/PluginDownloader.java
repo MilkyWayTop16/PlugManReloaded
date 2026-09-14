@@ -196,7 +196,8 @@ public class PluginDownloader {
 
             String declaredName = report.declaredName() != null ? report.declaredName() : entry.title();
             boolean requiresRestart = report.hasBootstrapper()
-                    || (report.isPaperPlugin() && PlatformDetector.isModernPaper());
+                    || (report.isPaperPlugin() && PlatformDetector.isModernPaper())
+                    || JarValidator.hasLibraries(stagedFile);
             String ver = info.versionNumber() != null ? info.versionNumber() : (report.declaredVersion() != null ? report.declaredVersion() : "1.0");
 
             return StageAttempt.success(new StagedItem(targetStaged, declaredName, ver, entry.sourceId(), entry.projectId(), entry.url(), requiresRestart, entry));

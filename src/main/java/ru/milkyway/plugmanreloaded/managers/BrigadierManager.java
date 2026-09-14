@@ -233,34 +233,50 @@ public class BrigadierManager {
                 }
             }
 
-            synchronized (root) {
-                Map<String, CommandNode<Object>> children = ReflectionHelper.getFieldValue(CommandNode.class, root, "children");
-                Map<String, CommandNode<Object>> literals = ReflectionHelper.getFieldValue(CommandNode.class, root, "literals");
+            synchronized (dispatcher) {
+                synchronized (root) {
+                    Map<String, CommandNode<Object>> children = ReflectionHelper.getFieldValue(CommandNode.class, root, "children");
+                    Map<String, CommandNode<Object>> literals = ReflectionHelper.getFieldValue(CommandNode.class, root, "literals");
+                    Map<String, CommandNode<Object>> arguments = ReflectionHelper.getFieldValue(CommandNode.class, root, "arguments");
 
-                if (children != null) {
-                    synchronized (children) {
-                        for (String label : cleanLabels) {
-                            children.remove(label);
-                        }
-                        children.keySet().removeIf(k -> {
+                    if (children != null) {
+                        synchronized (children) {
                             for (String label : cleanLabels) {
-                                if (k.equalsIgnoreCase(label)) return true;
+                                children.remove(label);
                             }
-                            return false;
-                        });
+                            children.keySet().removeIf(k -> {
+                                for (String label : cleanLabels) {
+                                    if (k.equalsIgnoreCase(label)) return true;
+                                }
+                                return false;
+                            });
+                        }
                     }
-                }
-                if (literals != null) {
-                    synchronized (literals) {
-                        for (String label : cleanLabels) {
-                            literals.remove(label);
-                        }
-                        literals.keySet().removeIf(k -> {
+                    if (literals != null) {
+                        synchronized (literals) {
                             for (String label : cleanLabels) {
-                                if (k.equalsIgnoreCase(label)) return true;
+                                literals.remove(label);
                             }
-                            return false;
-                        });
+                            literals.keySet().removeIf(k -> {
+                                for (String label : cleanLabels) {
+                                    if (k.equalsIgnoreCase(label)) return true;
+                                }
+                                return false;
+                            });
+                        }
+                    }
+                    if (arguments != null) {
+                        synchronized (arguments) {
+                            for (String label : cleanLabels) {
+                                arguments.remove(label);
+                            }
+                            arguments.keySet().removeIf(k -> {
+                                for (String label : cleanLabels) {
+                                    if (k.equalsIgnoreCase(label)) return true;
+                                }
+                                return false;
+                            });
+                        }
                     }
                 }
             }
