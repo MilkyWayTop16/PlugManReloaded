@@ -85,6 +85,8 @@ logs:
     timestamp-unparseable: "[BackupStore] Couldn't parse a timestamp from backup name {name}, using the file date instead"
 
   updateinstaller:
+    source-write-failed: "[UpdateInstaller] Failed to save pinned update source for {plugin}"
+    pending-source-write-failed: "[UpdateInstaller] Failed to save pending update metadata for {plugin}"
     dependency-update-available: "[UpdateInstaller] Notice: plugin {plugin} depends on {dependency}, which also has an update available ({newVersion})! Updating {dependency} is recommended"
     jar-overwrite-failed: "[UpdateInstaller] Failed to overwrite the JAR for &#FF5D00{plugin}&f, keeping it staged for a restart instead"
     new-version-load-failed: "[UpdateInstaller] The new version of &#ffff00{plugin} &ffailed to load, rolling back"
@@ -101,8 +103,12 @@ logs:
     delete-attempt-failed: "[UpdateInstaller] Attempt {attempt} to delete {file} failed"
     empty-folder-cleanup-failed: "[UpdateInstaller] Failed to remove the empty folder {folder}"
     temp-file-delete-failed: "[UpdateInstaller] Failed to delete the temporary file {file}"
+    stale-entry-delete-failed: "[UpdateInstaller] Failed to delete stale temporary directory {entry}"
+    stale-cleanup-failed: "[UpdateInstaller] Failed to clean up stale temporary directories"
+    temp-parent-delete-failed: "[UpdateInstaller] Failed to delete empty temporary directory"
 
   plugindownloader:
+    temp-parent-delete-failed: "[PluginDownloader] Failed to delete temporary directory {directory}"
     transaction-error: "[PluginDownloader] Error while running the download transaction: {error}"
     catalog-create-failed: "[PluginDownloader] Failed to create the catalog for resolving dependencies"
     update-folder-write-failed: "[PluginDownloader] Failed to save &#FF5D00{plugin}&f into the update/ folder"
@@ -151,6 +157,7 @@ logs:
     helptopics-cleanup-failed: "[ServerStateCleanup] Failed to clean up help topics for {plugin}"
 
   sourcecatalog:
+    pending-reconcile-failed: "[SourceCatalog] Failed to reconcile pending sources with {file}"
     resource-not-found: "[SourceCatalog] Resource {resource} not found, the catalog is empty"
     loaded: "[SourceCatalog] Plugins loaded into the catalog: {count}"
     load-failed: "[SourceCatalog] Failed to load the source catalog: {error}"
@@ -221,6 +228,8 @@ logs:
     canonical-path-check-failed: "[Lifecycle] An &#FF5D00error &foccurred while checking the canonical path for &#FF5D00{file}&f"
 
   downloadclient:
+    unsupported-protocol: "[DownloadClient] Unsupported protocol for download"
+    content-length-mismatch: "[DownloadClient] Download aborted: the server declared {expected} bytes but sent {actual}"
     scheme-compare-failed: "[DownloadClient] Failed to compare schemes {original} and {candidate}"
     insecure-downgrade: "[DownloadClient] Download aborted: the server redirected from &#FF5D00https &fto plain &#FF5D00{protocol}&f — the file may have been swapped in transit"
     redirect-no-location: "[DownloadClient] Download aborted: redirect with no destination address"
@@ -513,3 +522,6 @@ logs:
     success: "&#92FE9D▶ PlugMan &8| &f"
     warn: "&#FB8808▶ Warning &8| &f"
     error: "&#FF5D00▶ Error! &8| &f"
+
+  updatepipeline:
+    pinned-artifact-mismatch: "[UpdatePipeline] Pinned artifact does not match plugin {plugin}"

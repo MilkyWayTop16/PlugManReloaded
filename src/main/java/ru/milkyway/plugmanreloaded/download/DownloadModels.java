@@ -67,7 +67,8 @@ public final class DownloadModels {
             List<String> existingUnloadedToLoad,
             List<String> unresolvableDependencies,
             boolean hasCycles,
-            String cycleDetails
+            String cycleDetails,
+            List<SearchResultEntry> orderedDependencies
     ) {
         public DependencyTree {
             if (requiredDependencies == null) requiredDependencies = Collections.emptyList();
@@ -76,6 +77,28 @@ public final class DownloadModels {
             if (existingDisabledToEnable == null) existingDisabledToEnable = Collections.emptyList();
             if (existingUnloadedToLoad == null) existingUnloadedToLoad = Collections.emptyList();
             if (unresolvableDependencies == null) unresolvableDependencies = Collections.emptyList();
+            if (orderedDependencies == null) orderedDependencies = Collections.emptyList();
+        }
+
+        public DependencyTree(String targetPluginName, SearchResultEntry targetEntry,
+                              List<SearchResultEntry> requiredDependencies, List<SearchResultEntry> optionalDependencies,
+                              List<String> alreadySatisfied, List<String> existingDisabledToEnable,
+                              List<String> existingUnloadedToLoad, List<String> unresolvableDependencies,
+                              boolean hasCycles, String cycleDetails) {
+            this(targetPluginName, targetEntry, requiredDependencies, optionalDependencies, alreadySatisfied,
+                    existingDisabledToEnable, existingUnloadedToLoad, unresolvableDependencies, hasCycles, cycleDetails,
+                    mergeDependencies(requiredDependencies, optionalDependencies));
+        }
+
+        private static List<SearchResultEntry> mergeDependencies(List<SearchResultEntry> required,
+                                                                  List<SearchResultEntry> optional) {
+            if ((required == null || required.isEmpty()) && (optional == null || optional.isEmpty())) {
+                return Collections.emptyList();
+            }
+            java.util.ArrayList<SearchResultEntry> merged = new java.util.ArrayList<>();
+            if (required != null) merged.addAll(required);
+            if (optional != null) merged.addAll(optional);
+            return List.copyOf(merged);
         }
 
         public boolean hasMissing() {

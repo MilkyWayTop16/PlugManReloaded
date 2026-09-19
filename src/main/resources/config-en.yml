@@ -119,7 +119,7 @@ settings:
   # (These plugins embed themselves into the server's network stack or patch its internals
   # at startup. Their state cannot be restored after unloading, a server restart will be needed)
   #
-  # (With "safe-mode: true" such plugins require a confirmation or the "-f" flag.
+  # (With "safe-mode: true" such plugins require a confirmation or the "-y" flag.
   # On top of that the plugin finds such libraries on its own by marker classes,
   # even if they were renamed or it is a fork)
   unsafe-to-unload:

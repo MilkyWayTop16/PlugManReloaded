@@ -25,7 +25,7 @@ public final class UpdatePipeline {
     private final List<UpdateSource> sources;
     private final HangarSource hangarSource;
     private final JarScanner jarScanner;
-    private final SourceCatalog catalog;
+    private volatile SourceCatalog catalog;
     private static final double JAR_REF_MIN_SIMILARITY = 0.90;
 
     public UpdatePipeline(PlugManReloaded plugin, List<UpdateSource> sources, HangarSource hangarSource, JarScanner jarScanner, SourceCatalog catalog) {
@@ -36,8 +36,20 @@ public final class UpdatePipeline {
         this.catalog = catalog;
     }
 
+    void reloadCatalog(SourceCatalog catalog) {
+        this.catalog = catalog;
+    }
+
     public UpdateCandidate resolvePipeline(PluginIdentity identity, VersionResolver resolver) {
-        UpdateCandidate candidate = resolveSingleFromCatalog(identity, resolver);
+        SourceCatalog.CatalogSource pinned = catalog.pinnedSource(identity.mainClass(), identity.pluginName());
+        if (pinned != null && !pinnedArtifactMatches(identity, pinned)) {
+            Log.warn("updatepipeline.pinned-artifact-mismatch", "plugin", identity.pluginName());
+            return UpdateCandidate.noSource(identity);
+        }
+        UpdateCandidate candidate = resolveSingleFromCatalog(identity, resolver, pinned);
+        if (pinned != null) {
+            return candidate != null ? candidate : UpdateCandidate.failed(identity, UpdateStatus.NETWORK_ERROR);
+        }
         if (candidate != null && isConfirmed(candidate)) {
             return candidate;
         }
@@ -79,6 +91,20 @@ public final class UpdatePipeline {
         return candidate != null ? candidate : UpdateCandidate.noSource(identity);
     }
 
+    static boolean pinnedArtifactMatches(PluginIdentity identity, SourceCatalog.CatalogSource pinned) {
+        if (identity == null || pinned == null || pinned.options() == null) {
+            return false;
+        }
+        String expectedHash = pinned.options().get("artifactSha256");
+        if (expectedHash != null && !expectedHash.isBlank()
+                && identity.sha256() != null && !identity.sha256().isBlank()) {
+            return expectedHash.equalsIgnoreCase(identity.sha256());
+        }
+        String expectedFile = pinned.options().get("artifactFile");
+        return expectedFile == null || expectedFile.isBlank() || identity.jarFile() == null
+                || expectedFile.equalsIgnoreCase(identity.jarFile().getName());
+    }
+
     public static boolean isConfirmed(UpdateCandidate c) {
         return c != null && c.confidence() == MatchConfidence.CONFIRMED
                 && c.status() != UpdateStatus.NO_SOURCE
@@ -86,12 +112,18 @@ public final class UpdatePipeline {
                 && c.status() != UpdateStatus.RATE_LIMITED;
     }
 
-    private @Nullable UpdateCandidate resolveSingleFromCatalog(PluginIdentity identity, VersionResolver resolver) {
+    private @Nullable UpdateCandidate resolveSingleFromCatalog(PluginIdentity identity, VersionResolver resolver,
+                                                                @Nullable SourceCatalog.CatalogSource pinned) {
         List<UpdateCandidate> candidates = new ArrayList<>();
         boolean blockedByLimit = false;
 
         for (UpdateSource source : sources) {
-            SourceCatalog.CatalogSource entry = catalog.sourceFor(identity.mainClass(), identity.pluginName(), source.id());
+            if (pinned != null && !source.id().equalsIgnoreCase(pinned.sourceId())) {
+                continue;
+            }
+            SourceCatalog.CatalogSource entry = pinned != null
+                    ? pinned
+                    : catalog.sourceFor(identity.mainClass(), identity.pluginName(), source.id());
             if (entry == null) continue;
 
             if (source instanceof GithubSource github && github.isRateLimited()) {
@@ -106,7 +138,8 @@ public final class UpdatePipeline {
             List<RemoteVersion> versions = source.listVersions(match);
             if (versions.isEmpty()) continue;
 
-            UpdateCandidate candidate = resolver.resolve(identity, match, versions);
+            String installedVersion = pinned != null ? installedArtifactVersion(identity, pinned) : null;
+            UpdateCandidate candidate = resolver.resolve(identity, match, versions, installedVersion);
             if (candidate.status() != UpdateStatus.NO_SOURCE) {
                 candidates.add(candidate);
             }
@@ -120,6 +153,16 @@ public final class UpdatePipeline {
             return UpdateCandidate.failed(identity, UpdateStatus.RATE_LIMITED);
         }
         return null;
+    }
+
+    private String installedArtifactVersion(PluginIdentity identity, SourceCatalog.CatalogSource pinned) {
+        String expectedHash = pinned.options().get("artifactSha256");
+        String installedHash = identity.sha256();
+        if (expectedHash == null || expectedHash.isBlank()
+                || installedHash == null || !expectedHash.equalsIgnoreCase(installedHash)) {
+            return null;
+        }
+        return pinned.options().get("artifactVersion");
     }
 
     private @Nullable UpdateCandidate resolveSingleFromWebsite(PluginIdentity identity, VersionResolver resolver) {

@@ -14,6 +14,7 @@ import ru.milkyway.plugmanreloaded.update.HttpJson;
 import ru.milkyway.plugmanreloaded.update.PluginMatcher;
 import ru.milkyway.plugmanreloaded.update.ServerProfile;
 import ru.milkyway.plugmanreloaded.update.SourceCatalog;
+import ru.milkyway.plugmanreloaded.update.VersionCompare;
 import ru.milkyway.plugmanreloaded.update.input.SourceUrlParser;
 import ru.milkyway.plugmanreloaded.utils.Log;
 
@@ -28,15 +29,6 @@ import java.util.regex.Pattern;
 
 public class PluginSearch {
 
-    private static final ExecutorService SEARCH_EXECUTOR = Executors.newFixedThreadPool(
-            Math.max(4, Runtime.getRuntime().availableProcessors()),
-            runnable -> {
-                Thread thread = new Thread(runnable, "PlugManReloaded-SearchWorker");
-                thread.setDaemon(true);
-                return thread;
-            }
-    );
-
     private static final Map<Integer, String> SPIGET_AUTHORS = CacheBuilder.newBuilder()
             .maximumSize(500)
             .expireAfterWrite(1, TimeUnit.HOURS)
@@ -45,8 +37,9 @@ public class PluginSearch {
 
     private final PlugManReloaded plugin;
     private final ServerProfile serverProfile;
-    private final SourceCatalog catalog;
+    private volatile SourceCatalog catalog;
     private final Cache<String, List<SearchResultEntry>> cache;
+    private final ExecutorService searchExecutor;
 
     public PluginSearch(PlugManReloaded plugin, ServerProfile serverProfile, SourceCatalog catalog) {
         this(plugin, serverProfile, catalog, null);
@@ -56,6 +49,14 @@ public class PluginSearch {
         this.plugin = plugin;
         this.serverProfile = serverProfile;
         this.catalog = catalog;
+        this.searchExecutor = Executors.newFixedThreadPool(
+                Math.min(8, Math.max(4, Runtime.getRuntime().availableProcessors())),
+                runnable -> {
+                    Thread thread = new Thread(runnable, "PlugManReloaded-SearchWorker");
+                    thread.setDaemon(true);
+                    return thread;
+                }
+        );
         CacheBuilder<Object, Object> builder = CacheBuilder.newBuilder()
                 .maximumSize(200)
                 .expireAfterWrite(10, TimeUnit.MINUTES);
@@ -67,6 +68,15 @@ public class PluginSearch {
 
     void clearCache() {
         cache.invalidateAll();
+    }
+
+    void reloadCatalog(SourceCatalog catalog) {
+        this.catalog = catalog;
+        clearCache();
+    }
+
+    public void shutdown() {
+        searchExecutor.shutdownNow();
     }
 
     long cacheSize() {
@@ -84,13 +94,14 @@ public class PluginSearch {
     }
 
     public List<SearchResultEntry> search(@Nullable String rawQuery, String preferredSource, int limit) {
-        if (rawQuery == null || rawQuery.isBlank()) {
+        if (rawQuery == null || rawQuery.isBlank() || limit <= 0) {
             return Collections.emptyList();
         }
 
         long startTime = System.currentTimeMillis();
         String query = rawQuery.trim();
-        String cacheKey = (preferredSource != null ? preferredSource.toLowerCase(Locale.ROOT) : "all") + ":" + query.toLowerCase(Locale.ROOT);
+        String matchingQuery = matchingQuery(query);
+        String cacheKey = cacheKey(query, preferredSource, limit);
 
         List<SearchResultEntry> cached = cache.getIfPresent(cacheKey);
         if (cached != null) {
@@ -105,16 +116,16 @@ public class PluginSearch {
         boolean searchAll = preferredSource == null || preferredSource.isBlank() || "all".equalsIgnoreCase(preferredSource);
 
         if (searchAll || "modrinth".equalsIgnoreCase(preferredSource)) {
-            futures.add(CompletableFuture.supplyAsync(() -> searchModrinth(query), SEARCH_EXECUTOR));
+            futures.add(CompletableFuture.supplyAsync(() -> searchModrinth(query), searchExecutor));
         }
         if (searchAll || "hangar".equalsIgnoreCase(preferredSource)) {
-            futures.add(CompletableFuture.supplyAsync(() -> searchHangar(query), SEARCH_EXECUTOR));
+            futures.add(CompletableFuture.supplyAsync(() -> searchHangar(query), searchExecutor));
         }
         if (searchAll || "spigot".equalsIgnoreCase(preferredSource) || "spigotmc".equalsIgnoreCase(preferredSource)) {
-            futures.add(CompletableFuture.supplyAsync(() -> searchSpiget(query), SEARCH_EXECUTOR));
+            futures.add(CompletableFuture.supplyAsync(() -> searchSpiget(query), searchExecutor));
         }
         if (searchAll || "github".equalsIgnoreCase(preferredSource)) {
-            futures.add(CompletableFuture.supplyAsync(() -> searchGithub(query), SEARCH_EXECUTOR));
+            futures.add(CompletableFuture.supplyAsync(() -> searchGithub(query), searchExecutor));
         }
 
         try {
@@ -135,7 +146,13 @@ public class PluginSearch {
 
         List<SearchResultEntry> scored = new ArrayList<>();
         for (SearchResultEntry entry : combined) {
-            double score = computeRelevanceScore(query, entry);
+            if (!isCompatibleWithServer(entry)) {
+                continue;
+            }
+            if (!isRelevantSearchResult(matchingQuery, entry) && catalogScore(matchingQuery, entry) == 0.0) {
+                continue;
+            }
+            double score = computeRelevanceScore(matchingQuery, entry);
             scored.add(entry.withScore(score));
         }
 
@@ -159,6 +176,11 @@ public class PluginSearch {
         return finalResult;
     }
 
+    static String cacheKey(String query, @Nullable String preferredSource, int limit) {
+        return (preferredSource != null ? preferredSource.toLowerCase(Locale.ROOT) : "all")
+                + ":" + limit + ":" + query.toLowerCase(Locale.ROOT);
+    }
+
     private List<SearchResultEntry> enrichVersions(@Nullable List<SearchResultEntry> entries) {
         if (entries == null || entries.isEmpty()) return Collections.emptyList();
         List<CompletableFuture<SearchResultEntry>> futures = new ArrayList<>(entries.size());
@@ -166,7 +188,7 @@ public class PluginSearch {
             if (entry.version() != null && !entry.version().isBlank()) {
                 futures.add(CompletableFuture.completedFuture(entry));
             } else {
-                futures.add(CompletableFuture.supplyAsync(() -> fetchLatestVersion(entry), SEARCH_EXECUTOR));
+                futures.add(CompletableFuture.supplyAsync(() -> fetchLatestVersion(entry), searchExecutor));
             }
         }
 
@@ -681,7 +703,44 @@ public class PluginSearch {
         if (titleNorm.startsWith(queryNorm) || idNorm.startsWith(queryNorm)) {
             return 25.0;
         }
-        return titleNorm.contains(queryNorm) || idNorm.contains(queryNorm) ? 15.0 : 5.0;
+        return titleNorm.contains(queryNorm) || idNorm.contains(queryNorm) ? 15.0 : 0.0;
+    }
+
+    static boolean isRelevantSearchResult(String query, SearchResultEntry entry) {
+        String queryNorm = PluginMatcher.normalizeName(query);
+        String titleNorm = PluginMatcher.normalizeName(entry.title());
+        String idNorm = PluginMatcher.normalizeName(entry.projectId());
+        if (queryNorm.isEmpty()) {
+            return false;
+        }
+        if (queryNorm.equals(titleNorm) || queryNorm.equals(idNorm)
+                || titleNorm.contains(queryNorm) || idNorm.contains(queryNorm)
+                || (titleNorm.length() >= 3 && queryNorm.contains(titleNorm))
+                || (idNorm.length() >= 3 && queryNorm.contains(idNorm))) {
+            return true;
+        }
+        String descriptionNorm = PluginMatcher.normalizeName(entry.description());
+        if (queryNorm.length() >= 3 && descriptionNorm.contains(queryNorm)) {
+            return true;
+        }
+        if (queryNorm.length() >= 5) {
+            double similarity = Math.max(
+                    PluginMatcher.similarity(queryNorm, titleNorm),
+                    PluginMatcher.similarity(queryNorm, idNorm)
+            );
+            if (similarity >= 0.60) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static String matchingQuery(String query) {
+        var parsed = SourceUrlParser.parse(query);
+        if (parsed.success() && parsed.source().ref() != null && !parsed.source().ref().isBlank()) {
+            return parsed.source().ref();
+        }
+        return query;
     }
 
     private double catalogScore(String query, SearchResultEntry entry) {
@@ -704,7 +763,12 @@ public class PluginSearch {
         if (entry.gameVersions() == null || entry.gameVersions().isEmpty()) {
             return 5.0;
         }
-        return entry.gameVersions().contains(serverProfile.minecraftVersion()) ? 15.0 : 0.0;
+        return VersionCompare.supportsGameVersion(entry.gameVersions(), serverProfile.minecraftVersion()) ? 15.0 : 0.0;
+    }
+
+    boolean isCompatibleWithServer(SearchResultEntry entry) {
+        return serverProfile == null || entry.gameVersions() == null || entry.gameVersions().isEmpty()
+                || VersionCompare.supportsGameVersion(entry.gameVersions(), serverProfile.minecraftVersion());
     }
 
     private static double popularityScore(SearchResultEntry entry, boolean exactName) {

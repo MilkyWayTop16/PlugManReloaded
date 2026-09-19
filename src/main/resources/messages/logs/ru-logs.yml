@@ -84,6 +84,8 @@ logs:
     timestamp-unparseable: "[BackupStore] В имени копии {name} нет разбираемой метки времени, берётся дата файла"
 
   updateinstaller:
+    source-write-failed: "[UpdateInstaller] Не удалось сохранить закреплённый источник обновлений для {plugin}"
+    pending-source-write-failed: "[UpdateInstaller] Не удалось сохранить метаданные ожидающего обновления для {plugin}"
     dependency-update-available: "[UpdateInstaller] Внимание: плагин {plugin} зависит от {dependency}, для которого также доступно обновление ({newVersion})! Рекомендуется обновить {dependency}"
     jar-overwrite-failed: "[UpdateInstaller] Не удалось перезаписать JAR для &#FF5D00{plugin}&f, сохраняю для перезапуска"
     new-version-load-failed: "[UpdateInstaller] Новая версия &#ffff00{plugin} &fне загрузилась, выполняется откат"
@@ -100,8 +102,12 @@ logs:
     delete-attempt-failed: "[UpdateInstaller] Попытка {attempt} удалить {file} не удалась"
     empty-folder-cleanup-failed: "[UpdateInstaller] Не удалось убрать пустую папку {folder}"
     temp-file-delete-failed: "[UpdateInstaller] Не удалось удалить временный файл {file}"
+    stale-entry-delete-failed: "[UpdateInstaller] Не удалось удалить устаревший временный каталог {entry}"
+    stale-cleanup-failed: "[UpdateInstaller] Ошибка при очистке устаревших временных каталогов"
+    temp-parent-delete-failed: "[UpdateInstaller] Не удалось удалить пустой временный каталог"
 
   plugindownloader:
+    temp-parent-delete-failed: "[PluginDownloader] Не удалось удалить временную папку {directory}"
     transaction-error: "[PluginDownloader] Ошибка выполнения транзакции загрузки: {error}"
     catalog-create-failed: "[PluginDownloader] Не удалось создать каталог для разбора зависимостей"
     update-folder-write-failed: "[PluginDownloader] Не удалось сохранить &#FF5D00{plugin}&f в папку update/"
@@ -150,6 +156,7 @@ logs:
     helptopics-cleanup-failed: "[ServerStateCleanup] Не удалось очистить help topics для {plugin}"
 
   sourcecatalog:
+    pending-reconcile-failed: "[SourceCatalog] Не удалось синхронизировать ожидающие источники с файлом {file}"
     resource-not-found: "[SourceCatalog] Ресурс {resource} не найден, каталог пуст"
     loaded: "[SourceCatalog] Загружено плагинов в каталоге: {count}"
     load-failed: "[SourceCatalog] Не удалось загрузить каталог источников: {error}"
@@ -220,6 +227,8 @@ logs:
     canonical-path-check-failed: "[Lifecycle] Возникла &#FF5D00ошибка &fпроверки канонического пути для &#FF5D00{file}&f"
 
   downloadclient:
+    unsupported-protocol: "[DownloadClient] Неподдерживаемый протокол для скачивания"
+    content-length-mismatch: "[DownloadClient] Загрузка прервана: сервер объявил {expected} байт, но передал {actual}"
     scheme-compare-failed: "[DownloadClient] Не удалось сравнить схемы {original} и {candidate}"
     insecure-downgrade: "[DownloadClient] Загрузка прервана: сервер увёл с &#FF5D00https &fна незащищённый &#FF5D00{protocol}&f — файл мог быть подменён по дороге"
     redirect-no-location: "[DownloadClient] Загрузка прервана: редирект без адреса назначения"
@@ -512,3 +521,6 @@ logs:
     success: "&#92FE9D▶ PlugMan &8| &f"
     warn: "&#FB8808▶ Внимание &8| &f"
     error: "&#FF5D00▶ Ошибочка! &8| &f"
+
+  updatepipeline:
+    pinned-artifact-mismatch: "[UpdatePipeline] Закреплённый артефакт не соответствует плагину {plugin}"

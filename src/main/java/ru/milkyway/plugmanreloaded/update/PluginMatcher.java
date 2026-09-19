@@ -289,17 +289,11 @@ public final class PluginMatcher {
             if (!result.contains(xVariant)) {
                 result.add(xVariant);
             }
-            if (!result.contains("essentialsx")) {
-                result.add("essentialsx");
-            }
         } else if (normalized.startsWith("essentialsx")) {
             String sub = normalized.substring("essentialsx".length());
             String nonXVariant = "essentials" + sub;
             if (!result.contains(nonXVariant)) {
                 result.add(nonXVariant);
-            }
-            if (!result.contains("essentials")) {
-                result.add("essentials");
             }
         }
 

@@ -30,7 +30,7 @@ public class DependencyResolver {
 
     private final PlugManReloaded plugin;
     private final PluginSearch searchEngine;
-    private final SourceCatalog catalog;
+    private volatile SourceCatalog catalog;
     private final BiFunction<SearchResultEntry, Path, File> jarProvider;
     private final int maxDepth;
 
@@ -62,12 +62,17 @@ public class DependencyResolver {
         this.maxDepth = Math.max(0, maxDepth);
     }
 
+    void reloadCatalog(SourceCatalog catalog) {
+        this.catalog = catalog;
+    }
+
     private static final class Accumulator {
         final List<String> alreadySatisfied = new ArrayList<>();
         final List<String> existingDisabledToEnable = new ArrayList<>();
         final List<String> existingUnloadedToLoad = new ArrayList<>();
         final List<SearchResultEntry> required = new ArrayList<>();
         final List<SearchResultEntry> optional = new ArrayList<>();
+        final List<SearchResultEntry> ordered = new ArrayList<>();
         final List<String> unresolvable = new ArrayList<>();
         final Set<String> processed = new HashSet<>();
         final Deque<String> path = new ArrayDeque<>();
@@ -89,16 +94,17 @@ public class DependencyResolver {
         acc.processed.add(targetName.toLowerCase(Locale.ROOT));
         acc.path.push(targetName.toLowerCase(Locale.ROOT));
 
-        expand(targetJar, targetName, withSoftDeps, acc, 0, stagingDir);
+        expand(targetJar, targetName, withSoftDeps, true, acc, 0, stagingDir);
 
         return new DependencyTree(
                 targetName, targetEntry, acc.required, acc.optional, acc.alreadySatisfied,
                 acc.existingDisabledToEnable, acc.existingUnloadedToLoad, acc.unresolvable,
-                acc.hasCycles, acc.cycleDetails
+                acc.hasCycles, acc.cycleDetails, acc.ordered
         );
     }
 
-    private void expand(@Nullable File jar, String ownerName, boolean withSoftDeps, Accumulator acc, int depth, @Nullable Path stagingDir) {
+    private void expand(@Nullable File jar, String ownerName, boolean withSoftDeps, boolean requiredForTarget,
+                        Accumulator acc, int depth, @Nullable Path stagingDir) {
         if (jar == null) {
             if (depth == 0) {
                 Log.debug("dependencyresolver.no-jar", "owner", ownerName);
@@ -111,7 +117,7 @@ public class DependencyResolver {
         }
 
         for (String dep : JarValidator.readDeclaredDependencies(jar)) {
-            processDependency(dep, true, withSoftDeps, acc, depth, stagingDir);
+            processDependency(dep, requiredForTarget, withSoftDeps, acc, depth, stagingDir);
         }
         if (withSoftDeps) {
             for (String dep : JarValidator.readDeclaredSoftDependencies(jar)) {
@@ -143,10 +149,7 @@ public class DependencyResolver {
         }
 
         Plugin loaded = Bukkit.getPluginManager().getPlugin(cleanDep);
-        if (loaded != null && !loaded.isEnabled()) {
-            acc.existingDisabledToEnable.add(loaded.getName());
-            return;
-        }
+        boolean disabled = loaded != null && !loaded.isEnabled();
 
         File existingJar = null;
         try {
@@ -156,10 +159,19 @@ public class DependencyResolver {
         }
 
         if (existingJar != null && existingJar.isFile()) {
-            acc.existingUnloadedToLoad.add(cleanDep);
             acc.path.push(lowerDep);
-            expand(existingJar, cleanDep, withSoftDeps, acc, depth + 1, stagingDir);
+            expand(existingJar, cleanDep, withSoftDeps, isRequired, acc, depth + 1, stagingDir);
             acc.path.pop();
+            if (disabled) {
+                acc.existingDisabledToEnable.add(loaded.getName());
+            } else {
+                acc.existingUnloadedToLoad.add(cleanDep);
+            }
+            return;
+        }
+
+        if (disabled) {
+            acc.existingDisabledToEnable.add(loaded.getName());
             return;
         }
 
@@ -171,29 +183,26 @@ public class DependencyResolver {
             return;
         }
 
+        if (depth + 1 <= maxDepth && jarProvider != null) {
+            File depJar = null;
+            try {
+                depJar = jarProvider.apply(entry, stagingDir);
+            } catch (Throwable t) {
+                Log.debug("dependencyresolver.jar-fetch-failed", t, "dependency", cleanDep);
+            }
+            if (depJar != null) {
+                acc.path.push(lowerDep);
+                expand(depJar, cleanDep, withSoftDeps, isRequired, acc, depth + 1, stagingDir);
+                acc.path.pop();
+            }
+        }
+
         if (isRequired) {
             acc.required.add(entry);
         } else {
             acc.optional.add(entry);
         }
-
-        if (depth + 1 > maxDepth || jarProvider == null) {
-            return;
-        }
-
-        File depJar = null;
-        try {
-            depJar = jarProvider.apply(entry, stagingDir);
-        } catch (Throwable t) {
-            Log.debug("dependencyresolver.jar-fetch-failed", t, "dependency", cleanDep);
-        }
-        if (depJar == null) {
-            return;
-        }
-
-        acc.path.push(lowerDep);
-        expand(depJar, cleanDep, withSoftDeps, acc, depth + 1, stagingDir);
-        acc.path.pop();
+        acc.ordered.add(entry);
     }
 
     public boolean isSatisfiedOnServer(@Nullable String depName) {

@@ -80,7 +80,7 @@ abstract class AbstractReloadCommand extends AbstractSubCommand {
 
         boolean cascade = ctx.hasFlag("c") || ctx.hasFlag("cascade")
                 || plugin.getConfigManager().isCascadeReloadByDefault();
-        boolean force = ctx.hasFlag("f") || ctx.hasFlag("force");
+        boolean force = ctx.hasFlag("y") || ctx.hasFlag("yes") || ctx.hasFlag("f") || ctx.hasFlag("force");
 
         String token = ctx.token();
         if (token != null) {

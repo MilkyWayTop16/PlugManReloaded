@@ -55,6 +55,8 @@ public final class ChatButtonFactory {
                     boolean isPre = "true".equalsIgnoreCase(ctx.placeholders().get("is-prerelease"));
                     String preFlag = isPre ? " -pre" : "";
                     command = "/plm update " + ctx.pluginName() + (isDeps ? " -y -single" : " -y") + preFlag + ctx.tokenSuffix();
+                } else if (ctx.cmdType().equals("unload") || ctx.cmdType().equals("disable")) {
+                    command = "/plm " + ctx.cmdType() + " " + ctx.pluginName() + " -y" + ctx.tokenSuffix();
                 } else {
                     command = "/plm " + (ctx.cmdType().equals("safe-mode") ? "safe-mode" : ctx.cmdType()) + " " + ctx.pluginName() + " -f" + ctx.tokenSuffix();
                 }

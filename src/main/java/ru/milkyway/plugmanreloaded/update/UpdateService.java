@@ -87,6 +87,7 @@ public final class UpdateService {
 
         cache.loadMisses(missesCacheFile());
 
+        SourceCatalog.reconcilePendingInstallations(userCatalogFile(), plugin.getDataFolder().getParentFile());
         this.catalog = new SourceCatalog(userCatalogFile(), language());
         this.hangarSource = new HangarSource(cache);
         String githubToken = plugin.getConfigManager().getGithubToken();
@@ -154,7 +155,13 @@ public final class UpdateService {
 
     public void reload() {
         cache.setTtlMillis(plugin.getConfigManager().getUpdateCacheTtlHours() * 3600_000L);
-        this.catalog = new SourceCatalog(userCatalogFile(), language());
+        SourceCatalog.reconcilePendingInstallations(userCatalogFile(), plugin.getDataFolder().getParentFile());
+        SourceCatalog refreshedCatalog = new SourceCatalog(userCatalogFile(), language());
+        this.catalog = refreshedCatalog;
+        pipeline.reloadCatalog(refreshedCatalog);
+        if (plugin.getDownloadService() != null) {
+            plugin.getDownloadService().reloadCatalog(refreshedCatalog);
+        }
     }
 
     private String language() {

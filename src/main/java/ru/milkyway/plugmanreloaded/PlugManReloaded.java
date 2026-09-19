@@ -7,6 +7,7 @@ import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 import ru.milkyway.plugmanreloaded.api.PlugManAPI;
 import ru.milkyway.plugmanreloaded.api.PlugManProvider;
+import ru.milkyway.plugmanreloaded.api.impl.PlugManAPIImpl;
 import ru.milkyway.plugmanreloaded.bridge.PlatformDetector;
 import ru.milkyway.plugmanreloaded.commands.CommandHandler;
 import ru.milkyway.plugmanreloaded.commands.CommandTabCompleter;
@@ -25,7 +26,12 @@ import ru.milkyway.plugmanreloaded.utils.HexColors;
 import ru.milkyway.plugmanreloaded.utils.Log;
 import ru.milkyway.plugmanreloaded.utils.PluginMetaHelper;
 import ru.milkyway.plugmanreloaded.utils.ReflectionHelper;
+import ru.milkyway.plugmanreloaded.utils.TaskScheduler;
 import ru.milkyway.plugmanreloaded.utils.UpdateChecker;
+
+import ru.milkyway.plugmanreloaded.update.install.UpdateInstaller;
+
+import java.io.File;
 
 public final class PlugManReloaded extends JavaPlugin {
 
@@ -109,6 +115,8 @@ public final class PlugManReloaded extends JavaPlugin {
             PlugManProvider.register(api);
             getServer().getServicesManager().register(PlugManAPI.class, api, this, ServicePriority.Normal);
 
+            TaskScheduler.runAsync(this, () -> UpdateInstaller.cleanStaleTempDirectories(getDataFolder().getParentFile()));
+
             return true;
         } catch (Exception | LinkageError t) {
             Log.error("startup.init-failed", t, "error", String.valueOf(t.getMessage()));
@@ -129,7 +137,7 @@ public final class PlugManReloaded extends JavaPlugin {
         console("&#ffff00  █▀█ █░░ █░█ █▀▀ █▀▄▀█ ▄▀█ █▄░█ █▀█ █▀▀ █░░ █▀█ ▄▀█ █▀▄ █▀▀ █▀▄");
         console("&#ffff00  █▀▀ █▄▄ █▄█ █▄█ █░▀░█ █▀█ █░▀█ █▀▄ ██▄ █▄▄ █▄█ █▀█ █▄▀ ██▄ █▄▀");
         console("&#ffff00 ");
-        console("&f                     (By MilkyWay for everyone)");
+        console("&f                  (By MilkyWay for everyone)");
         console("&#ffff00 ");
     }
 
@@ -172,6 +180,10 @@ public final class PlugManReloaded extends JavaPlugin {
 
         if (manualSources != null) {
             manualSources.shutdown();
+        }
+
+        if (downloadService != null) {
+            downloadService.shutdown();
         }
 
         if (initialized) {

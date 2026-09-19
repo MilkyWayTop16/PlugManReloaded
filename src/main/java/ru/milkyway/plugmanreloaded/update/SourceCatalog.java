@@ -8,6 +8,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.Nullable;
 import ru.milkyway.plugmanreloaded.PlugManReloaded;
+import ru.milkyway.plugmanreloaded.utils.JarValidator;
 import ru.milkyway.plugmanreloaded.utils.Log;
 
 import java.io.File;
@@ -16,6 +17,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -35,7 +37,10 @@ public final class SourceCatalog {
     private static final double MIN_NAME_SIMILARITY = 0.85;
 
     private static final List<String> OPTION_FIELDS =
-            List.of("endpoint", "versionPath", "downloadPath", "url", "loaders", "gameVersions");
+            List.of("endpoint", "versionPath", "downloadPath", "url", "loaders", "gameVersions",
+                    "pinned", "artifactVersion", "artifactSha256", "artifactSize", "artifactFile",
+                    "pendingSourceId", "pendingProjectRef", "pendingPageUrl", "pendingVersion",
+                    "pendingSha256", "pendingSize", "pendingFile");
 
     public record CatalogSource(String sourceId, String ref, String url, Map<String, String> options) {}
 
@@ -322,6 +327,171 @@ public final class SourceCatalog {
         return null;
     }
 
+    public @Nullable CatalogSource pinnedSource(String mainClass, String pluginName) {
+        for (CatalogSource source : lookup(mainClass, pluginName)) {
+            if (source.options() != null && Boolean.parseBoolean(source.options().get("pinned"))) {
+                return source;
+            }
+        }
+        return null;
+    }
+
+    public static CatalogSource pinnedInstallation(String sourceId, String ref, String url,
+                                                    String artifactVersion, String artifactSha256,
+                                                    long artifactSize, String artifactFile) {
+        Map<String, String> options = new LinkedHashMap<>();
+        options.put("pinned", "true");
+        options.put("clearPending", "true");
+        if (artifactVersion != null && !artifactVersion.isBlank()) {
+            options.put("artifactVersion", artifactVersion);
+        }
+        if (artifactSha256 != null && !artifactSha256.isBlank()) {
+            options.put("artifactSha256", artifactSha256.toLowerCase(Locale.ROOT));
+        }
+        if (artifactSize >= 0) {
+            options.put("artifactSize", String.valueOf(artifactSize));
+        }
+        if (artifactFile != null && !artifactFile.isBlank()) {
+            options.put("artifactFile", artifactFile);
+        }
+        return new CatalogSource(sourceId, ref, url, Map.copyOf(options));
+    }
+
+    public static CatalogSource pendingInstallation(String sourceId, String ref, String url,
+                                                    String version, String sha256, long size, String file) {
+        Map<String, String> options = new LinkedHashMap<>();
+        options.put("pinned", "true");
+        options.put("pendingSourceId", sourceId);
+        options.put("pendingProjectRef", ref);
+        if (url != null && !url.isBlank()) {
+            options.put("pendingPageUrl", url);
+        }
+        if (version != null && !version.isBlank()) {
+            options.put("pendingVersion", version);
+        }
+        if (sha256 != null && !sha256.isBlank()) {
+            options.put("pendingSha256", sha256.toLowerCase(Locale.ROOT));
+        }
+        if (size >= 0) {
+            options.put("pendingSize", String.valueOf(size));
+        }
+        if (file != null && !file.isBlank()) {
+            options.put("pendingFile", file);
+        }
+        return new CatalogSource(sourceId, ref, url, Map.copyOf(options));
+    }
+
+    public static synchronized void reconcilePendingInstallations(@Nullable File userCatalogFile, @Nullable File pluginsDir) {
+        if (userCatalogFile == null || pluginsDir == null || !userCatalogFile.isFile() || !pluginsDir.isDirectory()) {
+            return;
+        }
+        try {
+            YamlConfiguration yaml = YamlConfiguration.loadConfiguration(userCatalogFile);
+            ConfigurationSection plugins = yaml.getConfigurationSection("plugins");
+            if (plugins == null) {
+                return;
+            }
+            boolean changed = false;
+            for (String pluginName : plugins.getKeys(false)) {
+                String base = "plugins." + pluginName + ".sources";
+                List<Map<?, ?>> sources = yaml.getMapList(base);
+                List<Map<String, Object>> reconciled = new ArrayList<>(sources.size());
+                for (Map<?, ?> source : sources) {
+                    Map<String, Object> copy = new LinkedHashMap<>();
+                    for (Map.Entry<?, ?> entry : source.entrySet()) {
+                        if (entry.getKey() != null && entry.getValue() != null) {
+                            copy.put(String.valueOf(entry.getKey()), entry.getValue());
+                        }
+                    }
+                    if (promotePending(pluginName, pluginsDir, copy)) {
+                        changed = true;
+                    }
+                    reconciled.add(copy);
+                }
+                if (!sources.isEmpty()) {
+                    yaml.set(base, reconciled);
+                }
+            }
+            if (changed) {
+                File temporary = new File(userCatalogFile.getParentFile(), userCatalogFile.getName() + ".pending.tmp");
+                yaml.save(temporary);
+                try {
+                    Files.move(temporary.toPath(), userCatalogFile.toPath(),
+                            StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+                } catch (Exception unsupported) {
+                    Files.move(temporary.toPath(), userCatalogFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                }
+            }
+        } catch (Exception e) {
+            Log.warn("sourcecatalog.pending-reconcile-failed", e, "file", userCatalogFile.getName());
+        }
+    }
+
+    private static boolean promotePending(String pluginName, File pluginsDir, Map<String, Object> source) throws Exception {
+        String pendingFile = string(source, "pendingFile");
+        if (pendingFile == null || pendingFile.isBlank()) {
+            return false;
+        }
+        java.nio.file.Path pluginsPath = pluginsDir.toPath().toAbsolutePath().normalize();
+        java.nio.file.Path activePath = pluginsPath.resolve(pendingFile).normalize();
+        if (!activePath.startsWith(pluginsPath)) {
+            return false;
+        }
+        File active = activePath.toFile();
+        if (!active.isFile() || !pluginName.equalsIgnoreCase(JarValidator.readPluginName(active))) {
+            return false;
+        }
+        String expectedHash = string(source, "pendingSha256");
+        if (expectedHash != null && !expectedHash.isBlank() && !expectedHash.equalsIgnoreCase(sha256(active.toPath()))) {
+            return false;
+        }
+        String expectedSize = string(source, "pendingSize");
+        if (expectedSize != null && !expectedSize.isBlank() && Long.parseLong(expectedSize) != active.length()) {
+            return false;
+        }
+        copyPending(source, "pendingVersion", "artifactVersion");
+        copyPending(source, "pendingSha256", "artifactSha256");
+        copyPending(source, "pendingSize", "artifactSize");
+        copyPending(source, "pendingFile", "artifactFile");
+        String sourceId = string(source, "pendingSourceId");
+        if (sourceId != null && !sourceId.isBlank()) {
+            source.put("id", sourceId);
+        }
+        String ref = string(source, "pendingProjectRef");
+        if (ref != null && !ref.isBlank()) {
+            source.put("ref", ref);
+        }
+        String url = string(source, "pendingPageUrl");
+        if (url != null && !url.isBlank()) {
+            source.put("url", url);
+        }
+        source.keySet().removeIf(key -> key.startsWith("pending"));
+        return true;
+    }
+
+    private static void copyPending(Map<String, Object> source, String pendingKey, String activeKey) {
+        Object value = source.get(pendingKey);
+        if (value != null) {
+            source.put(activeKey, value);
+        }
+    }
+
+    private static String sha256(java.nio.file.Path path) throws Exception {
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        try (InputStream input = Files.newInputStream(path)) {
+            byte[] buffer = new byte[8192];
+            int read;
+            while ((read = input.read(buffer)) != -1) {
+                digest.update(buffer, 0, read);
+            }
+        }
+        StringBuilder hex = new StringBuilder();
+        for (byte value : digest.digest()) {
+            hex.append(String.format("%02x", value));
+        }
+        return hex.toString();
+    }
+
     private static String key(String mainClass) {
         return mainClass.trim().toLowerCase(Locale.ROOT);
     }
@@ -390,11 +560,12 @@ public final class SourceCatalog {
             if (newSource.options() != null && !newSource.options().isEmpty()) {
                 targetMap.putAll(newSource.options());
             }
-
-            combined.add(targetMap);
+            boolean clearPending = Boolean.parseBoolean(String.valueOf(targetMap.remove("clearPending")));
 
             String targetId = newSource.sourceId().toLowerCase(Locale.ROOT);
             String targetRef = newSource.ref().toLowerCase(Locale.ROOT);
+            boolean pinNewSource = newSource.options() != null
+                    && Boolean.parseBoolean(newSource.options().get("pinned"));
 
             for (Map<?, ?> raw : existingRaw) {
                 Object rawId = raw.get("id");
@@ -403,6 +574,11 @@ public final class SourceCatalog {
                 String refStr = rawRef != null ? String.valueOf(rawRef).toLowerCase(Locale.ROOT) : "";
 
                 if (idStr.equals(targetId) && refStr.equals(targetRef)) {
+                    for (Map.Entry<?, ?> entry : raw.entrySet()) {
+                        if (entry.getKey() != null && entry.getValue() != null) {
+                            targetMap.putIfAbsent(String.valueOf(entry.getKey()), entry.getValue());
+                        }
+                    }
                     continue;
                 }
 
@@ -412,8 +588,21 @@ public final class SourceCatalog {
                         copy.put(String.valueOf(entry.getKey()), entry.getValue());
                     }
                 }
+                if (pinNewSource) {
+                    copy.remove("pinned");
+                    copy.remove("artifactVersion");
+                    copy.remove("artifactSha256");
+                    copy.remove("artifactSize");
+                    copy.remove("artifactFile");
+                }
                 combined.add(copy);
             }
+
+            if (clearPending) {
+                targetMap.keySet().removeIf(key -> key.startsWith("pending"));
+            }
+
+            combined.add(0, targetMap);
 
             yaml.set(base + ".sources", combined);
 

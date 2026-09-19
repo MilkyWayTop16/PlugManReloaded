@@ -10,26 +10,30 @@ import ru.milkyway.plugmanreloaded.api.PluginResult;
 import ru.milkyway.plugmanreloaded.download.DownloadClient;
 import ru.milkyway.plugmanreloaded.managers.SafetyManager;
 import ru.milkyway.plugmanreloaded.managers.SanitizerManager;
-import ru.milkyway.plugmanreloaded.update.UpdateModels.PluginIdentity;
-import ru.milkyway.plugmanreloaded.update.UpdateModels.RemoteVersion;
-import ru.milkyway.plugmanreloaded.update.UpdateModels.UpdateCandidate;
+import ru.milkyway.plugmanreloaded.update.SourceCatalog;
 import ru.milkyway.plugmanreloaded.utils.JarValidator;
 import ru.milkyway.plugmanreloaded.utils.Log;
 import ru.milkyway.plugmanreloaded.utils.PluginJarIndex;
 import ru.milkyway.plugmanreloaded.utils.TaskScheduler;
 
 import java.io.File;
+import java.lang.management.ManagementFactory;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 import java.util.function.Consumer;
 
 public final class UpdateInstaller {
+
+    public static final String TEMP_DIR_NAME = ".plugmanreloaded-tmp";
 
     private final PlugManReloaded plugin;
     private final BackupStore backups;
@@ -44,13 +48,21 @@ public final class UpdateInstaller {
         TaskScheduler.runAsync(plugin, this.backups::pruneAll);
     }
 
-    private record Preparation(InstallResult error, Path jarBackup, Path folderBackup, Path staged, List<String> dependencyWarnings) {}
+    private record Preparation(InstallResult error, Path jarBackup, Path folderBackup, Path staged,
+                               List<String> dependencyWarnings, String artifactSha256, long artifactSize) {}
 
     public void install(UpdateCandidate candidate, Consumer<InstallResult> callback) {
         install(candidate, true, callback);
     }
 
     public void install(UpdateCandidate candidate, boolean restartDependents, Consumer<InstallResult> callback) {
+        if (candidate == null || candidate.identity() == null || !candidate.installable()) {
+            String pluginName = candidate != null && candidate.identity() != null
+                    ? candidate.identity().pluginName() : "Unknown";
+            TaskScheduler.runSync(plugin, () -> callback.accept(
+                    InstallResult.failed(InstallStatus.NOT_INSTALLABLE, pluginName, "actions.update.details.candidate-not-installable")));
+            return;
+        }
         PluginIdentity identity = candidate.identity();
         RemoteVersion version = candidate.version();
 
@@ -77,7 +89,8 @@ public final class UpdateInstaller {
                 TaskScheduler.runSync(plugin, () -> wrappedCallback.accept(prep.error()));
                 return;
             }
-            TaskScheduler.runSync(plugin, () -> wrappedCallback.accept(swap(identity, version, prep.staged(), prep.jarBackup(), prep.folderBackup(), restartDependents, prep.dependencyWarnings())));
+            TaskScheduler.runSync(plugin, () -> wrappedCallback.accept(swap(identity, version, prep.staged(), prep.jarBackup(),
+                    prep.folderBackup(), restartDependents, prep.dependencyWarnings(), prep.artifactSha256(), prep.artifactSize())));
         });
     }
 
@@ -87,7 +100,7 @@ public final class UpdateInstaller {
                 : identity.pluginName() + "-" + version.versionNumber() + ".jar";
         String txId = UUID.randomUUID().toString().substring(0, 8);
         return plugin.getDataFolder().getParentFile().toPath()
-                .resolve(".plugmanreloaded-tmp")
+                .resolve(TEMP_DIR_NAME)
                 .resolve("up_" + txId)
                 .resolve(fileName.replaceAll("[^A-Za-z0-9._-]", "_"));
     }
@@ -97,13 +110,13 @@ public final class UpdateInstaller {
 
         DownloadClient.Downloaded downloaded = DownloadClient.download(version.downloadUrl(), staged, userAgent);
         if (downloaded == null) {
-            return new Preparation(InstallResult.failed(InstallStatus.DOWNLOAD_FAILED, identity.pluginName(), "actions.update.details.download-failed"), null, null, null, List.of());
+            return new Preparation(InstallResult.failed(InstallStatus.DOWNLOAD_FAILED, identity.pluginName(), "actions.update.details.download-failed"), null, null, null, List.of(), "", -1L);
         }
 
         String hashProblem = verifyHash(version, downloaded);
         if (hashProblem != null) {
             deleteQuietly(staged);
-            return new Preparation(InstallResult.failed(InstallStatus.HASH_MISMATCH, identity.pluginName(), hashProblem), null, null, null, List.of());
+            return new Preparation(InstallResult.failed(InstallStatus.HASH_MISMATCH, identity.pluginName(), hashProblem), null, null, null, List.of(), "", -1L);
         }
 
         JarValidator.PreFlightReport report = JarValidator.validatePreFlight(staged.toFile(), identity.pluginName(), false);
@@ -115,14 +128,14 @@ public final class UpdateInstaller {
                 case MISSING_DEPENDENCIES -> InstallStatus.MISSING_DEPENDENCY;
                 default -> InstallStatus.NOT_INSTALLABLE;
             };
-            return new Preparation(InstallResult.failed(outcome, identity.pluginName(), report.errorMessage()), null, null, null, List.of());
+            return new Preparation(InstallResult.failed(outcome, identity.pluginName(), report.errorMessage()), null, null, null, List.of(), "", -1L);
         }
 
         Path jarBackup = backups.backup(identity.pluginName(), identity.currentVersion(), identity.jarFile());
         if (jarBackup == null) {
             deleteQuietly(staged);
             return new Preparation(InstallResult.failed(InstallStatus.NOT_INSTALLABLE, identity.pluginName(),
-                    "actions.update.details.backup-failed"), null, null, null, List.of());
+                    "actions.update.details.backup-failed"), null, null, null, List.of(), "", -1L);
         }
 
         Plugin loadedPlugin = plugin.getPluginLifecycleManager().getPlugin(identity.pluginName());
@@ -136,7 +149,7 @@ public final class UpdateInstaller {
             warnings = checkDependencyUpdates(identity.pluginName(), stagedDesc.depend());
         }
 
-        return new Preparation(null, jarBackup, folderBackup, staged, warnings);
+        return new Preparation(null, jarBackup, folderBackup, staged, warnings, downloaded.sha256(), downloaded.size());
     }
 
     private List<String> checkDependencyUpdates(String pluginName, List<String> dependencies) {
@@ -187,7 +200,9 @@ public final class UpdateInstaller {
         return null;
     }
 
-    private InstallResult swap(PluginIdentity identity, RemoteVersion version, Path staged, Path jarBackup, Path folderBackup, boolean restartDependents, List<String> dependencyWarnings) {
+    private InstallResult swap(PluginIdentity identity, RemoteVersion version, Path staged, Path jarBackup,
+                               Path folderBackup, boolean restartDependents, List<String> dependencyWarnings,
+                               String artifactSha256, long artifactSize) {
         File oldTarget = identity.jarFile();
         String from = identity.currentVersion();
         String to = version.versionNumber();
@@ -205,7 +220,8 @@ public final class UpdateInstaller {
                 || plugin.getConfigManager().isUnsafeToUnload(identity.pluginName());
 
         if (isUnsafe) {
-            return stageForRestart(identity, version, staged, oldTarget, from, to, dependencyWarnings);
+            return stageForRestart(identity, version, staged, oldTarget, from, to, dependencyWarnings,
+                    artifactSha256, artifactSize);
         }
 
         SanitizerManager.closeAllOnlineInventories();
@@ -229,7 +245,8 @@ public final class UpdateInstaller {
                 if (restartDependents && !dependents.isEmpty()) {
                     loadDependents(identity.pluginName(), dependents);
                 }
-                return stageForRestart(identity, version, staged, oldTarget, from, to, dependencyWarnings);
+                return stageForRestart(identity, version, staged, oldTarget, from, to, dependencyWarnings,
+                        artifactSha256, artifactSize);
             }
         }
 
@@ -245,10 +262,11 @@ public final class UpdateInstaller {
             if (restartDependents && !dependents.isEmpty()) {
                 loadDependents(identity.pluginName(), dependents);
             }
-            return stageForRestart(identity, version, staged, oldTarget, from, to, dependencyWarnings);
+            return stageForRestart(identity, version, staged, oldTarget, from, to, dependencyWarnings,
+                    artifactSha256, artifactSize);
         }
 
-        cleanUpEmptyParent(staged);
+        cleanUpEmptyParents(staged);
 
         boolean oldTargetNeedsDeleteOnExit = false;
         if (oldTarget != null && !oldTarget.equals(target) && oldTarget.exists()) {
@@ -288,10 +306,13 @@ public final class UpdateInstaller {
             loadDependents(identity.pluginName(), dependents);
         }
         Log.info("updateinstaller.updated", "plugin", identity.pluginName(), "from", from, "to", to);
+        persistInstalledSource(identity, version, artifactSha256, artifactSize, target.getName());
         return InstallResult.of(InstallStatus.INSTALLED, identity.pluginName(), from, to, dependencyWarnings);
     }
 
-    private InstallResult stageForRestart(PluginIdentity identity, RemoteVersion version, Path staged, File oldTarget, String from, String to, List<String> dependencyWarnings) {
+    private InstallResult stageForRestart(PluginIdentity identity, RemoteVersion version, Path staged, File oldTarget,
+                                          String from, String to, List<String> dependencyWarnings,
+                                          String artifactSha256, long artifactSize) {
         try {
             File pluginsDir = plugin.getDataFolder().getParentFile();
             File updateFolder = null;
@@ -308,8 +329,9 @@ public final class UpdateInstaller {
             }
             String targetFileName = oldTarget != null ? oldTarget.getName() : (identity.pluginName() + ".jar");
             File updateTarget = new File(updateFolder, targetFileName);
-            Files.move(staged, updateTarget.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            cleanUpEmptyParent(staged);
+            replacePendingArtifact(staged, updateTarget, backups, identity.pluginName(), version.versionNumber());
+            cleanUpEmptyParents(staged);
+            persistPendingSource(identity, version, artifactSha256, artifactSize, updateTarget.getName());
             Log.info("updateinstaller.staged-for-restart", "plugin", identity.pluginName(), "from", from, "to", to);
             return InstallResult.of(InstallStatus.PENDING_RESTART, identity.pluginName(), from, to, dependencyWarnings);
         } catch (Throwable t) {
@@ -317,6 +339,40 @@ public final class UpdateInstaller {
             deleteQuietly(staged);
             return InstallResult.failed(InstallStatus.NOT_INSTALLABLE, identity.pluginName(),
                     "actions.update.details.update-folder-write-failed", dependencyWarnings);
+        }
+    }
+
+    private void persistInstalledSource(PluginIdentity identity, RemoteVersion version, String artifactSha256,
+                                        long artifactSize, String artifactFile) {
+        try {
+            SourceCatalog.CatalogSource pinned = SourceCatalog.pinnedInstallation(
+                    version.sourceId(), version.projectRef(), version.projectUrl(), version.versionNumber(),
+                    artifactSha256, artifactSize, artifactFile
+            );
+            String language = plugin.getConfigManager().getMainConfig().getLanguage();
+            if (SourceCatalog.writeUserEntry(SourceCatalog.resolveFile(plugin), identity.pluginName(),
+                    identity.mainClass(), pinned, language)) {
+                plugin.getUpdateService().reload();
+            }
+        } catch (Throwable t) {
+            Log.warn("updateinstaller.source-write-failed", t, "plugin", identity.pluginName());
+        }
+    }
+
+    private void persistPendingSource(PluginIdentity identity, RemoteVersion version, String artifactSha256,
+                                      long artifactSize, String artifactFile) {
+        try {
+            SourceCatalog.CatalogSource pending = SourceCatalog.pendingInstallation(
+                    version.sourceId(), version.projectRef(), version.projectUrl(), version.versionNumber(),
+                    artifactSha256, artifactSize, artifactFile
+            );
+            String language = plugin.getConfigManager().getMainConfig().getLanguage();
+            if (SourceCatalog.writeUserEntry(SourceCatalog.resolveFile(plugin), identity.pluginName(),
+                    identity.mainClass(), pending, language)) {
+                plugin.getUpdateService().reload();
+            }
+        } catch (Throwable t) {
+            Log.warn("updateinstaller.pending-source-write-failed", t, "plugin", identity.pluginName());
         }
     }
 
@@ -402,13 +458,46 @@ public final class UpdateInstaller {
     private boolean moveFileWithRetry(Path source, Path destination) {
         for (int i = 0; i < 3; i++) {
             try {
-                Files.move(source, destination, StandardCopyOption.REPLACE_EXISTING);
+                moveReplacing(source, destination);
                 return true;
             } catch (Throwable t) {
                 Log.debug("updateinstaller.move-attempt-failed", t, "attempt", String.valueOf(i + 1), "source", source.getFileName().toString(), "destination", destination.getFileName().toString());
             }
         }
         return false;
+    }
+
+    private static void moveReplacing(Path source, Path destination) throws Exception {
+        try {
+            Files.move(source, destination, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+        } catch (AtomicMoveNotSupportedException unsupported) {
+            Files.move(source, destination, StandardCopyOption.REPLACE_EXISTING);
+        }
+    }
+
+    static @Nullable Path replacePendingArtifact(
+            Path staged,
+            File target,
+            @Nullable BackupStore backups,
+            String pluginName,
+            String version
+    ) throws Exception {
+        if (staged == null || !Files.isRegularFile(staged)) {
+            throw new NoSuchFileException(staged != null ? staged.toString() : "null");
+        }
+        if (target == null) {
+            throw new IllegalArgumentException("target cannot be null");
+        }
+        File parent = target.getParentFile();
+        if (parent != null && !parent.exists()) {
+            parent.mkdirs();
+        }
+        Path backup = null;
+        if (target.exists() && target.isFile() && backups != null) {
+            backup = backups.backup(pluginName, version, target);
+        }
+        moveReplacing(staged, target.toPath());
+        return backup;
     }
 
     private boolean deleteFileWithRetry(File file) {
@@ -430,29 +519,84 @@ public final class UpdateInstaller {
         return !file.exists();
     }
 
-    private void cleanUpEmptyParent(@Nullable Path path) {
+    public static void cleanUpEmptyParents(@Nullable Path path) {
         if (path == null) return;
-        Path parent = path.getParent();
-        if (parent == null || !Files.isDirectory(parent)) {
-            return;
+        Path dir = path.getParent();
+        while (dir != null && Files.isDirectory(dir)) {
+            String name = dir.getFileName() != null ? dir.getFileName().toString() : "";
+            if (!name.startsWith("up_") && !name.equals(TEMP_DIR_NAME)) {
+                break;
+            }
+            try (var stream = Files.list(dir)) {
+                if (stream.findAny().isEmpty()) {
+                    Files.deleteIfExists(dir);
+                    dir = dir.getParent();
+                } else {
+                    break;
+                }
+            } catch (Throwable t) {
+                Log.debug("updateinstaller.empty-folder-cleanup-failed", t, "folder", dir.getFileName() != null ? dir.getFileName().toString() : "");
+                break;
+            }
         }
-        try (var stream = Files.list(parent)) {
-            if (stream.findAny().isEmpty()) {
-                Files.deleteIfExists(parent);
+    }
+
+    public static void cleanStaleTempDirectories(@Nullable File pluginsDir) {
+        cleanStaleTempDirectories(pluginsDir, ManagementFactory.getRuntimeMXBean().getStartTime());
+    }
+
+    public static void cleanStaleTempDirectories(@Nullable File pluginsDir, long maxModifiedThresholdMillis) {
+        if (pluginsDir == null || !pluginsDir.isDirectory()) return;
+        Path tmpDir = pluginsDir.toPath().resolve(TEMP_DIR_NAME);
+        if (!Files.exists(tmpDir) || !Files.isDirectory(tmpDir)) return;
+        try (var stream = Files.list(tmpDir)) {
+            List<Path> entries = stream.toList();
+            for (Path entry : entries) {
+                String name = entry.getFileName() != null ? entry.getFileName().toString() : "";
+                if (!name.startsWith("up_") && !name.startsWith("tx_") && !name.startsWith("inspect_")) {
+                    continue;
+                }
+                try {
+                    long lastMod = Files.getLastModifiedTime(entry).toMillis();
+                    if (lastMod < maxModifiedThresholdMillis) {
+                        deleteRecursivelyQuietly(entry);
+                    }
+                } catch (Throwable t) {
+                    Log.debug("updateinstaller.stale-entry-delete-failed", t, "entry", name);
+                }
             }
         } catch (Throwable t) {
-            Log.debug("updateinstaller.empty-folder-cleanup-failed", t, "folder", parent.getFileName().toString());
+            Log.debug("updateinstaller.stale-cleanup-failed", t);
         }
+
+        try (var stream = Files.list(tmpDir)) {
+            if (stream.findAny().isEmpty()) {
+                Files.deleteIfExists(tmpDir);
+            }
+        } catch (Throwable t) {
+            Log.debug("updateinstaller.temp-parent-delete-failed", t);
+        }
+    }
+
+    public static void deleteRecursivelyQuietly(@Nullable Path path) {
+        if (path == null || !Files.exists(path)) return;
+        try (var stream = Files.walk(path)) {
+            List<Path> paths = stream.sorted(Comparator.reverseOrder()).toList();
+            for (Path p : paths) {
+                try {
+                    Files.deleteIfExists(p);
+                } catch (Throwable ignored) {}
+            }
+        } catch (Throwable ignored) {}
     }
 
     private void deleteQuietly(@Nullable Path path) {
         if (path == null) return;
         try {
             Files.deleteIfExists(path);
-            cleanUpEmptyParent(path);
+            cleanUpEmptyParents(path);
         } catch (Throwable t) {
             Log.debug("updateinstaller.temp-file-delete-failed", t, "file", path.getFileName().toString());
         }
     }
 }
-

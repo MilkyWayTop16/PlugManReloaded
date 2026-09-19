@@ -61,6 +61,10 @@
 #   loaders — a comma-separated list of supported server platforms (e.g. paper, purpur, folia)
 #
 #   gameVersions — a comma-separated list of supported game versions (e.g. 1.20.4, 1.21)
+#
+# pinned, artifactVersion, artifactSha256, artifactSize, and artifactFile are managed fields
+# PlugManReloaded writes them after installation to keep updates on the same project and verified artifact
+# When changing a source manually, remove pinned from the old entry or pin the new one with pinned: true
 
 # Security and file verification
 #

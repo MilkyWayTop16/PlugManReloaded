@@ -12,12 +12,13 @@ import ru.milkyway.plugmanreloaded.utils.TaskScheduler;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ThreadLocalRandom;
+import java.security.SecureRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 public class ConfirmationManager implements Listener {
 
+    private static final SecureRandom RANDOM = new SecureRandom();
     private static final long TIMEOUT_MS = 60_000L;
     private static final Pattern TOKEN_PATTERN = Pattern.compile("[0-9a-fA-F]{6,8}");
 
@@ -72,7 +73,7 @@ public class ConfirmationManager implements Listener {
     }
 
     public String createSession(CommandSender sender, String commandType, String pluginName, String payload) {
-        String token = String.format("%06x", ThreadLocalRandom.current().nextInt(0x1000000));
+        String token = String.format("%06x", RANDOM.nextInt(0x1000000));
         pendingSessions.put(token, new ConfirmationSession(
                 getSenderKey(sender),
                 commandType.toLowerCase(Locale.ROOT),

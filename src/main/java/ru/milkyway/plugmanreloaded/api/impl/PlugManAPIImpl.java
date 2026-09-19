@@ -1,9 +1,10 @@
-package ru.milkyway.plugmanreloaded;
+package ru.milkyway.plugmanreloaded.api.impl;
 
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import ru.milkyway.plugmanreloaded.PlugManReloaded;
 import ru.milkyway.plugmanreloaded.api.DependencyNode;
 import ru.milkyway.plugmanreloaded.api.FailureReason;
 import ru.milkyway.plugmanreloaded.api.PluginInfo;
@@ -12,18 +13,25 @@ import ru.milkyway.plugmanreloaded.api.PlugManAPI;
 import ru.milkyway.plugmanreloaded.api.UpdateInfo;
 import ru.milkyway.plugmanreloaded.managers.DependencyManager;
 import ru.milkyway.plugmanreloaded.managers.HotSwapManager;
-import ru.milkyway.plugmanreloaded.utils.PluginJarIndex;
 import ru.milkyway.plugmanreloaded.managers.LifecycleManager;
 import ru.milkyway.plugmanreloaded.update.UpdateModels.UpdateCandidate;
 import ru.milkyway.plugmanreloaded.update.UpdateService;
 import ru.milkyway.plugmanreloaded.update.install.BackupStore;
+import ru.milkyway.plugmanreloaded.utils.Log;
+import ru.milkyway.plugmanreloaded.utils.PluginJarIndex;
 import ru.milkyway.plugmanreloaded.utils.PluginMetaHelper;
 import ru.milkyway.plugmanreloaded.utils.TaskScheduler;
-import ru.milkyway.plugmanreloaded.utils.Log;
 
 import java.io.File;
 import java.nio.file.Files;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -181,6 +189,9 @@ public final class PlugManAPIImpl implements PlugManAPI {
             if (targetPlugin == null) {
                 return PluginResult.ofError(FailureReason.PLUGIN_NOT_FOUND, "plugin", "null");
             }
+            if (lifecycleManager.isProtected(targetPlugin)) {
+                return PluginResult.ofError(lifecycleManager.protectedReason(targetPlugin), "plugin", targetPlugin.getName());
+            }
             File file = lifecycleManager.getPluginFile(targetPlugin);
             if (file == null || !file.exists()) {
                 return PluginResult.ofError(FailureReason.FILE_NOT_FOUND, "plugin", targetPlugin.getName());
@@ -189,6 +200,9 @@ public final class PlugManAPIImpl implements PlugManAPI {
             PluginResult unloadRes = lifecycleManager.unload(targetPlugin);
             if (!unloadRes.success()) {
                 return unloadRes;
+            }
+            if (hotSwapManager != null) {
+                hotSwapManager.temporarilyIgnore(file.getName(), 5000L);
             }
             try {
                 Files.deleteIfExists(file.toPath());
@@ -203,6 +217,9 @@ public final class PlugManAPIImpl implements PlugManAPI {
     @Override
     public PluginResult deletePlugin(@NotNull String pluginName) {
         return runSyncIfNeeded(() -> {
+            if (lifecycleManager.isProtected(pluginName)) {
+                return PluginResult.ofError(lifecycleManager.protectedReason(pluginName), "plugin", pluginName);
+            }
             Plugin target = lifecycleManager.getPlugin(pluginName);
             if (target != null) {
                 return deletePlugin(target);
@@ -213,6 +230,9 @@ public final class PlugManAPIImpl implements PlugManAPI {
             }
             PluginJarIndex.JarDescriptor desc = jarIndex.readDescriptor(file);
             backupBeforeDelete(pluginName, desc != null ? desc.version() : null, file);
+            if (hotSwapManager != null) {
+                hotSwapManager.temporarilyIgnore(file.getName(), 5000L);
+            }
             try {
                 Files.deleteIfExists(file.toPath());
                 jarIndex.invalidate();
@@ -236,18 +256,20 @@ public final class PlugManAPIImpl implements PlugManAPI {
 
     @Override
     public boolean isPluginProtected(@NotNull String pluginName) {
-        Plugin target = lifecycleManager.getPlugin(pluginName);
-        return target != null && lifecycleManager.isProtected(target);
+        return lifecycleManager.isProtected(pluginName);
     }
 
+    @Override
     public boolean isLoaded(@NotNull String pluginName) {
         return isPluginLoaded(pluginName);
     }
 
+    @Override
     public boolean isEnabled(@NotNull String pluginName) {
         return isPluginEnabled(pluginName);
     }
 
+    @Override
     public boolean isProtected(@NotNull String pluginName) {
         return isPluginProtected(pluginName);
     }
@@ -274,14 +296,14 @@ public final class PlugManAPIImpl implements PlugManAPI {
 
     @Override
     public List<String> getCascadeUnloadOrder(@NotNull String pluginName) {
-        return graphManager.calculateCascadeOrder(pluginName);
+        List<String> order = new ArrayList<>(graphManager.calculateCascadeOrder(pluginName));
+        Collections.reverse(order);
+        return order;
     }
 
     @Override
     public List<String> getCascadeLoadOrder(@NotNull String pluginName) {
-        List<String> order = new ArrayList<>(graphManager.calculateCascadeOrder(pluginName));
-        Collections.reverse(order);
-        return order;
+        return graphManager.calculateCascadeOrder(pluginName);
     }
 
     @Override
@@ -331,11 +353,10 @@ public final class PlugManAPIImpl implements PlugManAPI {
 
     @Override
     public CompletableFuture<Optional<UpdateInfo>> checkUpdate(@Nullable Plugin targetPlugin) {
-        CompletableFuture<Optional<UpdateInfo>> future = new CompletableFuture<>();
-        if (targetPlugin == null) {
-            future.complete(Optional.empty());
-            return future;
+        if (targetPlugin == null || !plugin.isEnabled()) {
+            return CompletableFuture.completedFuture(Optional.empty());
         }
+        CompletableFuture<Optional<UpdateInfo>> future = new CompletableFuture<>();
         updateService.checkOne(targetPlugin, candidates -> {
             if (candidates == null || candidates.isEmpty()) {
                 future.complete(Optional.empty());
@@ -343,7 +364,7 @@ public final class PlugManAPIImpl implements PlugManAPI {
                 future.complete(Optional.of(candidates.get(0).toUpdateInfo()));
             }
         });
-        return future;
+        return future.orTimeout(30, TimeUnit.SECONDS);
     }
 
     @Override
@@ -352,13 +373,14 @@ public final class PlugManAPIImpl implements PlugManAPI {
         if (target != null) {
             return checkUpdate(target);
         }
-        CompletableFuture<Optional<UpdateInfo>> future = new CompletableFuture<>();
-        future.complete(Optional.empty());
-        return future;
+        return CompletableFuture.completedFuture(Optional.empty());
     }
 
     @Override
     public CompletableFuture<List<UpdateInfo>> checkAllUpdates() {
+        if (!plugin.isEnabled()) {
+            return CompletableFuture.completedFuture(Collections.emptyList());
+        }
         CompletableFuture<List<UpdateInfo>> future = new CompletableFuture<>();
         updateService.checkAll(candidates -> {
             if (candidates == null || candidates.isEmpty()) {
@@ -371,7 +393,7 @@ public final class PlugManAPIImpl implements PlugManAPI {
                 future.complete(list);
             }
         });
-        return future;
+        return future.orTimeout(60, TimeUnit.SECONDS);
     }
 
     @Override

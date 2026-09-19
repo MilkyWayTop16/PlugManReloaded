@@ -55,9 +55,21 @@ public interface PlugManAPI {
 
     boolean isPluginLoaded(@NotNull String pluginName);
 
+    default boolean isLoaded(@NotNull String pluginName) {
+        return isPluginLoaded(pluginName);
+    }
+
     boolean isPluginEnabled(@NotNull String pluginName);
 
+    default boolean isEnabled(@NotNull String pluginName) {
+        return isPluginEnabled(pluginName);
+    }
+
     boolean isPluginProtected(@NotNull String pluginName);
+
+    default boolean isProtected(@NotNull String pluginName) {
+        return isPluginProtected(pluginName);
+    }
 
     @Nullable DependencyNode getNode(@NotNull String pluginName);
 

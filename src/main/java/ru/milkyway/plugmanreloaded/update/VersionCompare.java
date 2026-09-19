@@ -17,6 +17,42 @@ public final class VersionCompare {
             "bungee", "bungeecord", "waterfall", "sponge", "fabric", "forge", "neoforge"
     );
 
+    public static boolean supportsGameVersion(Iterable<String> gameVersions, String serverVersion) {
+        if (gameVersions == null || serverVersion == null || serverVersion.isBlank()) {
+            return false;
+        }
+        String server = serverVersion.trim();
+        for (String gameVersion : gameVersions) {
+            if (gameVersion == null || gameVersion.isBlank()) continue;
+            String clean = gameVersion.trim();
+            if (clean.equalsIgnoreCase("all") || clean.equals("*")) {
+                return true;
+            }
+            if (clean.equalsIgnoreCase(server)) {
+                return true;
+            }
+            if (clean.endsWith(".x") || clean.endsWith(".X") || clean.endsWith(".*")) {
+                String prefix = clean.substring(0, clean.length() - 2);
+                if (server.equals(prefix) || server.startsWith(prefix + ".")) {
+                    return true;
+                }
+            }
+            if (clean.matches("^\\d+\\.\\d+$")
+                    && (server.equals(clean) || server.startsWith(clean + "."))) {
+                return true;
+            }
+            int dash = clean.indexOf('-');
+            if (dash > 0) {
+                String min = clean.substring(0, dash).trim();
+                String max = clean.substring(dash + 1).trim();
+                if (compare(server, min) >= 0 && compare(server, max) <= 0) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     public static int compare(String left, String right) {
         List<String> a = split(left);
         List<String> b = split(right);

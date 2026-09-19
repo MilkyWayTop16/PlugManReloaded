@@ -44,12 +44,17 @@ public final class VersionResolver {
     }
 
     public UpdateCandidate resolve(PluginIdentity identity, UpdateSource.ProjectMatch match, List<RemoteVersion> versions) {
+        return resolve(identity, match, versions, null);
+    }
+
+    UpdateCandidate resolve(PluginIdentity identity, UpdateSource.ProjectMatch match, List<RemoteVersion> versions,
+                            String recordedInstalledVersion) {
         if (versions == null || versions.isEmpty()) {
             return UpdateCandidate.noSource(identity);
         }
 
         MatchConfidence confidence = confirmByInstalledHash(identity, match, versions);
-        String effectiveInstalled = resolveInstalledVersion(identity, versions);
+        String effectiveInstalled = resolveInstalledVersion(identity, versions, recordedInstalledVersion);
 
         List<RemoteVersion> platformFit = new ArrayList<>();
         for (RemoteVersion version : versions) {
@@ -228,7 +233,13 @@ public final class VersionResolver {
         return false;
     }
 
-    private String resolveInstalledVersion(PluginIdentity identity, List<RemoteVersion> versions) {
+    private String resolveInstalledVersion(PluginIdentity identity, List<RemoteVersion> versions,
+                                           String recordedInstalledVersion) {
+        if (recordedInstalledVersion != null && !recordedInstalledVersion.isBlank()
+                && isKnownRemoteVersion(recordedInstalledVersion, versions)) {
+            return recordedInstalledVersion;
+        }
+
         String declared = identity.currentVersion();
         if (identity.jarFile() == null) {
             return declared;

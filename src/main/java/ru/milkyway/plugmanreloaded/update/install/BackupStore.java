@@ -82,8 +82,11 @@ public final class BackupStore {
                         String entryName = sourcePath.relativize(file).toString().replace('\\', '/');
                         try {
                             zos.putNextEntry(new ZipEntry(entryName));
-                            Files.copy(file, zos);
-                            zos.closeEntry();
+                            try {
+                                Files.copy(file, zos);
+                            } finally {
+                                zos.closeEntry();
+                            }
                         } catch (Throwable t) {
                             Log.debug("backupstore.unreadable-file-skipped", t, "file", entryName, "error", t.getMessage());
                         }

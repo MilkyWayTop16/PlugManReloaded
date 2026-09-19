@@ -11,14 +11,18 @@ public final class CommandFlags {
     static {
         register("reload",
                 Flag.of("cascade", "-c", "--cascade"),
+                Flag.of("yes", "-y", "--yes"),
                 Flag.of("force", "-f", "--force"),
                 Flag.of("config", "-cfg", "--config"));
         register("restart",
                 Flag.of("cascade", "-c", "--cascade"),
+                Flag.of("yes", "-y", "--yes"),
                 Flag.of("force", "-f", "--force"));
         register("unload",
+                Flag.of("yes", "-y", "--yes"),
                 Flag.of("force", "-f", "--force"));
         register("disable",
+                Flag.of("yes", "-y", "--yes"),
                 Flag.of("force", "-f", "--force"));
         register("delete",
                 Flag.of("yes", "-y", "--yes"),

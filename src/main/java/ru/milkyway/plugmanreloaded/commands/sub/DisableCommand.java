@@ -76,7 +76,7 @@ public class DisableCommand extends AbstractSubCommand {
             return true;
         }
 
-        boolean force = ctx.hasFlag("f") || ctx.hasFlag("force");
+        boolean force = ctx.hasFlag("y") || ctx.hasFlag("yes") || ctx.hasFlag("f") || ctx.hasFlag("force");
         String token = ctx.token();
         if (token != null) {
             if (!plugin.getConfirmationManager().validateAndConsume(sender, "disable", targetName, token)) {

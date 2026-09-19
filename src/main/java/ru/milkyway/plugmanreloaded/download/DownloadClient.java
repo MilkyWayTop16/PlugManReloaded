@@ -12,6 +12,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.util.Locale;
@@ -37,14 +38,28 @@ public final class DownloadClient {
         }
     }
 
+    static boolean isAllowedProtocol(String url) {
+        try {
+            String protocol = new URL(url).getProtocol();
+            return "https".equalsIgnoreCase(protocol) || "http".equalsIgnoreCase(protocol);
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
     public static @Nullable Downloaded download(String url, Path target, String userAgent) {
         HttpURLConnection connection = null;
         try {
             String current = url;
 
+            if (!isAllowedProtocol(current)) {
+                Log.warn("downloadclient.unsupported-protocol");
+                return null;
+            }
+
             for (int redirect = 0; redirect <= MAX_REDIRECTS; redirect++) {
                 URL currentUrl = new URL(current);
-                if (isInsecureDowngrade(url, current)) {
+                if (!isAllowedProtocol(current) || isInsecureDowngrade(url, current)) {
                     Log.warn("downloadclient.insecure-downgrade", "protocol", currentUrl.getProtocol());
                     return null;
                 }
@@ -97,6 +112,7 @@ public final class DownloadClient {
     private static @Nullable Downloaded transfer(HttpURLConnection connection, Path target) throws Exception {
         Files.createDirectories(target.getParent());
         Path part = target.resolveSibling(target.getFileName() + ".part");
+        Files.deleteIfExists(part);
 
         MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
         MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
@@ -123,7 +139,18 @@ public final class DownloadClient {
             throw t;
         }
 
-        Files.move(part, target, StandardCopyOption.REPLACE_EXISTING);
+        long declared = connection.getContentLengthLong();
+        if (declared >= 0 && total != declared) {
+            Files.deleteIfExists(part);
+            Log.warn("downloadclient.content-length-mismatch", "expected", String.valueOf(declared), "actual", String.valueOf(total));
+            return null;
+        }
+
+        try {
+            Files.move(part, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+        } catch (AtomicMoveNotSupportedException unsupported) {
+            Files.move(part, target, StandardCopyOption.REPLACE_EXISTING);
+        }
         double mb = total / (1024.0 * 1024.0);
         Log.debug("downloadclient.downloaded", "mb", String.format(Locale.ROOT, "%.2f", mb), "file", target.getFileName().toString());
         return new Downloaded(target, PluginMatcher.toHex(sha1.digest()), PluginMatcher.toHex(sha256.digest()), total);
