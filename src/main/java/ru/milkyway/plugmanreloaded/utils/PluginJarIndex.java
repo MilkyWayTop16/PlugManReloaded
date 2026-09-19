@@ -32,9 +32,9 @@ public final class PluginJarIndex {
         }
     }
 
-    public record JarDescriptor(String declaredName, String version, String authors, List<String> depend, List<String> softDepend, List<String> provides) {
+    public record JarDescriptor(String declaredName, String version, String authors, List<String> depend, List<String> softDepend, List<String> provides, boolean hasLibraries) {
         public JarDescriptor(String declaredName, String version, String authors) {
-            this(declaredName, version, authors, Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
+            this(declaredName, version, authors, Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), false);
         }
     }
 
@@ -382,8 +382,9 @@ public final class PluginJarIndex {
                     softDepend = yaml.getStringList("soft-depend");
                 }
                 List<String> provides = yaml.getStringList("provides");
+                boolean hasLibraries = yaml.contains("libraries") && !yaml.getStringList("libraries").isEmpty();
 
-                return new JarDescriptor(name != null && !name.isBlank() ? name.trim() : null, version, authors, depend, softDepend, provides);
+                return new JarDescriptor(name != null && !name.isBlank() ? name.trim() : null, version, authors, depend, softDepend, provides, hasLibraries);
             }
         } catch (Throwable t) {
             Log.debug("pluginjarindex.descriptor-read-failed", "file", file.getName(), "error", t.getMessage());

@@ -49,7 +49,7 @@ public final class UpdateInstaller {
     }
 
     private record Preparation(InstallResult error, Path jarBackup, Path folderBackup, Path staged,
-                               List<String> dependencyWarnings, String artifactSha256, long artifactSize) {}
+                               List<String> dependencyWarnings, String artifactSha256, long artifactSize, boolean hasLibraries) {}
 
     public void install(UpdateCandidate candidate, Consumer<InstallResult> callback) {
         install(candidate, true, callback);
@@ -90,7 +90,7 @@ public final class UpdateInstaller {
                 return;
             }
             TaskScheduler.runSync(plugin, () -> wrappedCallback.accept(swap(identity, version, prep.staged(), prep.jarBackup(),
-                    prep.folderBackup(), restartDependents, prep.dependencyWarnings(), prep.artifactSha256(), prep.artifactSize())));
+                    prep.folderBackup(), restartDependents, prep.dependencyWarnings(), prep.artifactSha256(), prep.artifactSize(), prep.hasLibraries())));
         });
     }
 
@@ -110,13 +110,13 @@ public final class UpdateInstaller {
 
         DownloadClient.Downloaded downloaded = DownloadClient.download(version.downloadUrl(), staged, userAgent);
         if (downloaded == null) {
-            return new Preparation(InstallResult.failed(InstallStatus.DOWNLOAD_FAILED, identity.pluginName(), "actions.update.details.download-failed"), null, null, null, List.of(), "", -1L);
+            return new Preparation(InstallResult.failed(InstallStatus.DOWNLOAD_FAILED, identity.pluginName(), "actions.update.details.download-failed"), null, null, null, List.of(), "", -1L, false);
         }
 
         String hashProblem = verifyHash(version, downloaded);
         if (hashProblem != null) {
             deleteQuietly(staged);
-            return new Preparation(InstallResult.failed(InstallStatus.HASH_MISMATCH, identity.pluginName(), hashProblem), null, null, null, List.of(), "", -1L);
+            return new Preparation(InstallResult.failed(InstallStatus.HASH_MISMATCH, identity.pluginName(), hashProblem), null, null, null, List.of(), "", -1L, false);
         }
 
         JarValidator.PreFlightReport report = JarValidator.validatePreFlight(staged.toFile(), identity.pluginName(), false);
@@ -128,14 +128,14 @@ public final class UpdateInstaller {
                 case MISSING_DEPENDENCIES -> InstallStatus.MISSING_DEPENDENCY;
                 default -> InstallStatus.NOT_INSTALLABLE;
             };
-            return new Preparation(InstallResult.failed(outcome, identity.pluginName(), report.errorMessage()), null, null, null, List.of(), "", -1L);
+            return new Preparation(InstallResult.failed(outcome, identity.pluginName(), report.errorMessage()), null, null, null, List.of(), "", -1L, false);
         }
 
         Path jarBackup = backups.backup(identity.pluginName(), identity.currentVersion(), identity.jarFile());
         if (jarBackup == null) {
             deleteQuietly(staged);
             return new Preparation(InstallResult.failed(InstallStatus.NOT_INSTALLABLE, identity.pluginName(),
-                    "actions.update.details.backup-failed"), null, null, null, List.of(), "", -1L);
+                    "actions.update.details.backup-failed"), null, null, null, List.of(), "", -1L, false);
         }
 
         Plugin loadedPlugin = plugin.getPluginLifecycleManager().getPlugin(identity.pluginName());
@@ -149,7 +149,7 @@ public final class UpdateInstaller {
             warnings = checkDependencyUpdates(identity.pluginName(), stagedDesc.depend());
         }
 
-        return new Preparation(null, jarBackup, folderBackup, staged, warnings, downloaded.sha256(), downloaded.size());
+        return new Preparation(null, jarBackup, folderBackup, staged, warnings, downloaded.sha256(), downloaded.size(), stagedDesc != null && stagedDesc.hasLibraries());
     }
 
     private List<String> checkDependencyUpdates(String pluginName, List<String> dependencies) {
@@ -202,7 +202,7 @@ public final class UpdateInstaller {
 
     private InstallResult swap(PluginIdentity identity, RemoteVersion version, Path staged, Path jarBackup,
                                Path folderBackup, boolean restartDependents, List<String> dependencyWarnings,
-                               String artifactSha256, long artifactSize) {
+                               String artifactSha256, long artifactSize, boolean hasLibraries) {
         File oldTarget = identity.jarFile();
         String from = identity.currentVersion();
         String to = version.versionNumber();
@@ -217,7 +217,8 @@ public final class UpdateInstaller {
                 || risk == SafetyManager.PluginRiskLevel.CRITICAL_PROTECTED
                 || risk == SafetyManager.PluginRiskLevel.API_PROVIDER
                 || risk == SafetyManager.PluginRiskLevel.LOW_LEVEL_NETWORK
-                || plugin.getConfigManager().isUnsafeToUnload(identity.pluginName());
+                || plugin.getConfigManager().isUnsafeToUnload(identity.pluginName())
+                || hasLibraries;
 
         if (isUnsafe) {
             return stageForRestart(identity, version, staged, oldTarget, from, to, dependencyWarnings,
