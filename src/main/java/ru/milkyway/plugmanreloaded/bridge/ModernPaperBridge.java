@@ -43,11 +43,23 @@ public class ModernPaperBridge extends LegacyBukkitBridge {
     @SuppressWarnings("unchecked")
     private void cleanPaperPluginManager(Plugin targetPlugin) {
         try {
-            Class<?> paperPluginManagerImplClass = ReflectionHelper.getClass("io.papermc.paper.plugin.manager.PaperPluginManagerImpl");
-            if (paperPluginManagerImplClass == null) return;
+            PluginManager pm = Bukkit.getPluginManager();
+            if (!(pm instanceof SimplePluginManager)) {
+                return;
+            }
 
-            Object paperManagerInstance = ReflectionHelper.invokeStaticMethod(paperPluginManagerImplClass, "getInstance");
-            if (paperManagerInstance == null) return;
+            Object paperManagerInstance = ReflectionHelper.getFieldValue(pm, "paperPluginManager");
+            
+            if (paperManagerInstance == null) {
+                Class<?> paperPluginManagerImplClass = ReflectionHelper.getClass("io.papermc.paper.plugin.manager.PaperPluginManagerImpl");
+                if (paperPluginManagerImplClass != null) {
+                    paperManagerInstance = ReflectionHelper.invokeStaticMethod(paperPluginManagerImplClass, "getInstance");
+                }
+            }
+
+            if (paperManagerInstance == null) {
+                return;
+            }
 
             Object instanceManager = ReflectionHelper.getFieldValue(paperManagerInstance, "instanceManager");
             if (instanceManager == null) return;

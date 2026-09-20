@@ -17,9 +17,12 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public final class PluginMetaHelper {
+
+    private static final Set<String> WARNED_PLACEHOLDERS = ConcurrentHashMap.newKeySet();
 
     private PluginMetaHelper() {}
 
@@ -37,7 +40,9 @@ public final class PluginMetaHelper {
         }
         String trimmed = version.trim();
         if (trimmed.startsWith("${") && trimmed.endsWith("}")) {
-            Log.warn("pluginmetahelper.version-not-substituted", "placeholder", trimmed);
+            if (WARNED_PLACEHOLDERS.add(trimmed)) {
+                Log.warn("pluginmetahelper.version-not-substituted", "placeholder", trimmed);
+            }
             return "unknown";
         }
         String stripped = trimmed.replaceFirst("^[vV]+", "");

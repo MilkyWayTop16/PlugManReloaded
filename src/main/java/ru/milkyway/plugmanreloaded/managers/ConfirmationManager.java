@@ -104,7 +104,24 @@ public class ConfirmationManager implements Listener {
     }
 
     public boolean validateAndConsume(CommandSender sender, String commandType, @Nullable String pluginName, @Nullable String token) {
-        if (token == null) return false;
+        if (token == null || token.isBlank()) {
+            String key = getSenderKey(sender);
+            ConfirmationSession bestMatch = null;
+            for (ConfirmationSession session : pendingSessions.values()) {
+                if (session.isExpired()) continue;
+                if (!session.senderKey().equals(key)) continue;
+                if (!session.commandType().equalsIgnoreCase(commandType)) continue;
+                if (pluginName != null && !pluginName.isEmpty() && !session.pluginName().equalsIgnoreCase(pluginName)) continue;
+
+                if (bestMatch == null || session.timestamp() > bestMatch.timestamp()) {
+                    bestMatch = session;
+                }
+            }
+            if (bestMatch != null) {
+                return pendingSessions.remove(bestMatch.token().toLowerCase(Locale.ROOT), bestMatch);
+            }
+            return false;
+        }
 
         String key = token.toLowerCase(Locale.ROOT);
         ConfirmationSession session = pendingSessions.get(key);

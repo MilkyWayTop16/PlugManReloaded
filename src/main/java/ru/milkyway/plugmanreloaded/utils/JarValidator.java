@@ -73,6 +73,8 @@ public final class JarValidator {
                         "plugin", name, "file", file.getName());
                 case NO_DESCRIPTOR -> PluginResult.ofError(FailureReason.INVALID_DESCRIPTION,
                         "plugin", name, "file", file.getName());
+                case REQUIRES_COLD_RESTART, STARTUP_ONLY_LOAD -> PluginResult.ofError(FailureReason.PAPER_BOOTSTRAPPER,
+                        "plugin", name, "file", file.getName());
                 default -> PluginResult.ofError(FailureReason.LOAD_FAILED,
                         "plugin", name, "file", file.getName(),
                         "error", errorMessage != null ? errorMessage : LogCatalog.get("jarvalidator.unknown"));
@@ -168,10 +170,9 @@ public final class JarValidator {
             }
 
             boolean hasBoot = hasPaperBootstrapper(file);
-            if (isReloadOrRestart && (hasBoot || (isPaper && PlatformDetector.isModernPaper()))) {
-                return new PreFlightReport(PreFlightStatus.REQUIRES_COLD_RESTART, declaredName, declaredVersion, reqJava, currJava,
-                        Collections.emptyList(), isPaper, true,
-                        LogCatalog.get("jarvalidator.requires-cold-restart"));
+            if (hasBoot || (isPaper && PlatformDetector.isModernPaper())) {
+                return new PreFlightReport(isReloadOrRestart ? PreFlightStatus.REQUIRES_COLD_RESTART : PreFlightStatus.STARTUP_ONLY_LOAD, declaredName, declaredVersion, reqJava, currJava,
+                        Collections.emptyList(), isPaper, true, null);
             }
 
             List<String> missing = readMissingDependencies(file);

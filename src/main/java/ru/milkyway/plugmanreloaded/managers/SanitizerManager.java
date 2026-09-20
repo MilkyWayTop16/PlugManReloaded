@@ -34,6 +34,7 @@ import ru.milkyway.plugmanreloaded.utils.TaskScheduler;
 import java.beans.Introspector;
 import java.io.Closeable;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URLClassLoader;
 import java.sql.Driver;
@@ -415,16 +416,98 @@ public class SanitizerManager {
 
     private void detachFromLoaderGroup(ClassLoader classLoader) {
         try {
-            Object group = ReflectionHelper.getFieldValue(classLoader, "group");
-            if (group == null) return;
-
-            Collection<?> groupLoaders = ReflectionHelper.getFieldValue(group, "loaders");
-            if (groupLoaders != null) {
-                groupLoaders.remove(classLoader);
+            Class<?> storageClass = ReflectionHelper.getClass("io.papermc.paper.plugin.provider.classloader.PaperClassLoaderStorage");
+            if (storageClass != null) {
+                Object storage = ReflectionHelper.invokeStaticMethod(storageClass, "instance");
+                if (storage != null) {
+                    Object globalGroup = ReflectionHelper.getFieldValue(storage, "globalGroup");
+                    if (globalGroup != null) {
+                        removeLoaderFromGroupHierarchy(globalGroup, classLoader);
+                    }
+                    
+                    Map<?, ?> pluginGroups = ReflectionHelper.getFieldValue(storage, "pluginGroups");
+                    if (pluginGroups != null) {
+                        for (Object groupObj : pluginGroups.values()) {
+                            removeLoaderFromGroupHierarchy(groupObj, classLoader);
+                        }
+                    }
+                }
             }
-            Map<?, ?> groupMap = ReflectionHelper.getFieldValue(group, "map");
-            if (groupMap != null) {
-                groupMap.values().removeIf(loader -> loader == classLoader);
+        } catch (Throwable ignored) {
+        }
+
+        try {
+            Object group = ReflectionHelper.getFieldValue(classLoader, "classLoaderGroup");
+            if (group == null) {
+                group = ReflectionHelper.getFieldValue(classLoader, "group");
+            }
+            if (group == null) {
+                Method getGroupMethod = ReflectionHelper.getMethod(classLoader.getClass(), "getGroup");
+                if (getGroupMethod != null) {
+                    group = getGroupMethod.invoke(classLoader);
+                }
+            }
+            if (group != null) {
+                removeLoaderFromGroupHierarchy(group, classLoader);
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private void removeLoaderFromGroupHierarchy(Object group, ClassLoader classLoader) {
+        try {
+            List<?> classloaders = ReflectionHelper.getFieldValue(group, "classloaders");
+            if (classloaders == null) {
+                classloaders = ReflectionHelper.invokeMethod(group, "getClassLoaders");
+            }
+            if (classloaders != null) {
+                classloaders.remove(classLoader);
+            }
+        } catch (Throwable ignored) {
+        }
+
+        try {
+            Collection<?> loaders = ReflectionHelper.getFieldValue(group, "loaders");
+            if (loaders != null) {
+                loaders.remove(classLoader);
+            }
+        } catch (Throwable ignored) {
+        }
+
+        try {
+            Map<?, ?> map = ReflectionHelper.getFieldValue(group, "map");
+            if (map != null) {
+                map.values().removeIf(loader -> loader == classLoader);
+            }
+        } catch (Throwable ignored) {
+        }
+
+        try {
+            Method removeMethod = ReflectionHelper.getMethod(group.getClass(), "remove", classLoader.getClass());
+            if (removeMethod != null) {
+                removeMethod.invoke(group, classLoader);
+            }
+        } catch (Throwable ignored) {
+        }
+
+        try {
+            Object parent = ReflectionHelper.getFieldValue(group, "parent");
+            if (parent == null) {
+                Method getParent = ReflectionHelper.getMethod(group.getClass(), "getParent");
+                if (getParent != null) {
+                    parent = getParent.invoke(group);
+                }
+            }
+            if (parent != null && parent != group) {
+                removeLoaderFromGroupHierarchy(parent, classLoader);
+            }
+        } catch (Throwable ignored) {
+        }
+
+        try {
+            Object globalGroup = ReflectionHelper.getFieldValue(group, "globalGroup");
+            if (globalGroup != null && globalGroup != group) {
+                removeLoaderFromGroupHierarchy(globalGroup, classLoader);
             }
         } catch (Throwable ignored) {
         }
