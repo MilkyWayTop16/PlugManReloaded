@@ -404,7 +404,6 @@ logs:
 
   foliabridge:
     cancel-tasks-failed: "[FoliaBridge] Failed to cancel Folia tasks for {plugin}"
-    cancel-entity-tasks-failed: "[FoliaBridge] Failed to cancel entity tasks of {plugin} for player {player}"
 
   platformdetector:
     unsupported-core: "Unsupported core (Paper required)"

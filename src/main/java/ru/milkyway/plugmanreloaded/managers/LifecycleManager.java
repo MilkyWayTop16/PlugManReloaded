@@ -36,6 +36,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -267,7 +268,8 @@ public final class LifecycleManager {
             if (res.success()) {
                 invalidatePluginFile(targetPlugin);
                 if (Bukkit.getServer() != null) {
-                    Bukkit.getPluginManager().callEvent(new PluginReloadedEvent(targetPlugin, res.elapsedMs()));
+                    Plugin reloaded = getPlugin(targetPlugin.getName());
+                    Bukkit.getPluginManager().callEvent(new PluginReloadedEvent(reloaded != null ? reloaded : targetPlugin, res.elapsedMs()));
                 }
             }
             return res;
@@ -360,6 +362,17 @@ public final class LifecycleManager {
 
         long startTime = System.currentTimeMillis();
         CascadePlan plan = planCascade(targetPlugin);
+        Set<String> protectedDependents = new LinkedHashSet<>();
+        for (String name : dependencyManager.getDependents(targetPlugin.getName(), plan.graph())) {
+            Plugin dependent = getPlugin(name);
+            if (dependent != null && isProtected(dependent)) {
+                protectedDependents.add(name);
+            }
+        }
+        if (!protectedDependents.isEmpty()) {
+            return PluginResult.ofError(FailureReason.HAS_DEPENDENTS, "plugin", targetPlugin.getName(),
+                    "dependents", String.join(", ", protectedDependents));
+        }
         boolean targetSkipped = false;
         for (String s : plan.skipped()) {
             if (s.equalsIgnoreCase(targetPlugin.getName())) {
@@ -370,6 +383,10 @@ public final class LifecycleManager {
         if (plan.reloadOrder().isEmpty() || targetSkipped) {
             return PluginResult.ofError(FailureReason.RELOAD_FAILED, "plugin", targetPlugin.getName(),
                     "error", message("actions.cascade-reload.details.no-jar"));
+        }
+        if (!plan.skipped().isEmpty()) {
+            return PluginResult.ofError(FailureReason.RELOAD_FAILED, "plugin", targetPlugin.getName(),
+                    "error", describeProblems(Collections.emptyList(), plan.skipped()));
         }
 
         UnloadPhase unloaded = unloadAll(plan.reloadOrder());
@@ -492,7 +509,11 @@ public final class LifecycleManager {
             }
             Plugin restored = getPlugin(pluginName);
             if (restored != null && restored.isEnabled() && !plan.wasEnabled().getOrDefault(pluginName, true)) {
-                bridge.disablePlugin(restored);
+                PluginResult result = bridge.disablePlugin(restored);
+                if (!result.success() && restored.isEnabled()) {
+                    rollbackFailed.add(pluginName);
+                    Log.warn("lifecyclemanager.cascade-rollback-failed", "plugin", pluginName);
+                }
             }
         }
 
@@ -542,7 +563,10 @@ public final class LifecycleManager {
                 Bukkit.getPluginManager().callEvent(new PluginLoadedEvent(reloaded, jarFile));
             }
             if (reloaded != null && reloaded.isEnabled() && !plan.wasEnabled().getOrDefault(pluginName, true)) {
-                bridge.disablePlugin(reloaded);
+                PluginResult result = bridge.disablePlugin(reloaded);
+                if (!result.success() && reloaded.isEnabled()) {
+                    failedPlugins.add(pluginName);
+                }
             }
         }
         return failedPlugins;
@@ -553,12 +577,22 @@ public final class LifecycleManager {
         if (node == null) {
             return false;
         }
-        for (String dependency : node.getHardDependencies()) {
+        for (String dependency : node.getResolvedHardDependencies()) {
             if (failedNames.contains(dependency.toLowerCase(Locale.ROOT))) {
                 return true;
             }
         }
         return false;
+    }
+
+    private Set<String> remainingDependents(Map<String, DependencyNode> graph, String pluginName, Set<String> completedNames) {
+        Set<String> remaining = new LinkedHashSet<>();
+        for (String dependent : dependencyManager.getDependents(pluginName, graph)) {
+            if (!completedNames.contains(dependent.toLowerCase(Locale.ROOT))) {
+                remaining.add(dependent);
+            }
+        }
+        return remaining;
     }
 
     private String describeProblems(List<String> failedPlugins, List<String> skipped) {
@@ -724,16 +758,26 @@ public final class LifecycleManager {
         long start = System.currentTimeMillis();
         List<Plugin> order = dependencyManager.sortPluginsTopologically(targets);
         Collections.reverse(order);
+        Map<String, DependencyNode> graph = dependencyManager.buildGraph(true);
 
         List<String> successful = new ArrayList<>();
         List<String> failed = new ArrayList<>();
         Map<String, String> failureReasons = new LinkedHashMap<>();
+        Set<String> unloadedNames = new HashSet<>();
 
         for (Plugin p : order) {
             if (isProtected(p)) continue;
+            Set<String> remaining = remainingDependents(graph, p.getName(), unloadedNames);
+            if (!remaining.isEmpty()) {
+                failed.add(p.getName());
+                failureReasons.put(p.getName(), message("actions.errors.details.dependents-still-loaded",
+                        "plugins", String.join(", ", remaining)));
+                continue;
+            }
             PluginResult res = unload(p);
             if (res.success()) {
                 successful.add(p.getName());
+                unloadedNames.add(p.getName().toLowerCase(Locale.ROOT));
             } else {
                 failed.add(p.getName());
                 String err = res.detail(message("actions.errors.details.unload-failed"));
@@ -764,17 +808,26 @@ public final class LifecycleManager {
 
         long start = System.currentTimeMillis();
         List<Plugin> order = dependencyManager.sortPluginsTopologically(targets);
+        Map<String, DependencyNode> graph = dependencyManager.buildGraph(true);
 
         List<String> successful = new ArrayList<>();
         List<String> failed = new ArrayList<>();
         Map<String, String> failureReasons = new LinkedHashMap<>();
+        Set<String> failedNames = new HashSet<>();
 
         for (Plugin p : order) {
+            if (dependencyAlreadyFailed(graph, p.getName(), failedNames)) {
+                failed.add(p.getName());
+                failedNames.add(p.getName().toLowerCase(Locale.ROOT));
+                failureReasons.put(p.getName(), message("actions.cascade-reload.details.dependency-failed", "plugin", p.getName()));
+                continue;
+            }
             PluginResult res = enable(p);
             if (res.success()) {
                 successful.add(p.getName());
             } else {
                 failed.add(p.getName());
+                failedNames.add(p.getName().toLowerCase(Locale.ROOT));
                 String err = res.detail(message("actions.errors.details.enable-failed"));
                 failureReasons.put(p.getName(), err);
             }
@@ -801,16 +854,31 @@ public final class LifecycleManager {
         long start = System.currentTimeMillis();
         List<Plugin> order = dependencyManager.sortPluginsTopologically(targets);
         Collections.reverse(order);
+        Map<String, DependencyNode> graph = dependencyManager.buildGraph(true);
 
         List<String> successful = new ArrayList<>();
         List<String> failed = new ArrayList<>();
         Map<String, String> failureReasons = new LinkedHashMap<>();
+        Set<String> disabledNames = new HashSet<>();
+        for (Plugin p : Bukkit.getPluginManager().getPlugins()) {
+            if (!p.isEnabled()) {
+                disabledNames.add(p.getName().toLowerCase(Locale.ROOT));
+            }
+        }
 
         for (Plugin p : order) {
             if (isProtected(p)) continue;
+            Set<String> remaining = remainingDependents(graph, p.getName(), disabledNames);
+            if (!remaining.isEmpty()) {
+                failed.add(p.getName());
+                failureReasons.put(p.getName(), message("actions.errors.details.dependents-still-enabled",
+                        "plugins", String.join(", ", remaining)));
+                continue;
+            }
             PluginResult res = disable(p);
             if (res.success()) {
                 successful.add(p.getName());
+                disabledNames.add(p.getName().toLowerCase(Locale.ROOT));
             } else {
                 failed.add(p.getName());
                 String err = res.detail(message("actions.errors.details.disable-failed"));
@@ -863,7 +931,7 @@ public final class LifecycleManager {
             reloadOrder.add(p.getName());
         }
 
-        Set<String> unloaded = unloadForBulk(reloadOrder, failed, reasons);
+        Set<String> unloaded = unloadForBulk(reloadOrder, failed, reasons, plan.graph());
         List<String> successful = loadForBulk(reloadOrder, unloaded, plan, failed, reasons);
 
         jarIndex.invalidate();
@@ -901,14 +969,24 @@ public final class LifecycleManager {
         return new BulkPlan(valid, files, wasEnabled, graph);
     }
 
-    private Set<String> unloadForBulk(List<String> reloadOrder, List<String> failed, Map<String, String> reasons) {
+    private Set<String> unloadForBulk(List<String> reloadOrder, List<String> failed,
+                                      Map<String, String> reasons, Map<String, DependencyNode> graph) {
         List<String> unloadOrder = new ArrayList<>(reloadOrder);
         Collections.reverse(unloadOrder);
 
         Set<String> unloaded = new HashSet<>();
+        Set<String> unloadedNames = new HashSet<>();
         for (String pluginName : unloadOrder) {
             Plugin target = getPlugin(pluginName);
             if (target == null) continue;
+
+            Set<String> remaining = remainingDependents(graph, pluginName, unloadedNames);
+            if (!remaining.isEmpty()) {
+                failed.add(pluginName);
+                reasons.put(pluginName, message("actions.errors.details.dependents-still-loaded",
+                        "plugins", String.join(", ", remaining)));
+                continue;
+            }
 
             if (Bukkit.getServer() != null) {
                 PluginPreUnloadEvent pre = new PluginPreUnloadEvent(target, true);
@@ -927,6 +1005,7 @@ public final class LifecycleManager {
                     Bukkit.getPluginManager().callEvent(new PluginUnloadedEvent(pluginName, true));
                 }
                 unloaded.add(pluginName);
+                unloadedNames.add(pluginName.toLowerCase(Locale.ROOT));
             } else {
                 failed.add(pluginName);
                 reasons.put(pluginName, result.detail(message("actions.errors.details.unload-failed")));
@@ -985,7 +1064,12 @@ public final class LifecycleManager {
                 Bukkit.getPluginManager().callEvent(new PluginLoadedEvent(reloaded, jarFile));
             }
             if (reloaded != null && reloaded.isEnabled() && !plan.wasEnabled().getOrDefault(pluginName, true)) {
-                bridge.disablePlugin(reloaded);
+                PluginResult disableResult = bridge.disablePlugin(reloaded);
+                if (!disableResult.success() && reloaded.isEnabled()) {
+                    successful.remove(pluginName);
+                    failed.add(pluginName);
+                    reasons.put(pluginName, disableResult.detail(message("actions.errors.details.disable-failed")));
+                }
             }
         }
         return successful;

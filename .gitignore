@@ -1,5 +1,5 @@
 /*
 !/src/
 !/.gitignore
-
-/src/test/
+!/pom.xml
+!/README.md

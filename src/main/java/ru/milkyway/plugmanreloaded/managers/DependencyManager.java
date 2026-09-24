@@ -72,10 +72,7 @@ public class DependencyManager {
                 if (depends != null) {
                     for (String dep : depends) {
                         if (dep == null || dep.isBlank() || dep.equalsIgnoreCase(p.getName())) continue;
-                        node.addHardDependency(dep);
-                        for (DependencyNode depNode : resolveNodes(graph, providesMap, dep)) {
-                            depNode.addDependent(p.getName());
-                        }
+                        addDependency(node, graph, providesMap, dep, p.getName(), true);
                     }
                 }
             }
@@ -85,10 +82,7 @@ public class DependencyManager {
                 if (softDepends != null) {
                     for (String sdep : softDepends) {
                         if (sdep == null || sdep.isBlank() || sdep.equalsIgnoreCase(p.getName())) continue;
-                        node.addSoftDependency(sdep);
-                        for (DependencyNode sdepNode : resolveNodes(graph, providesMap, sdep)) {
-                            sdepNode.addDependent(p.getName());
-                        }
+                        addDependency(node, graph, providesMap, sdep, p.getName(), false);
                     }
                 }
             }
@@ -96,9 +90,10 @@ public class DependencyManager {
             if (includeSoftDepends && desc != null && desc.getLoadBefore() != null) {
                 for (String before : desc.getLoadBefore()) {
                     if (before == null || before.isBlank() || before.equalsIgnoreCase(p.getName())) continue;
-                    node.addDependent(before);
                     for (DependencyNode beforeNode : resolveNodes(graph, providesMap, before)) {
+                        node.addDependent(beforeNode.getName());
                         beforeNode.addSoftDependency(p.getName());
+                        beforeNode.addResolvedSoftDependency(p.getName());
                     }
                 }
             }
@@ -129,6 +124,25 @@ public class DependencyManager {
         }
         DependencyNode synthetic = graph.computeIfAbsent(lower, k -> new DependencyNode(name));
         return List.of(synthetic);
+    }
+
+    private void addDependency(DependencyNode node, Map<String, DependencyNode> graph,
+                               Map<String, List<DependencyNode>> providesMap, String dependency,
+                               String dependentName, boolean hard) {
+        if (hard) {
+            node.addHardDependency(dependency);
+        } else {
+            node.addSoftDependency(dependency);
+        }
+
+        for (DependencyNode dependencyNode : resolveNodes(graph, providesMap, dependency)) {
+            if (hard) {
+                node.addResolvedHardDependency(dependencyNode.getName());
+            } else {
+                node.addResolvedSoftDependency(dependencyNode.getName());
+            }
+            dependencyNode.addDependent(dependentName);
+        }
     }
 
     private void readPaperMetaProvides(Plugin p, DependencyNode node, Map<String, List<DependencyNode>> providesMap) {
@@ -163,10 +177,7 @@ public class DependencyManager {
                 for (Object o : iterable) {
                     String depName = extractDescriptorName(o);
                     if (depName != null && !depName.isBlank() && !depName.equalsIgnoreCase(p.getName())) {
-                        node.addHardDependency(depName);
-                        for (DependencyNode depNode : resolveNodes(graph, providesMap, depName)) {
-                            depNode.addDependent(p.getName());
-                        }
+                        addDependency(node, graph, providesMap, depName, p.getName(), true);
                     }
                 }
             }
@@ -177,10 +188,7 @@ public class DependencyManager {
                     for (Object o : iterable) {
                         String depName = extractDescriptorName(o);
                         if (depName != null && !depName.isBlank() && !depName.equalsIgnoreCase(p.getName())) {
-                            node.addSoftDependency(depName);
-                            for (DependencyNode depNode : resolveNodes(graph, providesMap, depName)) {
-                                depNode.addDependent(p.getName());
-                            }
+                            addDependency(node, graph, providesMap, depName, p.getName(), false);
                         }
                     }
                 }
@@ -190,9 +198,10 @@ public class DependencyManager {
                     for (Object o : iterable) {
                         String beforeName = extractDescriptorName(o);
                         if (beforeName != null && !beforeName.isBlank() && !beforeName.equalsIgnoreCase(p.getName())) {
-                            node.addDependent(beforeName);
                             for (DependencyNode beforeNode : resolveNodes(graph, providesMap, beforeName)) {
+                                node.addDependent(beforeNode.getName());
                                 beforeNode.addSoftDependency(p.getName());
+                                beforeNode.addResolvedSoftDependency(p.getName());
                             }
                         }
                     }
@@ -306,7 +315,7 @@ public class DependencyManager {
         for (String pLower : affectedLower) {
             DependencyNode node = fullGraph.get(pLower);
             if (node != null) {
-                for (String dep : node.getHardDependencies()) {
+                for (String dep : node.getResolvedHardDependencies()) {
                     String depLower = dep.toLowerCase(Locale.ROOT);
                     if (affectedLower.contains(depLower) && !depLower.equals(pLower)) {
                         inDegree.get(pLower).add(depLower);
@@ -314,7 +323,7 @@ public class DependencyManager {
                     }
                 }
                 if (includeSoftDepends) {
-                    for (String sdep : node.getSoftDependencies()) {
+                    for (String sdep : node.getResolvedSoftDependencies()) {
                         String sdepLower = sdep.toLowerCase(Locale.ROOT);
                         if (affectedLower.contains(sdepLower) && !sdepLower.equals(pLower)) {
                             inDegree.get(pLower).add(sdepLower);
@@ -403,10 +412,10 @@ public class DependencyManager {
             DependencyNode node = fullGraph.get(key);
             if (node == null) continue;
 
-            for (String dependency : node.getHardDependencies()) {
+            for (String dependency : node.getResolvedHardDependencies()) {
                 linkWithin(affected, key, dependency, waitingFor, unblocks);
             }
-            for (String dependency : node.getSoftDependencies()) {
+            for (String dependency : node.getResolvedSoftDependencies()) {
                 linkWithin(affected, key, dependency, waitingFor, unblocks);
             }
         }

@@ -403,7 +403,6 @@ logs:
 
   foliabridge:
     cancel-tasks-failed: "[FoliaBridge] Не удалось отменить задачи Folia для {plugin}"
-    cancel-entity-tasks-failed: "[FoliaBridge] Не удалось отменить entity-задачи {plugin} у игрока {player}"
 
   platformdetector:
     unsupported-core: "Неподдерживаемое ядро (требуется Paper)"

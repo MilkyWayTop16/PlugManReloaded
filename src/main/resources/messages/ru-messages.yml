@@ -34,9 +34,11 @@ actions:
   errors:
     details:
       unload-failed: "не удалось выгрузить"
+      dependents-still-loaded: "зависимые плагины остаются загруженными: {plugins}"
       load-failed: "не удалось загрузить"
       enable-failed: "не удалось включить"
       disable-failed: "не удалось выключить"
+      dependents-still-enabled: "зависимые плагины остаются включёнными: {plugins}"
       dependency-failed: "не загрузилась зависимость"
       unknown: "неизвестная ошибка"
       self-disabled: "плагин отключил себя при запуске или упал при инициализации"

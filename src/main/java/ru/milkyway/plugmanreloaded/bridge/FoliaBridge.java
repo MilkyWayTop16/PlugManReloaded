@@ -1,7 +1,6 @@
 package ru.milkyway.plugmanreloaded.bridge;
 
 import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.Nullable;
 import ru.milkyway.plugmanreloaded.PlugManReloaded;
@@ -43,16 +42,6 @@ public class FoliaBridge extends ModernPaperBridge {
             }
         } catch (Throwable t) {
             Log.debug("foliabridge.cancel-tasks-failed", t, "plugin", targetPlugin.getName());
-        }
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            try {
-                Object entityScheduler = ReflectionHelper.invokeMethod(player, "getScheduler");
-                if (entityScheduler != null) {
-                    ReflectionHelper.invokeMethod(entityScheduler, "cancelTasks", targetPlugin);
-                }
-            } catch (Throwable t) {
-                Log.debug("foliabridge.cancel-entity-tasks-failed", t, "plugin", targetPlugin.getName(), "player", player.getName());
-            }
         }
     }
 }

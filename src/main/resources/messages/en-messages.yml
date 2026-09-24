@@ -21,9 +21,11 @@ actions:
   errors:
     details:
       unload-failed: "failed to unload"
+      dependents-still-loaded: "dependent plugins remain loaded: {plugins}"
       load-failed: "failed to load"
       enable-failed: "failed to enable"
       disable-failed: "failed to disable"
+      dependents-still-enabled: "dependent plugins remain enabled: {plugins}"
       dependency-failed: "a dependency failed to load"
       unknown: "unknown error"
       self-disabled: "the plugin disabled itself on startup, or an initialization error occurred"

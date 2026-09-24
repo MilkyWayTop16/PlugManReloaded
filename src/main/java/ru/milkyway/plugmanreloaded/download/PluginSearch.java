@@ -128,8 +128,13 @@ public class PluginSearch {
             futures.add(CompletableFuture.supplyAsync(() -> searchGithub(query), searchExecutor));
         }
 
+        boolean complete = false;
         try {
             CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).get(5, TimeUnit.SECONDS);
+            complete = true;
+        } catch (InterruptedException interrupted) {
+            Thread.currentThread().interrupt();
+            Log.debug("pluginsearch.not-all-sources-responded", interrupted);
         } catch (Exception timeout) {
             Log.debug("pluginsearch.not-all-sources-responded", timeout);
         }
@@ -172,7 +177,9 @@ public class PluginSearch {
         long elapsed = System.currentTimeMillis() - startTime;
         Log.info("pluginsearch.search-finished", "query", query, "count", String.valueOf(finalResult.size()), "elapsed", String.valueOf(elapsed));
 
-        cache.put(cacheKey, finalResult);
+        if (complete) {
+            cache.put(cacheKey, finalResult);
+        }
         return finalResult;
     }
 

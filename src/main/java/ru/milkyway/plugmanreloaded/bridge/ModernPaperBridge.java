@@ -32,6 +32,18 @@ public class ModernPaperBridge extends LegacyBukkitBridge {
     }
 
     @Override
+    public PluginResult enablePlugin(@Nullable Plugin targetPlugin) {
+        if (targetPlugin == null || targetPlugin.isEnabled()) {
+            return super.enablePlugin(targetPlugin);
+        }
+        PluginResult res = restartPlugin(targetPlugin);
+        if (res.success()) {
+            return PluginResult.ofSuccess("enable.success", res.placeholders());
+        }
+        return res;
+    }
+
+    @Override
     public PluginResult reloadPlugin(Plugin targetPlugin) {
         PluginResult res = restartPlugin(targetPlugin);
         if (res.success()) {
@@ -70,8 +82,7 @@ public class ModernPaperBridge extends LegacyBukkitBridge {
             Map<String, ?> lookupNames = ReflectionHelper.getFieldValue(instanceManager, "lookupNames");
             if (lookupNames != null) {
                 synchronized (lookupNames) {
-                    lookupNames.remove(lowerName);
-                    lookupNames.remove(name);
+                    removePluginLookupNames(lookupNames, targetPlugin);
                 }
             }
 
@@ -103,6 +114,10 @@ public class ModernPaperBridge extends LegacyBukkitBridge {
         } catch (Throwable t) {
             Log.debug("modernpaperbridge.paperpluginmanager-cleanup-failed", t, "plugin", targetPlugin.getName());
         }
+    }
+
+    static void removePluginLookupNames(Map<?, ?> lookupNames, Plugin targetPlugin) {
+        lookupNames.entrySet().removeIf(entry -> entry.getValue() == targetPlugin);
     }
 }
 

@@ -10,6 +10,8 @@ public class DependencyNode {
     private final String pluginName;
     private final Set<String> hardDependencies = new HashSet<>();
     private final Set<String> softDependencies = new HashSet<>();
+    private final Set<String> resolvedHardDependencies = new HashSet<>();
+    private final Set<String> resolvedSoftDependencies = new HashSet<>();
     private final Set<String> dependents = new HashSet<>();
 
     public DependencyNode(String pluginName) {
@@ -28,6 +30,14 @@ public class DependencyNode {
         return Collections.unmodifiableSet(softDependencies);
     }
 
+    public Set<String> getResolvedHardDependencies() {
+        return Collections.unmodifiableSet(resolvedHardDependencies);
+    }
+
+    public Set<String> getResolvedSoftDependencies() {
+        return Collections.unmodifiableSet(resolvedSoftDependencies);
+    }
+
     public Set<String> getDependents() {
         return Collections.unmodifiableSet(dependents);
     }
@@ -41,6 +51,18 @@ public class DependencyNode {
     public void addSoftDependency(String dep) {
         if (dep != null && !dep.isBlank() && !dep.equalsIgnoreCase(this.pluginName)) {
             this.softDependencies.add(dep);
+        }
+    }
+
+    public void addResolvedHardDependency(String dep) {
+        if (dep != null && !dep.isBlank() && !dep.equalsIgnoreCase(this.pluginName)) {
+            this.resolvedHardDependencies.add(dep);
+        }
+    }
+
+    public void addResolvedSoftDependency(String dep) {
+        if (dep != null && !dep.isBlank() && !dep.equalsIgnoreCase(this.pluginName)) {
+            this.resolvedSoftDependencies.add(dep);
         }
     }
 

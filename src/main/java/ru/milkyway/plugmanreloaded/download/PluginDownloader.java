@@ -162,7 +162,7 @@ public class PluginDownloader {
                         Files.deleteIfExists(targetStaged);
                         return PluginDownloader.StageAttempt.failed(DownloadModels.DownloadStatus.INVALID_PLUGIN, "actions.download.details.identity-mismatch");
                      } else {
-                        boolean requiresRestart = report.hasBootstrapper() || report.isPaperPlugin() && PlatformDetector.isModernPaper() || JarValidator.hasLibraries(stagedFile);
+                        boolean requiresRestart = report.hasBootstrapper() || (report.isPaperPlugin() && PlatformDetector.isModernPaper());
                         String ver = info.versionNumber() != null ? info.versionNumber() : (report.declaredVersion() != null ? report.declaredVersion() : "1.0");
                         return PluginDownloader.StageAttempt.success(new StagedItem(targetStaged, declaredName, ver, entry.sourceId(), entry.projectId(), entry.url(), requiresRestart, entry, downloaded.sha256(), Files.size(targetStaged)));
                      }
