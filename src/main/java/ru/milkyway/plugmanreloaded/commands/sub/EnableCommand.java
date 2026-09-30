@@ -47,9 +47,12 @@ public class EnableCommand extends AbstractSubCommand {
         }
 
         if (ctx.isAll()) {
-            List<Plugin> disabled = Arrays.stream(Bukkit.getPluginManager().getPlugins())
-                    .filter(p -> !p.isEnabled())
-                    .toList();
+            List<Plugin> disabled = new java.util.ArrayList<>();
+            for (Plugin p : Bukkit.getPluginManager().getPlugins()) {
+                if (!p.isEnabled()) {
+                    disabled.add(p);
+                }
+            }
             if (disabled.isEmpty()) {
                 sendAction(sender, "enable.all-empty");
                 return true;

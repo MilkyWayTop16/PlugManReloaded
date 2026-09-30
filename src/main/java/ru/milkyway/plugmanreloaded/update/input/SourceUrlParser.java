@@ -145,7 +145,9 @@ public final class SourceUrlParser {
         if (parts.length >= 2 && isAny(parts[0], "plugin", "mod", "project", "datapack", "resourcepack", "shader", "modpack")) {
             slug = parts[1];
         } else if (parts.length >= 1 && !parts[0].isBlank()) {
-            slug = parts[0];
+            if (!isAny(parts[0], "plugin", "mod", "project", "datapack", "resourcepack", "shader", "modpack")) {
+                slug = parts[0];
+            }
         }
         if (slug == null || slug.isBlank()) {
             return ParseResult.ofError(ERRORS + "modrinth-format");
@@ -175,6 +177,13 @@ public final class SourceUrlParser {
     }
 
     private static ParseResult parseRuspigot(String[] parts) {
+        if (parts.length >= 4 && "dev".equalsIgnoreCase(parts[0]) && "v1".equalsIgnoreCase(parts[1]) && "resource".equalsIgnoreCase(parts[2])) {
+            String id = parts[3];
+            String pageUrl = "https://spigotmc.ru/resources/" + id + "/";
+            return ParseResult.ofSuccess(
+                    new SourceCatalog.CatalogSource("ruspigot", pageUrl, pageUrl, Map.of()),
+                    NOTICES + "ruspigot");
+        }
         if (parts.length < 1 || parts[0].isBlank() || !"resources".equalsIgnoreCase(parts[0])) {
             return ParseResult.ofError(ERRORS + "ruspigot-format");
         }

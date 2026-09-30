@@ -66,9 +66,17 @@ public final class CommandContext {
         }
 
         String subCommand = args[0].toLowerCase(Locale.ROOT);
-        boolean takesSource = command != null
-                ? command.getFlags().stream().anyMatch(f -> f.takesValue() && f.name().equals("source"))
-                : CommandFlags.takesSourceOption(subCommand);
+        boolean takesSource = false;
+        if (command != null) {
+            for (CommandFlags.Flag f : command.getFlags()) {
+                if (f.takesValue() && f.name().equals("source")) {
+                    takesSource = true;
+                    break;
+                }
+            }
+        } else {
+            takesSource = CommandFlags.takesSourceOption(subCommand);
+        }
 
         Set<String> flags = new HashSet<>();
         Map<String, String> options = new HashMap<>();

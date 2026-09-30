@@ -16,7 +16,7 @@ import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Set;
 
-final class DownloadResolver {
+class DownloadResolver {
 
     private static final double MIN_GITHUB_ASSET_SIMILARITY = 0.55;
 
@@ -30,33 +30,54 @@ final class DownloadResolver {
 
     DownloadResolution resolve(SearchResultEntry entry) {
         if (entry.downloadUrl() != null && !entry.downloadUrl().isBlank()) {
+            String fileName = entry.fileName() != null && !entry.fileName().isBlank()
+                    ? entry.fileName()
+                    : sanitizeFileName(entry.title());
             return DownloadResolution.of(new ResolvedDownload(
-                    entry.downloadUrl(), entry.fileName(), entry.version(), entry.sha512(), entry.sha256()));
+                    entry.downloadUrl(), fileName, entry.version(), entry.sha512(), entry.sha256()));
         }
 
+        if (!entry.directDownloadable()) {
+            return DownloadResolution.failed("actions.download.details.no-direct-link");
+        }
+
+        String initialVersion = entry.version() != null && !entry.version().isBlank() ? entry.version() : null;
         return switch (entry.sourceId().toLowerCase(Locale.ROOT)) {
             case "modrinth" -> resolveModrinthDownload(entry.projectId());
             case "hangar" -> resolveHangarDownload(entry.projectId());
             case "spigot", "spigotmc" -> DownloadResolution.of(new ResolvedDownload(
                     "https://api.spiget.org/v2/resources/" + entry.projectId() + "/download",
-                    entry.title() + ".jar", "1.0", null, null));
+                    sanitizeFileName(entry.title()), initialVersion, null, null));
             case "github" -> resolveGithubDownload(entry.projectId());
-            default -> DownloadResolution.of(new ResolvedDownload(entry.url(), entry.title() + ".jar", "1.0", null, null));
+            default -> DownloadResolution.of(new ResolvedDownload(entry.url(), sanitizeFileName(entry.title()), initialVersion, null, null));
         };
+    }
+
+    private static String sanitizeFileName(@Nullable String title) {
+        if (title == null || title.isBlank()) {
+            return "plugin.jar";
+        }
+        String clean = title.replaceAll("[^A-Za-z0-9._-]", "_");
+        return clean.isBlank() ? "plugin.jar" : clean + ".jar";
     }
 
     private DownloadResolution resolveModrinthDownload(String projectId) {
         try {
-            HttpJson.Response response = HttpJson.get("https://api.modrinth.com/v2/project/" + projectId + "/version");
+            HttpJson.Response response = HttpJson.get("https://api.modrinth.com/v2/project/" + HttpJson.encodePath(projectId) + "/version");
             if (!response.ok() || !response.body().isJsonArray()) {
+                if (response.rateLimited()) {
+                    return DownloadResolution.failed("actions.download.details.rate-limited");
+                }
+                if (response.transportFailure()) {
+                    return DownloadResolution.failed("actions.download.details.network");
+                }
                 return DownloadResolution.failed("actions.download.details.no-direct-link");
             }
 
             String minecraftVersion = serverProfile != null ? serverProfile.minecraftVersion() : null;
             Set<String> loaders = serverProfile != null ? serverProfile.loaders() : Set.of();
-            JsonObject selectedVersion = null;
-            int selectedScore = -1;
 
+            java.util.List<JsonObject> candidates = new java.util.ArrayList<>();
             for (JsonElement element : response.body().getAsJsonArray()) {
                 if (!element.isJsonObject()) {
                     continue;
@@ -65,33 +86,49 @@ final class DownloadResolver {
                 if (!isModrinthVersionCompatible(version, minecraftVersion, loaders)) {
                     continue;
                 }
-                int score = scoreModrinthVersion(version, minecraftVersion, loaders);
-                if (score > selectedScore) {
-                    selectedVersion = version;
-                    selectedScore = score;
+                candidates.add(version);
+            }
+
+            if (candidates.isEmpty()) {
+                if (response.body().getAsJsonArray().size() > 0) {
+                    return DownloadResolution.failed("actions.download.details.no-compatible-version");
                 }
-            }
-
-            if (selectedVersion == null || !selectedVersion.has("files") || !selectedVersion.get("files").isJsonArray()) {
                 return DownloadResolution.failed("actions.download.details.no-direct-link");
             }
 
-            JsonObject file = selectModrinthRuntimeFile(selectedVersion.getAsJsonArray("files"));
-            if (file == null || !file.has("url") || file.get("url").isJsonNull()) {
-                return DownloadResolution.failed("actions.download.details.no-direct-link");
+            candidates.sort((a, b) -> {
+                int scoreA = scoreModrinthVersion(a, minecraftVersion, loaders);
+                int scoreB = scoreModrinthVersion(b, minecraftVersion, loaders);
+                return Integer.compare(scoreB, scoreA);
+            });
+
+            java.util.List<ResolvedDownload> resolved = new java.util.ArrayList<>();
+            for (JsonObject selectedVersion : candidates) {
+                if (resolved.size() >= 6) {
+                    break;
+                }
+                if (!selectedVersion.has("files") || !selectedVersion.get("files").isJsonArray()) {
+                    continue;
+                }
+                JsonObject file = selectModrinthRuntimeFile(selectedVersion.getAsJsonArray("files"));
+                if (file == null || !file.has("url") || file.get("url").isJsonNull()) {
+                    continue;
+                }
+                String version = selectedVersion.has("version_number") && selectedVersion.get("version_number").isJsonPrimitive()
+                        ? selectedVersion.get("version_number").getAsString() : null;
+                String fileName = file.has("filename") && !file.get("filename").isJsonNull()
+                        ? file.get("filename").getAsString() : null;
+                String sha512 = null;
+                String sha256 = null;
+                if (file.has("hashes") && file.get("hashes").isJsonObject()) {
+                    JsonObject hashes = file.getAsJsonObject("hashes");
+                    sha512 = stringOrNull(hashes, "sha512");
+                    sha256 = stringOrNull(hashes, "sha256");
+                }
+                resolved.add(new ResolvedDownload(file.get("url").getAsString(), fileName, version, sha512, sha256));
             }
-            String version = selectedVersion.has("version_number") && selectedVersion.get("version_number").isJsonPrimitive()
-                    ? selectedVersion.get("version_number").getAsString() : "1.0";
-            String fileName = file.has("filename") && !file.get("filename").isJsonNull()
-                    ? file.get("filename").getAsString() : null;
-            String sha512 = null;
-            String sha256 = null;
-            if (file.has("hashes") && file.get("hashes").isJsonObject()) {
-                JsonObject hashes = file.getAsJsonObject("hashes");
-                sha512 = stringOrNull(hashes, "sha512");
-                sha256 = stringOrNull(hashes, "sha256");
-            }
-            return DownloadResolution.of(new ResolvedDownload(file.get("url").getAsString(), fileName, version, sha512, sha256));
+
+            return DownloadResolution.ofCandidates(resolved);
         } catch (Exception e) {
             Log.debug("plugindownloader.modrinth-parse-failed", e);
             return DownloadResolution.failed("actions.download.details.no-direct-link");
@@ -104,6 +141,12 @@ final class DownloadResolver {
             HttpJson.Response response = HttpJson.get(
                     "https://hangar.papermc.io/api/v1/projects/" + HttpJson.encodePath(project) + "/versions?limit=25");
             if (!response.ok() || !response.body().isJsonObject()) {
+                if (response.rateLimited()) {
+                    return DownloadResolution.failed("actions.download.details.rate-limited");
+                }
+                if (response.transportFailure()) {
+                    return DownloadResolution.failed("actions.download.details.network");
+                }
                 return DownloadResolution.failed("actions.download.details.no-direct-link");
             }
             JsonObject payload = response.body().getAsJsonObject();
@@ -112,8 +155,7 @@ final class DownloadResolver {
             }
 
             String minecraftVersion = serverProfile != null ? serverProfile.minecraftVersion() : null;
-            JsonObject selectedVersion = null;
-            int selectedScore = -1;
+            java.util.List<JsonObject> candidates = new java.util.ArrayList<>();
             for (JsonElement element : payload.getAsJsonArray("result")) {
                 if (!element.isJsonObject()) {
                     continue;
@@ -122,32 +164,50 @@ final class DownloadResolver {
                 if (!isHangarVersionCompatible(version, minecraftVersion)) {
                     continue;
                 }
-                int score = scoreHangarVersion(version, minecraftVersion);
-                if (score > selectedScore) {
-                    selectedVersion = version;
-                    selectedScore = score;
+                candidates.add(version);
+            }
+
+            if (candidates.isEmpty()) {
+                if (payload.getAsJsonArray("result").size() > 0) {
+                    return DownloadResolution.failed("actions.download.details.no-compatible-version");
                 }
-            }
-            if (selectedVersion == null) {
                 return DownloadResolution.failed("actions.download.details.no-direct-link");
             }
 
-            JsonObject downloads = selectedVersion.getAsJsonObject("downloads");
-            JsonObject paper = downloads.getAsJsonObject("PAPER");
-            String downloadUrl = stringOrNull(paper, "downloadUrl");
-            if (downloadUrl == null) {
-                downloadUrl = stringOrNull(paper, "externalUrl");
-            }
-            if (downloadUrl == null) {
-                return DownloadResolution.failed("actions.download.details.no-direct-link");
-            }
+            candidates.sort((a, b) -> {
+                int scoreA = scoreHangarVersion(a, minecraftVersion);
+                int scoreB = scoreHangarVersion(b, minecraftVersion);
+                return Integer.compare(scoreB, scoreA);
+            });
 
-            JsonObject fileInfo = paper.has("fileInfo") && paper.get("fileInfo").isJsonObject()
-                    ? paper.getAsJsonObject("fileInfo") : null;
-            String fileName = fileInfo != null ? stringOrNull(fileInfo, "name") : null;
-            String sha256 = fileInfo != null ? stringOrNull(fileInfo, "sha256Hash") : null;
-            return DownloadResolution.of(new ResolvedDownload(
-                    downloadUrl, fileName, stringOrNull(selectedVersion, "name"), null, sha256));
+            java.util.List<ResolvedDownload> resolved = new java.util.ArrayList<>();
+            for (JsonObject selectedVersion : candidates) {
+                if (resolved.size() >= 6) {
+                    break;
+                }
+                if (!selectedVersion.has("downloads") || !selectedVersion.get("downloads").isJsonObject()) {
+                    continue;
+                }
+                JsonObject downloads = selectedVersion.getAsJsonObject("downloads");
+                if (!downloads.has("PAPER") || !downloads.get("PAPER").isJsonObject()) {
+                    continue;
+                }
+                JsonObject paper = downloads.getAsJsonObject("PAPER");
+                String downloadUrl = stringOrNull(paper, "downloadUrl");
+                if (downloadUrl == null) {
+                    downloadUrl = stringOrNull(paper, "externalUrl");
+                }
+                if (downloadUrl == null) {
+                    continue;
+                }
+
+                JsonObject fileInfo = paper.has("fileInfo") && paper.get("fileInfo").isJsonObject()
+                        ? paper.getAsJsonObject("fileInfo") : null;
+                String fileName = fileInfo != null ? stringOrNull(fileInfo, "name") : null;
+                String sha256 = fileInfo != null ? stringOrNull(fileInfo, "sha256Hash") : null;
+                resolved.add(new ResolvedDownload(downloadUrl, fileName, stringOrNull(selectedVersion, "name"), null, sha256));
+            }
+            return DownloadResolution.ofCandidates(resolved);
         } catch (Exception e) {
             Log.debug("plugindownloader.hangar-parse-failed", e);
             return DownloadResolution.failed("actions.download.details.no-direct-link");
@@ -158,70 +218,82 @@ final class DownloadResolver {
         try {
             String token = plugin != null && plugin.getConfigManager() != null ? plugin.getConfigManager().getGithubToken() : null;
             String authorization = token != null && !token.isBlank() ? "Bearer " + token.trim() : null;
-            JsonObject release = latestGithubRelease(repo, authorization);
-            if (release == null) {
+            HttpJson.Response response = HttpJson.get("https://api.github.com/repos/" + repo + "/releases?per_page=10", authorization);
+            if (!response.ok() || !response.body().isJsonArray()) {
+                if (response.rateLimited()) {
+                    return DownloadResolution.failed("actions.download.details.rate-limited");
+                }
+                if (response.transportFailure()) {
+                    return DownloadResolution.failed("actions.download.details.network");
+                }
                 return DownloadResolution.failed("actions.download.details.github-no-releases");
             }
 
-            if (!release.has("assets") || !release.get("assets").isJsonArray()) {
-                return DownloadResolution.failed("actions.download.details.github-no-assets");
-            }
-            String repoName = repo.contains("/") ? repo.substring(repo.lastIndexOf('/') + 1) : repo;
-            JsonObject bestAsset = null;
-            double bestScore = -1.0;
-            for (JsonElement element : release.getAsJsonArray("assets")) {
-                if (!element.isJsonObject()) {
+            java.util.List<JsonObject> releases = new java.util.ArrayList<>();
+            for (JsonElement candidate : response.body().getAsJsonArray()) {
+                if (!candidate.isJsonObject()) {
                     continue;
                 }
-                JsonObject asset = element.getAsJsonObject();
-                String name = stringOrNull(asset, "name");
-                if (name == null || !name.endsWith(".jar") || PluginMatcher.isNonRuntimeArtifact(name)
-                        || PluginMatcher.isCompanion(repoName, name)) {
+                JsonObject release = candidate.getAsJsonObject();
+                if (release.has("draft") && !release.get("draft").isJsonNull() && release.get("draft").getAsBoolean()) {
                     continue;
                 }
-                double score = PluginMatcher.similarity(repoName, name) + PluginMatcher.platformBonus(name, serverProfile);
-                if (score > bestScore) {
-                    bestScore = score;
-                    bestAsset = asset;
+                if (release.has("prerelease") && !release.get("prerelease").isJsonNull() && release.get("prerelease").getAsBoolean()) {
+                    continue;
                 }
-            }
-            if (bestAsset == null || bestScore < MIN_GITHUB_ASSET_SIMILARITY) {
-                return DownloadResolution.failed("actions.download.details.github-no-jar");
+                releases.add(release);
             }
 
-            String downloadUrl = stringOrNull(bestAsset, "browser_download_url");
-            if (downloadUrl == null) {
+            if (releases.isEmpty()) {
+                return DownloadResolution.failed("actions.download.details.github-no-releases");
+            }
+
+            String repoName = repo.contains("/") ? repo.substring(repo.lastIndexOf('/') + 1) : repo;
+            java.util.List<ResolvedDownload> resolved = new java.util.ArrayList<>();
+            for (JsonObject release : releases) {
+                if (resolved.size() >= 6) {
+                    break;
+                }
+                if (!release.has("assets") || !release.get("assets").isJsonArray()) {
+                    continue;
+                }
+                JsonObject bestAsset = null;
+                double bestScore = -1.0;
+                for (JsonElement element : release.getAsJsonArray("assets")) {
+                    if (!element.isJsonObject()) {
+                        continue;
+                    }
+                    JsonObject asset = element.getAsJsonObject();
+                    String name = stringOrNull(asset, "name");
+                    if (name == null || !name.endsWith(".jar") || PluginMatcher.isNonRuntimeArtifact(name)
+                            || PluginMatcher.isCompanion(repoName, name)) {
+                        continue;
+                    }
+                    double score = PluginMatcher.similarity(repoName, name) + PluginMatcher.platformBonus(name, serverProfile);
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestAsset = asset;
+                    }
+                }
+                if (bestAsset == null || bestScore < MIN_GITHUB_ASSET_SIMILARITY) {
+                    continue;
+                }
+
+                String downloadUrl = stringOrNull(bestAsset, "browser_download_url");
+                if (downloadUrl == null) {
+                    continue;
+                }
+                resolved.add(new ResolvedDownload(downloadUrl, stringOrNull(bestAsset, "name"),
+                        stringOrNull(release, "tag_name"), null, digest(bestAsset)));
+            }
+            if (resolved.isEmpty()) {
                 return DownloadResolution.failed("actions.download.details.github-no-jar");
             }
-            return DownloadResolution.of(new ResolvedDownload(downloadUrl, stringOrNull(bestAsset, "name"),
-                    stringOrNull(release, "tag_name"), null, digest(bestAsset)));
+            return DownloadResolution.ofCandidates(resolved);
         } catch (Exception e) {
             Log.debug("plugindownloader.github-parse-failed", e, "repo", repo);
             return DownloadResolution.failed("actions.download.details.no-direct-link");
         }
-    }
-
-    private @Nullable JsonObject latestGithubRelease(String repo, @Nullable String authorization) throws Exception {
-        HttpJson.Response response = HttpJson.get("https://api.github.com/repos/" + repo + "/releases/latest", authorization);
-        if (response.ok() && response.body().isJsonObject()) {
-            return response.body().getAsJsonObject();
-        }
-        HttpJson.Response fallback = HttpJson.get("https://api.github.com/repos/" + repo + "/releases?per_page=1", authorization);
-        if (!fallback.ok() || !fallback.body().isJsonArray() || fallback.body().getAsJsonArray().isEmpty()) {
-            return null;
-        }
-        JsonElement candidate = fallback.body().getAsJsonArray().get(0);
-        if (!candidate.isJsonObject()) {
-            return null;
-        }
-        JsonObject release = candidate.getAsJsonObject();
-        if (release.has("draft") && !release.get("draft").isJsonNull() && release.get("draft").getAsBoolean()) {
-            return null;
-        }
-        if (release.has("prerelease") && !release.get("prerelease").isJsonNull() && release.get("prerelease").getAsBoolean()) {
-            return null;
-        }
-        return release;
     }
 
     private static int scoreModrinthVersion(JsonObject version, @Nullable String minecraftVersion, Set<String> serverLoaders) {
@@ -358,7 +430,7 @@ final class DownloadResolver {
     }
 
     private static String extractMajorMinor(String version) {
-        String[] parts = version.split("\\\\.");
+        String[] parts = version.split("\\.");
         return parts.length >= 2 ? parts[0] + "." + parts[1] : version;
     }
 
@@ -377,13 +449,20 @@ final class DownloadResolver {
 
     record ResolvedDownload(String downloadUrl, String fileName, String versionNumber, String sha512, String sha256) {}
 
-    record DownloadResolution(@Nullable ResolvedDownload info, @Nullable String failureDetail) {
+    record DownloadResolution(@Nullable ResolvedDownload info, @Nullable java.util.List<ResolvedDownload> candidates, @Nullable String failureDetail) {
         static DownloadResolution of(ResolvedDownload info) {
-            return new DownloadResolution(info, null);
+            return new DownloadResolution(info, java.util.List.of(info), null);
+        }
+
+        static DownloadResolution ofCandidates(java.util.List<ResolvedDownload> candidates) {
+            if (candidates == null || candidates.isEmpty()) {
+                return failed("actions.download.details.no-direct-link");
+            }
+            return new DownloadResolution(candidates.get(0), candidates, null);
         }
 
         static DownloadResolution failed(String detail) {
-            return new DownloadResolution(null, detail);
+            return new DownloadResolution(null, java.util.List.of(), detail);
         }
     }
 }

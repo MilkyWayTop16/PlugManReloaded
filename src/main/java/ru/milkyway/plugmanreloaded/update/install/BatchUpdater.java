@@ -120,6 +120,13 @@ public final class BatchUpdater {
                 listener.sendAction(sender, "update.all-install-success", summary);
             }
 
+            if (pendingRestartList != null && !pendingRestartList.isEmpty()) {
+                listener.sendAction(sender, "update.all-pending-restart", Map.of(
+                        "count", String.valueOf(pendingRestartList.size()),
+                        "plugins", String.join(", ", pendingRestartList)
+                ));
+            }
+
             if (skippedList != null && !skippedList.isEmpty()) {
                 listener.sendAction(sender, "update.all-install-skipped", Map.of(
                         "count", String.valueOf(skippedList.size()),

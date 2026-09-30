@@ -1,4 +1,4 @@
-#
+﻿#
 #
 #         █▀█ █░░ █░█ █▀▀ █▀▄▀█ ▄▀█ █▄░█ █▀█ █▀▀ █░░ █▀█ ▄▀█ █▀▄ █▀▀ █▀▄
 #         █▀▀ █▄▄ █▄█ █▄█ █░▀░█ █▀█ █░▀█ █▀▄ ██▄ █▄▄ █▄█ █▀█ █▄▀ ██▄ █▄▀
@@ -360,7 +360,7 @@ actions:
       - "[message] &#FB8808▶ Oops! &fSome plugins (&#FB8808{count}&f/&#FB8808{total}&f) were enabled in &#FFFF00{time}ms&f, but &#FB8808{failed-count} &ffailed: &#FB8808{failed-plugins}"
       - "[sound] ENTITY_VILLAGER_NO"
     all-failed:
-      - "[message] &#FB8808▶ Oops! &fNone of the plugins (&#FB88080&f/&#FB8808{total}&f) could be enabled! Check console."
+      - "[message] &#FB8808▶ Oops! &fNone of the plugins (&#FB88080&f/&#FB8808{total}&f) could be enabled! Check console"
       - "[sound] BLOCK_ANVIL_LAND"
     all-success:
       - "[message] &#FFFF00◆ &fAll previously disabled plugins (&#FFFF00{count}&f/&#FFFF00{total}&f) were successfully &#FFFF00enabled &fin &#FFFF00{time}ms."
@@ -383,7 +383,7 @@ actions:
       - "[message] &#FB8808▶ Oops! &fSome plugins (&#FB8808{count}&f/&#FB8808{total}&f) were disabled in &#FFFF00{time}ms&f, but &#FB8808{failed-count} &ffailed: &#FB8808{failed-plugins}"
       - "[sound] ENTITY_VILLAGER_NO"
     all-failed:
-      - "[message] &#FB8808▶ Oops! &fNone of the plugins (&#FB88080&f/&#FB8808{total}&f) could be disabled! Check console."
+      - "[message] &#FB8808▶ Oops! &fNone of the plugins (&#FB88080&f/&#FB8808{total}&f) could be disabled! Check console"
       - "[sound] BLOCK_ANVIL_LAND"
     all-success:
       - "[message] &#FFFF00◆ &fAll plugins (&#FFFF00{count}&f/&#FFFF00{total}&f) were successfully &#FFFF00disabled &fin &#FFFF00{time}ms."
@@ -442,7 +442,7 @@ actions:
       - "[message] &#FB8808▶ Oops! &fSome plugins (&#FB8808{count}&f/&#FB8808{total}&f) were loaded in &#FFFF00{time}ms&f, but &#FB8808{failed-count} &ffailed: &#FB8808{failed-plugins}"
       - "[sound] ENTITY_VILLAGER_NO"
     all-failed:
-      - "[message] &#FB8808▶ Oops! &fNone of the plugins (&#FB88080&f/&#FB8808{total}&f) could be loaded! Check console."
+      - "[message] &#FB8808▶ Oops! &fNone of the plugins (&#FB88080&f/&#FB8808{total}&f) could be loaded! Check console"
       - "[sound] BLOCK_ANVIL_LAND"
     all-success:
       - "[message] &#FFFF00◆ &fAll unloaded plugins (&#FFFF00{count}&f/&#FFFF00{total}&f) were successfully &#FFFF00loaded &fin &#FFFF00{time}ms."
@@ -465,7 +465,7 @@ actions:
       - "[message] &#FB8808▶ Oops! &fSome plugins (&#FB8808{count}&f/&#FB8808{total}&f) were unloaded from memory in &#FFFF00{time}ms&f, but &#FB8808{failed-count} &ffailed: &#FB8808{failed-plugins}"
       - "[sound] ENTITY_VILLAGER_NO"
     all-failed:
-      - "[message] &#FB8808▶ Oops! &fNone of the plugins (&#FB88080&f/&#FB8808{total}&f) could be unloaded! Check console."
+      - "[message] &#FB8808▶ Oops! &fNone of the plugins (&#FB88080&f/&#FB8808{total}&f) could be unloaded! Check console"
       - "[sound] BLOCK_ANVIL_LAND"
     all-success:
       - "[message] &#FFFF00◆ &fAll plugins (&#FFFF00{count}&f/&#FFFF00{total}&f) were successfully &#FFFF00unloaded &ffrom memory in &#FFFF00{time}ms."
@@ -597,7 +597,7 @@ actions:
       - "[message] &#FB8808▶ Oops! &fSome plugins (&#FB8808{count}&f/&#FB8808{total}&f) were reloaded in &#FFFF00{time}ms&f, but &#FB8808{failed-count} &ffailed: &#FB8808{failed-plugins}"
       - "[sound] ENTITY_VILLAGER_NO"
     all-failed:
-      - "[message] &#FB8808▶ Oops! &fNone of the plugins (&#FB88080&f/&#FB8808{total}&f) could be reloaded! Check console."
+      - "[message] &#FB8808▶ Oops! &fNone of the plugins (&#FB88080&f/&#FB8808{total}&f) could be reloaded! Check console"
       - "[sound] BLOCK_ANVIL_LAND"
     all-success:
       - "[message] &#FFFF00◆ &fAll plugins (&#FFFF00{count}&f/&#FFFF00{total}&f) were successfully &#FFFF00reloaded &fin &#FFFF00{time}ms."
@@ -663,7 +663,7 @@ actions:
       - "[message] &#FB8808▶ Oops! &fSome plugins (&#FB8808{count}&f/&#FB8808{total}&f) were restarted from disk in &#FFFF00{time}ms&f, but &#FB8808{failed-count} &ffailed: &#FB8808{failed-plugins}"
       - "[sound] ENTITY_VILLAGER_NO"
     all-failed:
-      - "[message] &#FB8808▶ Oops! &fNone of the plugins (&#FB88080&f/&#FB8808{total}&f) could be restarted! Check console."
+      - "[message] &#FB8808▶ Oops! &fNone of the plugins (&#FB88080&f/&#FB8808{total}&f) could be restarted! Check console"
       - "[sound] BLOCK_ANVIL_LAND"
     all-success:
       - "[message] &#FFFF00◆ &fAll plugins (&#FFFF00{count}&f/&#FFFF00{total}&f) were successfully &#FFFF00restarted &ffrom disk in &#FFFF00{time}ms."
@@ -1032,16 +1032,16 @@ actions:
       - "[message] &#FFFF00◆ &fPlugin &#FFFF00«{plugin}» &fwas successfully &#FFFF00updated &ffrom &#FFFF00v{from} &fto &#FFFF00v{to} &f(&#FFFF00{index}&f/&#FFFF00{total}&f)"
       - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
     all-install-item-pending:
-      - "[message] &#FFFF00◆ &fPlugin &#FFFF00«{plugin}» &fwas successfully &#FFFF00updated &ffrom &#FFFF00v{from} &fto &#FFFF00v{to} &f(&#FFFF00{index}&f/&#FFFF00{total}&f)"
+      - "[message] &#FFFF00◆ &fPlugin &#FFFF00«{plugin}» &fwas successfully &#FFFF00updated &ffrom &#FFFF00v{from} &fto &#FFFF00v{to}&f, will apply on &#FFFF00restart &f(&#FFFF00{index}&f/&#FFFF00{total}&f)"
       - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
     all-install-item-failed:
       - "[message] &#FB8808▶ Oops! Failed to &#FB8808update &fplugin &#FB8808«{plugin}»&f: &#FB8808{detail} &f(&#FB8808{index}&f/&#FB8808{total}&f)"
       - "[sound] BLOCK_ANVIL_LAND"
     all-install-partial:
-      - "[message] &#FB8808▶ Oops! &fPart of the updates (&#FB8808{count}&f/&#FB8808{total}&f) installed in &#FFFF00{time}ms&f, but some couldn't be installed! Check the console."
+      - "[message] &#FB8808▶ Oops! &fPart of the updates (&#FB8808{count}&f/&#FB8808{total}&f) installed in &#FFFF00{time}ms&f, but some couldn't be installed! Check the console"
       - "[sound] ENTITY_VILLAGER_NO"
     all-install-failed:
-      - "[message] &#FB8808▶ Oops! &fNone of the updates (&#FB88080&f/&#FB8808{total}&f) could be installed! Check the console."
+      - "[message] &#FB8808▶ Oops! &fNone of the updates (&#FB88080&f/&#FB8808{total}&f) could be installed! Check the console"
       - "[sound] BLOCK_ANVIL_LAND"
     all-install-success:
       - "[message] &#FFFF00◆ Done! &fThe bulk plugin update &#FFFF00finished successfully&f! Updated &#FFFF00{count} plugin(s) &fout of &#FFFF00{total} &fin &#FFFF00{time}ms."
@@ -1052,7 +1052,9 @@ actions:
     all-install-skipped:
       - "[message] &#FB8808▶ Heads up! &fSome plugin(s) (for example, &#FB8808{plugins}&f) were &#FB8808skipped&f, because they're either &#FB8808paid&f, or they &#FB8808don't support &fautomatic downloading..."
       - "[sound] BLOCK_ANVIL_LAND"
-    all-pending-restart: []
+    all-pending-restart:
+      - "[message] &#FB8808▶ Attention! &fPlugin(s) &#FB8808{plugins} &fwere staged into &#FB8808update/ &fand will take effect after server &#FB8808restart&f"
+      - "[sound] BLOCK_LEVER_CLICK"
     summary:
       - "[message] "
       - "[message]   &#FFFF00▶ &fCheck results:"
@@ -1526,7 +1528,7 @@ actions:
       - "[message] {cards}"
       - "[sound] BLOCK_LEVER_CLICK"
     search-card:
-      - "  &#FFFF00{index}. &fPlugin &#FFFF00«{title}» &f(&#FFFF00v{version}&f) by &#FFFF00{author}&f:"
+      - "  &#FFFF00{index}. &fPlugin &#FFFF00«{title}» &f(&#FFFF00{version}&f) by &#FFFF00{author}&f:"
       - ""
       - "     &#FFFF00◆ &fSite: &#FFFF00{source} &f| Downloads: &#FFFF00{downloads} &f| Stars: &#FFFF00{stars}"
       - ""
@@ -1540,7 +1542,7 @@ actions:
       - "[sound] BLOCK_ANVIL_LAND"
     confirm-single:
       - "[message] "
-      - "[message]   &#FFFF00◆ &fAre you sure you want to &#FFFF00download &fplugin &#FFFF00«{plugin}» &f(&#FFFF00v{version}&f)"
+      - "[message]   &#FFFF00◆ &fAre you sure you want to &#FFFF00download &fplugin &#FFFF00«{plugin}» &f(&#FFFF00{version}&f)"
       - "[message]       &fby &#FFFF00{author} &ffrom the &#FFFF00{source} &fsite, which has "
       - "[message]               &#FFFF00{downloads} &fdownloads and &#FFFF00{stars} &fstars?"
       - "[message] "
@@ -1607,6 +1609,7 @@ actions:
       invalid-plan-file: "a prepared installation file is missing or is outside the transaction directory"
       duplicate-plugin: "the installation plan contains the same plugin more than once"
       staged-file-changed: "a prepared file changed after validation"
+      rate-limited: "the site's rate limit was exceeded, please try again later"
     reasons:
       incompatible-java: "The plugin requires Java {required-java}+, but the server is running Java {current-java}"
       invalid-jar: "The downloaded file is corrupted or isn't a valid .jar archive"
@@ -1637,7 +1640,7 @@ actions:
         text: "&#FFFF00[More info]"
         hover:
           - ""
-          - " &#FFFF00▶ &fInfo about plugin &#FFFF00«{title}» &f(&#FFFF00v{version}&f): "
+          - " &#FFFF00▶ &fInfo about plugin &#FFFF00«{title}» &f(&#FFFF00{version}&f): "
           - ""
           - "  &#FFFF00◆ &fAuthor: &#FFFF00{author} "
           - "  &#FFFF00◆ &fSite: &#FFFF00{source} "

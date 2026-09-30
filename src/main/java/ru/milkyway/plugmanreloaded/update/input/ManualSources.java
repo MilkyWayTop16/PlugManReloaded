@@ -18,6 +18,7 @@ import ru.milkyway.plugmanreloaded.update.UpdateModels.RemoteVersion;
 import ru.milkyway.plugmanreloaded.update.source.GithubSource;
 import ru.milkyway.plugmanreloaded.update.source.UpdateSource;
 import ru.milkyway.plugmanreloaded.utils.Log;
+import ru.milkyway.plugmanreloaded.utils.PluginMetaHelper;
 import ru.milkyway.plugmanreloaded.utils.TaskScheduler;
 
 import java.io.File;
@@ -207,14 +208,14 @@ public class ManualSources {
                     source.identifyFromCatalog(identityFor(session), catalogSource.ref(), catalogSource.options());
             if (match == null) {
                 reportToPlayer(playerId, session, MS + "project-not-found", MS + "not-found",
-                        Map.of("source", catalogSource.sourceId(), "ref", catalogSource.ref()));
+                        Map.of("source", formatSourceDisplayName(catalogSource.sourceId()), "ref", catalogSource.ref()));
                 return;
             }
 
             List<RemoteVersion> versions = source.listVersions(match);
             if (versions == null || versions.isEmpty()) {
                 reportToPlayer(playerId, session, MS + "no-versions", MS + "not-found",
-                        Map.of("source", catalogSource.sourceId(), "ref", catalogSource.ref()));
+                        Map.of("source", formatSourceDisplayName(catalogSource.sourceId()), "ref", catalogSource.ref()));
                 return;
             }
 
@@ -238,7 +239,8 @@ public class ManualSources {
             }
         }
         File jar = target != null ? plugin.getPluginLifecycleManager().getPluginFile(target) : null;
-        return new PluginIdentity(session.getPluginName(), session.getMainClass(), "1.0",
+        String currentVer = target != null ? PluginMetaHelper.getVersion(target) : "1.0";
+        return new PluginIdentity(session.getPluginName(), session.getMainClass(), currentVer,
                 List.of(), null, null, null, jar);
     }
 
@@ -403,9 +405,7 @@ public class ManualSources {
 
         @EventHandler(priority = EventPriority.MONITOR)
         public void onQuit(PlayerQuitEvent event) {
-            if (event.getPlayer() != null) {
-                manualSources.removeSession(event.getPlayer().getUniqueId());
-            }
+            manualSources.removeSession(event.getPlayer().getUniqueId());
         }
     }
 }

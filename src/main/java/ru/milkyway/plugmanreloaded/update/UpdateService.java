@@ -179,20 +179,7 @@ public final class UpdateService {
     }
 
     public List<Plugin> snapshotLoadedPlugins() {
-        if (Bukkit.getServer() == null || Bukkit.getPluginManager() == null) {
-            return Collections.emptyList();
-        }
-        Plugin[] plugins = Bukkit.getPluginManager().getPlugins();
-        if (plugins == null || plugins.length == 0) {
-            return Collections.emptyList();
-        }
-        List<Plugin> list = new ArrayList<>(plugins.length);
-        for (Plugin p : plugins) {
-            if (p != null) {
-                list.add(p);
-            }
-        }
-        return list;
+        return List.of(Bukkit.getPluginManager().getPlugins());
     }
 
     private File userCatalogFile() {
@@ -344,14 +331,24 @@ public final class UpdateService {
 
         Map<String, List<UpdateCandidate>> candidatesByPlugin = new HashMap<>();
 
+        List<PluginIdentity> batchIdentities = new ArrayList<>();
+        List<PluginIdentity> explicitIdentities = new ArrayList<>();
+        for (PluginIdentity id : identities) {
+            if (catalog != null && catalog.hasExplicitSource(id.mainClass(), id.pluginName())) {
+                explicitIdentities.add(id);
+            } else {
+                batchIdentities.add(id);
+            }
+        }
+
         for (UpdateSource source : sources) {
             if (source == hangarSource) continue;
 
-            Map<String, UpdateSource.ProjectMatch> matches = source.identifyBatch(identities);
+            Map<String, UpdateSource.ProjectMatch> matches = source.identifyBatch(batchIdentities);
             if (matches.isEmpty()) continue;
 
             List<PluginIdentity> matchedIdentities = new ArrayList<>();
-            for (PluginIdentity id : identities) {
+            for (PluginIdentity id : batchIdentities) {
                 if (matches.containsKey(id.pluginName())) {
                     matchedIdentities.add(id);
                 }
@@ -372,7 +369,8 @@ public final class UpdateService {
             }
         }
 
-        List<PluginIdentity> stillNeeded = withoutConfirmedSource(identities, candidatesByPlugin);
+        List<PluginIdentity> stillNeeded = withoutConfirmedSource(batchIdentities, candidatesByPlugin);
+        stillNeeded.addAll(explicitIdentities);
         if (!stillNeeded.isEmpty()) {
             List<UpdateCandidate> pipelineResults = new ArrayList<>();
             resolveInParallel(stillNeeded, pipelineResults, identity -> pipeline.resolvePipeline(identity, resolver));

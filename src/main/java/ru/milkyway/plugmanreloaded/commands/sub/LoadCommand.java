@@ -71,9 +71,22 @@ public class LoadCommand extends AbstractSubCommand {
         }
 
         String rawPluginName = file.getName().replaceAll("(?i)\\.jar$", "");
+        String resolvedPluginName = null;
+        List<PluginJarIndex.JarInfo> indexed = plugin.getPluginLifecycleManager().getJarIndex().findAll(file.getName());
+        if (!indexed.isEmpty() && indexed.get(0).declaredName() != null) {
+            resolvedPluginName = indexed.get(0).declaredName();
+        } else {
+            PluginJarIndex.JarDescriptor descriptor = PluginJarIndex.readDescriptor(file);
+            if (descriptor != null && descriptor.declaredName() != null && !descriptor.declaredName().isBlank()) {
+                resolvedPluginName = descriptor.declaredName();
+            }
+        }
+        if (resolvedPluginName == null || resolvedPluginName.isBlank()) {
+            resolvedPluginName = rawPluginName;
+        }
         sendAction(sender, "load.start", Map.of(
                 "file", file.getName(),
-                "plugin", rawPluginName
+                "plugin", resolvedPluginName
         ));
         long start = System.currentTimeMillis();
 

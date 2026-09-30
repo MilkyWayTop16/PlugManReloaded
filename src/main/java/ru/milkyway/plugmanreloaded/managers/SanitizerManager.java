@@ -54,7 +54,7 @@ public class SanitizerManager {
         if (targetPlugin == null) return;
         ClassLoader classLoader = targetPlugin.getClass().getClassLoader();
 
-        boolean isSelf = (plugin != null && (classLoader == plugin.getClass().getClassLoader() || targetPlugin.equals(plugin) || targetPlugin.getName().equalsIgnoreCase(plugin.getName())))
+        boolean isSelf = (plugin != null && (targetPlugin == plugin || classLoader == plugin.getClass().getClassLoader()))
                 || classLoader == getClass().getClassLoader()
                 || targetPlugin.getName().equalsIgnoreCase("PlugManReloaded");
         if (isSelf) {
@@ -62,12 +62,10 @@ public class SanitizerManager {
             return;
         }
 
-        if (Bukkit.getServer() != null) {
-            try {
-                Bukkit.getServicesManager().unregisterAll(targetPlugin);
-            } catch (Throwable t) {
-                Log.debug("plugincleanup.services-failed", t, "plugin", targetPlugin.getName());
-            }
+        try {
+            Bukkit.getServicesManager().unregisterAll(targetPlugin);
+        } catch (Throwable t) {
+            Log.debug("plugincleanup.services-failed", t, "plugin", targetPlugin.getName());
         }
 
         try {
@@ -77,16 +75,14 @@ public class SanitizerManager {
             Log.debug("plugincleanup.listeners-failed", t, "plugin", targetPlugin.getName());
         }
 
-        if (Bukkit.getServer() != null && Bukkit.getMessenger() != null) {
-            try {
-                Bukkit.getMessenger().unregisterIncomingPluginChannel(targetPlugin);
-                Bukkit.getMessenger().unregisterOutgoingPluginChannel(targetPlugin);
-            } catch (Throwable t) {
-                Log.debug("plugincleanup.messenger-failed", t, "plugin", targetPlugin.getName());
-            }
+        try {
+            Bukkit.getMessenger().unregisterIncomingPluginChannel(targetPlugin);
+            Bukkit.getMessenger().unregisterOutgoingPluginChannel(targetPlugin);
+        } catch (Throwable t) {
+            Log.debug("plugincleanup.messenger-failed", t, "plugin", targetPlugin.getName());
         }
 
-        if (!PlatformDetector.isFolia() && Bukkit.getServer() != null) {
+        if (!PlatformDetector.isFolia()) {
             try {
                 Bukkit.getScheduler().cancelTasks(targetPlugin);
             } catch (Throwable t) {
@@ -364,12 +360,15 @@ public class SanitizerManager {
         detachFromPluginLoader(targetPlugin, classLoader);
         detachFromLoaderGroup(classLoader);
         clearClassTable(targetPlugin, classLoader);
-        closeLoaderItself(targetPlugin, classLoader);
-        closeUrlClassPath(targetPlugin, classLoader);
-        closeJarHandle(targetPlugin, classLoader);
-        clearBackReferences(targetPlugin, classLoader);
 
-        MetaspaceCleanup.requestDeferred(plugin);
+        TaskScheduler.runSyncLater(plugin, () -> {
+            closeLoaderItself(targetPlugin, classLoader);
+            closeUrlClassPath(targetPlugin, classLoader);
+            closeJarHandle(targetPlugin, classLoader);
+            clearBackReferences(targetPlugin, classLoader);
+
+            MetaspaceCleanup.requestDeferred(plugin);
+        }, 10L);
     }
 
     private void clearSafeClassDefinerLocks(Plugin targetPlugin, ClassLoader classLoader) {
@@ -683,7 +682,7 @@ public class SanitizerManager {
     }
 
     private static boolean canProceed(@Nullable Plugin targetPlugin) {
-        return targetPlugin != null && Bukkit.getServer() != null;
+        return targetPlugin != null;
     }
 
     public static void cleanupServerState(@Nullable Plugin targetPlugin) {
@@ -707,7 +706,6 @@ public class SanitizerManager {
         if (Bukkit.getServer() == null) return;
         PlugManReloaded plugin = PlugManReloaded.getInstance();
         for (Player player : Bukkit.getOnlinePlayers()) {
-            if (player == null) continue;
             TaskScheduler.runForEntity(plugin, player, () -> {
                 try {
                     if (player.isOnline()) {
@@ -725,7 +723,6 @@ public class SanitizerManager {
         PlugManReloaded plugin = PlugManReloaded.getInstance();
         AtomicInteger failed = new AtomicInteger();
         for (Player player : Bukkit.getOnlinePlayers()) {
-            if (player == null) continue;
             TaskScheduler.runForEntity(plugin, player, () -> {
                 try {
                     if (!player.isOnline()) return;
@@ -755,7 +752,6 @@ public class SanitizerManager {
         PlugManReloaded plugin = PlugManReloaded.getInstance();
         AtomicInteger failed = new AtomicInteger();
         for (Player player : Bukkit.getOnlinePlayers()) {
-            if (player == null) continue;
             TaskScheduler.runForEntity(plugin, player, () -> {
                 try {
                     if (!player.isOnline()) return;

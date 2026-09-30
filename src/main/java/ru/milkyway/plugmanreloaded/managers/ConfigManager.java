@@ -27,7 +27,7 @@ public final class ConfigManager {
 
     public ConfigManager(PlugManReloaded plugin) {
         this.plugin = plugin;
-        this.mainConfig = plugin != null ? new MainConfig(plugin) : null;
+        this.mainConfig = new MainConfig(plugin);
         this.actionManager = new ActionManager(plugin, this);
         loadMessages();
     }

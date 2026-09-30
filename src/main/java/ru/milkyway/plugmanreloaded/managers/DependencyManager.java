@@ -27,23 +27,11 @@ public class DependencyManager {
     }
 
     public Map<String, DependencyNode> buildGraph(boolean includeSoftDepends) {
-        if (Bukkit.getServer() == null) {
-            return Collections.emptyMap();
-        }
-        PluginManager pm = Bukkit.getPluginManager();
-        if (pm == null) {
-            return Collections.emptyMap();
-        }
-        Plugin[] plugins = pm.getPlugins();
-        if (plugins == null) {
-            return Collections.emptyMap();
-        }
-
         Map<String, DependencyNode> graph = new HashMap<>();
         Map<String, List<DependencyNode>> providesMap = new HashMap<>();
 
+        Plugin[] plugins = Bukkit.getPluginManager().getPlugins();
         for (Plugin p : plugins) {
-            if (p == null || p.getName() == null || p.getName().isBlank()) continue;
             DependencyNode node = new DependencyNode(p.getName());
             graph.put(p.getName().toLowerCase(Locale.ROOT), node);
 
@@ -60,7 +48,7 @@ public class DependencyManager {
         }
 
         for (Plugin p : plugins) {
-            if (p == null || p.getName() == null || p.getName().isBlank()) continue;
+            if (p.getName().isBlank()) continue;
             String nameLower = p.getName().toLowerCase(Locale.ROOT);
             DependencyNode node = graph.get(nameLower);
             if (node == null) continue;

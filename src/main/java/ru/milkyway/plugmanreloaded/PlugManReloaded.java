@@ -7,7 +7,7 @@ import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 import ru.milkyway.plugmanreloaded.api.PlugManAPI;
 import ru.milkyway.plugmanreloaded.api.PlugManProvider;
-import ru.milkyway.plugmanreloaded.api.impl.PlugManAPIImpl;
+
 import ru.milkyway.plugmanreloaded.bridge.PlatformDetector;
 import ru.milkyway.plugmanreloaded.commands.CommandHandler;
 import ru.milkyway.plugmanreloaded.commands.CommandTabCompleter;
@@ -102,7 +102,7 @@ public final class PlugManReloaded extends JavaPlugin {
             updateService = new UpdateService(this);
             getServer().getPluginManager().registerEvents(new UpdateNotifyListener(this, updateService), this);
             updateService.getNotifications().checkOnStartIfEnabled();
-            String downloadUserAgent = "PlugManReloaded/" + PluginMetaHelper.getVersion(this);
+            String downloadUserAgent = "PlugManReloaded/" + PluginMetaHelper.getVersion(this) + " (+https://github.com/MilkyWayTop16/PlugManReloaded)";
             downloadService = new DownloadService(this, updateService.getServerProfile(), updateService.getCatalog(), downloadUserAgent);
             manualSources = new ManualSources(this);
             getServer().getPluginManager().registerEvents(new ManualSourceListener(this, manualSources), this);
@@ -216,19 +216,14 @@ public final class PlugManReloaded extends JavaPlugin {
     }
 
     public void console(String message) {
-        if (message == null) return;
-        if (Bukkit.getServer() != null && Bukkit.getConsoleSender() != null) {
+        if (message != null) {
             Bukkit.getConsoleSender().sendMessage(HexColors.translateForConsole(message));
         }
     }
 
     @Override
     public FileConfiguration getConfig() {
-        if (configManager != null && configManager.getMainConfig() != null) {
-            FileConfiguration cfg = configManager.getMainConfig().getConfig();
-            if (cfg != null) return cfg;
-        }
-        return super.getConfig();
+        return configManager != null ? configManager.getMainConfig().getConfig() : super.getConfig();
     }
 
     @Override

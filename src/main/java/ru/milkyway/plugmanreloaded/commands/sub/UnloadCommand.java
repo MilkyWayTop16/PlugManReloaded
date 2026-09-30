@@ -74,13 +74,13 @@ public class UnloadCommand extends AbstractSubCommand {
         boolean force = ctx.hasFlag("y") || ctx.hasFlag("yes") || ctx.hasFlag("f") || ctx.hasFlag("force");
         String token = ctx.token();
         if (token != null) {
-            if (!plugin.getConfirmationManager().validateAndConsume(sender, "unload", targetName, token)) {
+            if (!plugin.getConfirmationManager().validateAndConsume(sender, "unload", targetPlugin.getName(), token)) {
                 sendAction(sender, "errors.confirm-expired");
                 return true;
             }
             force = true;
         } else if (force) {
-            plugin.getConfirmationManager().consumeIfPresent(sender, "unload", targetName);
+            plugin.getConfirmationManager().consumeIfPresent(sender, "unload", targetPlugin.getName());
         }
 
         Map<String, String> pluginPh = getPluginPlaceholders(targetPlugin);
@@ -99,9 +99,12 @@ public class UnloadCommand extends AbstractSubCommand {
     }
 
     private boolean unloadAll(CommandSender sender) {
-        List<Plugin> plugins = Arrays.stream(Bukkit.getPluginManager().getPlugins())
-                .filter(p -> !plugin.getPluginLifecycleManager().isProtected(p))
-                .toList();
+        List<Plugin> plugins = new java.util.ArrayList<>();
+        for (Plugin p : Bukkit.getPluginManager().getPlugins()) {
+            if (!plugin.getPluginLifecycleManager().isProtected(p)) {
+                plugins.add(p);
+            }
+        }
         if (plugins.isEmpty()) {
             sendAction(sender, "unload.all-empty");
             return true;

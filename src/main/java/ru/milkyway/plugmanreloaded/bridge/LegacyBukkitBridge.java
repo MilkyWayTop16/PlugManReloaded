@@ -15,6 +15,7 @@ import ru.milkyway.plugmanreloaded.utils.PluginJarIndex;
 import ru.milkyway.plugmanreloaded.utils.ErrorAnalyzer;
 import ru.milkyway.plugmanreloaded.utils.JarValidator;
 import ru.milkyway.plugmanreloaded.utils.Log;
+import ru.milkyway.plugmanreloaded.utils.MetaspaceCleanup;
 import ru.milkyway.plugmanreloaded.utils.PluginMetaHelper;
 import ru.milkyway.plugmanreloaded.utils.ReflectionHelper;
 
@@ -216,6 +217,7 @@ public class LegacyBukkitBridge implements PlatformBridge {
 
         PluginResult loadResult = loadPlugin(file);
         if (!loadResult.success()) {
+            MetaspaceCleanup.runNow();
             loadResult = loadPlugin(file);
         }
         if (!loadResult.success()) {
@@ -234,16 +236,16 @@ public class LegacyBukkitBridge implements PlatformBridge {
 
         if (targetPlugin instanceof JavaPlugin jp) {
             File f = ReflectionHelper.getFieldValue(JavaPlugin.class, targetPlugin, "file");
-            if (f != null && f.exists()) {
+            if (f != null) {
                 File resolved = resolveOriginalJar(f, pluginsDir);
-                if (resolved != null && resolved.exists()) return resolved;
+                if (resolved != null) return resolved;
             }
 
             try {
                 File mf = ReflectionHelper.invokeMethod(jp, "getFile");
-                if (mf != null && mf.exists()) {
+                if (mf != null) {
                     File resolved = resolveOriginalJar(mf, pluginsDir);
-                    if (resolved != null && resolved.exists()) return resolved;
+                    if (resolved != null) return resolved;
                 }
             } catch (Throwable ignored) {}
         }
@@ -252,9 +254,9 @@ public class LegacyBukkitBridge implements PlatformBridge {
             CodeSource cs = targetPlugin.getClass().getProtectionDomain().getCodeSource();
             if (cs != null && cs.getLocation() != null) {
                 File f = new File(cs.getLocation().toURI());
-                if (f.exists() && f.getName().toLowerCase(Locale.ROOT).endsWith(".jar")) {
+                if (f.getName().toLowerCase(Locale.ROOT).endsWith(".jar")) {
                     File resolved = resolveOriginalJar(f, pluginsDir);
-                    if (resolved != null && resolved.exists()) return resolved;
+                    if (resolved != null) return resolved;
                 }
             }
         } catch (Throwable ignored) {}
@@ -265,16 +267,16 @@ public class LegacyBukkitBridge implements PlatformBridge {
                 URL[] urls = ucl.getURLs();
                 if (urls != null && urls.length > 0) {
                     File f = new File(urls[0].toURI());
-                    if (f.exists() && f.getName().toLowerCase(Locale.ROOT).endsWith(".jar")) {
+                    if (f.getName().toLowerCase(Locale.ROOT).endsWith(".jar")) {
                         File resolved = resolveOriginalJar(f, pluginsDir);
-                        if (resolved != null && resolved.exists()) return resolved;
+                        if (resolved != null) return resolved;
                     }
                 }
             }
         } catch (Throwable ignored) {}
 
         File fromIndex = plugin.getPluginLifecycleManager().getJarIndex().find(targetPlugin.getName());
-        if (fromIndex != null && fromIndex.exists() && isDirectChildOf(fromIndex, pluginsDir)) {
+        if (fromIndex != null && isDirectChildOf(fromIndex, pluginsDir)) {
             return fromIndex;
         }
 

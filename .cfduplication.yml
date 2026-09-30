@@ -1,0 +1,12 @@
+MinLineCount: 20
+
+IgnorePatterns:
+  - "**/test/**"
+  - "**/tests/**"
+  - "**/*Test.java"
+  - "**/*.spec.*"
+  - "**/mocks/**"
+  - ".experiment/**"
+  - "test_plugins_cache/**"
+  - "vanilla_cache/**"
+  - "target/**"

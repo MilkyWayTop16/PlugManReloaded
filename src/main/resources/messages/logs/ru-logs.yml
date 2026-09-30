@@ -87,6 +87,7 @@ logs:
     source-write-failed: "[UpdateInstaller] Не удалось сохранить закреплённый источник обновлений для {plugin}"
     pending-source-write-failed: "[UpdateInstaller] Не удалось сохранить метаданные ожидающего обновления для {plugin}"
     dependency-update-available: "[UpdateInstaller] Внимание: плагин {plugin} зависит от {dependency}, для которого также доступно обновление ({newVersion})! Рекомендуется обновить {dependency}"
+    dependency-check-failed: "[UpdateInstaller] Не удалось проверить обновления для зависимости {dependency}"
     jar-overwrite-failed: "[UpdateInstaller] Не удалось перезаписать JAR для &#FF5D00{plugin}&f, сохраняю для перезапуска"
     new-version-load-failed: "[UpdateInstaller] Новая версия &#ffff00{plugin} &fне загрузилась, выполняется откат"
     jarindex-invalidate-failed: "[UpdateInstaller] Не удалось сбросить кэш индекса jar-файлов"
@@ -124,6 +125,8 @@ logs:
     modrinth-parse-failed: "[PluginDownloader] Не удалось разобрать ответ Modrinth"
     hangar-parse-failed: "[PluginDownloader] Не удалось разобрать ответ Hangar"
     github-parse-failed: "[PluginDownloader] Не удалось разобрать релизы GitHub для {repo}"
+    candidate-java-incompatible: "[PluginDownloader] Версия {version} плагина &#FF5D00{plugin}&f требует Java {reqJava} (текущая: {currJava}), пропускаем"
+    java-fallback-applied: "[PluginDownloader] Найдена совместимая старая версия {version} для &#FF5D00{plugin}&f (новая версия требует слишком новую Java)"
     temp-file-delete-failed: "[PluginDownloader] Не удалось удалить временный файл {file}"
     staging-cleanup-failed: "[PluginDownloader] Не удалось очистить staging-каталог"
 

@@ -88,6 +88,7 @@ logs:
     source-write-failed: "[UpdateInstaller] Failed to save pinned update source for {plugin}"
     pending-source-write-failed: "[UpdateInstaller] Failed to save pending update metadata for {plugin}"
     dependency-update-available: "[UpdateInstaller] Notice: plugin {plugin} depends on {dependency}, which also has an update available ({newVersion})! Updating {dependency} is recommended"
+    dependency-check-failed: "[UpdateInstaller] Failed to check updates for dependency {dependency}"
     jar-overwrite-failed: "[UpdateInstaller] Failed to overwrite the JAR for &#FF5D00{plugin}&f, keeping it staged for a restart instead"
     new-version-load-failed: "[UpdateInstaller] The new version of &#ffff00{plugin} &ffailed to load, rolling back"
     jarindex-invalidate-failed: "[UpdateInstaller] Failed to invalidate the jar index cache"
@@ -125,6 +126,8 @@ logs:
     modrinth-parse-failed: "[PluginDownloader] Failed to parse the Modrinth response"
     hangar-parse-failed: "[PluginDownloader] Failed to parse the Hangar response"
     github-parse-failed: "[PluginDownloader] Failed to parse GitHub releases for {repo}"
+    candidate-java-incompatible: "[PluginDownloader] Version {version} of &#FF5D00{plugin}&f requires Java {reqJava} (current: {currJava}), skipping"
+    java-fallback-applied: "[PluginDownloader] Found a compatible older version {version} for &#FF5D00{plugin}&f (the latest requires a newer Java)"
     temp-file-delete-failed: "[PluginDownloader] Failed to delete the temporary file {file}"
     staging-cleanup-failed: "[PluginDownloader] Failed to clean up the staging directory"
 

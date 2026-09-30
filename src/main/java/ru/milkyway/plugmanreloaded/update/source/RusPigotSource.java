@@ -3,6 +3,8 @@ package ru.milkyway.plugmanreloaded.update.source;
 import ru.milkyway.plugmanreloaded.update.PluginMatcher;
 import ru.milkyway.plugmanreloaded.update.UpdateModels.*;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import org.jetbrains.annotations.Nullable;
 import ru.milkyway.plugmanreloaded.update.HttpJson;
 import ru.milkyway.plugmanreloaded.update.UpdateCache;
@@ -29,6 +31,9 @@ public class RusPigotSource implements UpdateSource {
     private static final int CANDIDATE_LIMIT = 6;
     private static final double MIN_TITLE_SIMILARITY = 0.90;
 
+    private static final Pattern RESOURCE_ID = Pattern.compile(
+            "(?:/resources/(?:[^/]*?\\.)?|(?<=\\.)|^)(\\d+)(?:/|$|\\?|#)"
+    );
     private static final Pattern RESOURCE_LINK = Pattern.compile(
             "<a[^>]+href=\"(/resources/[a-zA-Z0-9%._-]+\\.\\d+/?)\"[^>]*>(.*?)</a>",
             Pattern.DOTALL
@@ -58,7 +63,7 @@ public class RusPigotSource implements UpdateSource {
         this.github = github;
     }
 
-    private static HttpJson.RawResponse fetch(String url) {
+    private static void throttle() {
         long waitTime = 0;
         synchronized (REQUEST_LOCK) {
             long now = System.currentTimeMillis();
@@ -78,7 +83,54 @@ public class RusPigotSource implements UpdateSource {
                 Log.debug("ruspigotsource.rate-limit-interrupted", interrupted);
             }
         }
+    }
+
+    private static HttpJson.RawResponse fetch(String url) {
+        throttle();
         return HttpJson.getRaw(url);
+    }
+
+    private static HttpJson.Response fetchJson(String url) {
+        throttle();
+        return HttpJson.get(url);
+    }
+
+    private static @Nullable String extractResourceId(@Nullable String input) {
+        if (input == null || input.isBlank()) {
+            return null;
+        }
+        Matcher matcher = RESOURCE_ID.matcher(input.trim());
+        return matcher.find() ? matcher.group(1) : null;
+    }
+
+    private static @Nullable String cleanVersionString(@Nullable String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        String trimmed = raw.trim();
+        String stripped = trimmed.replaceFirst("^[vV]+", "").trim();
+        String result = stripped.isEmpty() ? trimmed : stripped;
+        if (isDateLike(result)) {
+            return null;
+        }
+        return result;
+    }
+
+    private static @Nullable String fetchVersionFromApi(String resourceId) {
+        String url = SITE + "/dev/v1/resource/" + resourceId + "/version/";
+        HttpJson.Response response = fetchJson(url);
+        if (!response.ok() || response.body() == null || !response.body().isJsonObject()) {
+            return null;
+        }
+        JsonObject obj = response.body().getAsJsonObject();
+        if (obj.has("error") || !obj.has("version")) {
+            return null;
+        }
+        JsonElement versionElement = obj.get("version");
+        if (versionElement == null || !versionElement.isJsonPrimitive()) {
+            return null;
+        }
+        return cleanVersionString(versionElement.getAsString());
     }
 
     @Override
@@ -145,6 +197,11 @@ public class RusPigotSource implements UpdateSource {
                 continue;
             }
 
+            String resourceId = extractResourceId(pageUrl);
+            if (resourceId != null) {
+                cache.put(ID + ":paid:" + resourceId, Boolean.valueOf(resource.paid()));
+            }
+
             if (!resource.paid() && resource.repoRef() != null) {
                 ProjectMatch match = delegatedMatch(pluginName, resource.repoRef(), MatchReason.NAME_FUZZY);
                 cache.put(cacheKey, match);
@@ -186,6 +243,10 @@ public class RusPigotSource implements UpdateSource {
         if (resource == null || resource.transportFailure()) {
             return null;
         }
+        String resourceId = extractResourceId(pageUrl);
+        if (resourceId != null) {
+            cache.put(ID + ":paid:" + resourceId, Boolean.valueOf(resource.paid()));
+        }
         if (!resource.paid() && resource.repoRef() != null) {
             return delegatedMatch(identity.pluginName(), resource.repoRef(), MatchReason.CATALOG);
         }
@@ -226,13 +287,35 @@ public class RusPigotSource implements UpdateSource {
             return cached;
         }
 
-        HttpJson.RawResponse page = fetch(match.projectRef());
-        if (page.transportFailure() || !page.ok()) {
-            return versions;
+        String resourceId = extractResourceId(match.projectRef());
+        String versionNumber = resourceId != null ? fetchVersionFromApi(resourceId) : null;
+        boolean paid = false;
+
+        if (versionNumber != null && !versionNumber.isBlank()) {
+            Boolean cachedPaid = resourceId != null ? cache.get(ID + ":paid:" + resourceId, Boolean.class) : null;
+            if (cachedPaid != null) {
+                paid = cachedPaid;
+            } else {
+                HttpJson.RawResponse page = fetch(match.projectRef());
+                if (page.ok()) {
+                    paid = isPaidResource(page.body());
+                    if (resourceId != null) {
+                        cache.put(ID + ":paid:" + resourceId, Boolean.valueOf(paid));
+                    }
+                }
+            }
+        } else {
+            HttpJson.RawResponse page = fetch(match.projectRef());
+            if (page.transportFailure() || !page.ok()) {
+                return versions;
+            }
+            paid = isPaidResource(page.body());
+            if (resourceId != null) {
+                cache.put(ID + ":paid:" + resourceId, Boolean.valueOf(paid));
+            }
+            versionNumber = cleanVersionString(extractVersionNumber(page.body()));
         }
 
-        boolean paid = isPaidResource(page.body());
-        String versionNumber = extractVersionNumber(page.body());
         if (versionNumber != null && !versionNumber.isBlank()) {
             versions.add(new RemoteVersion(
                     paid ? ID_PREMIUM : ID,

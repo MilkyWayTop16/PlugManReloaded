@@ -148,7 +148,7 @@ public class ActionManager {
     }
 
     public void executeActions(CommandSender sender, String actionKey, Map<String, String> placeholders) {
-        if (Bukkit.getServer() != null && !Bukkit.isPrimaryThread()) {
+        if (!Bukkit.isPrimaryThread()) {
             TaskScheduler.runSync(plugin, () -> executeActionsInternal(sender, actionKey, placeholders));
         } else {
             executeActionsInternal(sender, actionKey, placeholders);
@@ -157,7 +157,7 @@ public class ActionManager {
 
     public void executeRawAction(CommandSender sender, @Nullable String rawLine, Map<String, String> placeholders) {
         if (rawLine == null || rawLine.isEmpty()) return;
-        if (Bukkit.getServer() != null && !Bukkit.isPrimaryThread()) {
+        if (!Bukkit.isPrimaryThread()) {
             TaskScheduler.runSync(plugin, () -> executeRawActionInternal(sender, rawLine, placeholders));
         } else {
             executeRawActionInternal(sender, rawLine, placeholders);
@@ -227,9 +227,7 @@ public class ActionManager {
                 }
             }
             case "message-console" -> {
-                if (Bukkit.getServer() != null) {
-                    sendMessage(Bukkit.getConsoleSender(), text, placeholders, actionKey);
-                }
+                sendMessage(Bukkit.getConsoleSender(), text, placeholders, actionKey);
             }
             case "actionbar" -> {
                 if (player != null) {
@@ -247,25 +245,21 @@ public class ActionManager {
                 }
             }
             case "broadcast" -> {
-                if (Bukkit.getServer() != null) {
-                    for (Player online : Bukkit.getOnlinePlayers()) {
-                        sendMessage(online, text, placeholders, actionKey);
-                    }
-                    sendMessage(Bukkit.getConsoleSender(), text, placeholders, actionKey);
+                for (Player online : Bukkit.getOnlinePlayers()) {
+                    sendMessage(online, text, placeholders, actionKey);
                 }
+                sendMessage(Bukkit.getConsoleSender(), text, placeholders, actionKey);
             }
             case "console-command", "command" -> {
-                if (Bukkit.getServer() != null) {
-                    Map<String, String> safePlaceholders = sanitizePlaceholders(placeholders);
-                    String safeText = applyPlaceholders(action.content(), safePlaceholders);
-                    if (PlatformDetector.isFolia()) {
-                        TaskScheduler.runSync(plugin, () -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), safeText));
+                Map<String, String> safePlaceholders = sanitizePlaceholders(placeholders);
+                String safeText = applyPlaceholders(action.content(), safePlaceholders);
+                if (PlatformDetector.isFolia()) {
+                    TaskScheduler.runSync(plugin, () -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), safeText));
+                } else {
+                    if (Bukkit.isPrimaryThread()) {
+                        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), safeText);
                     } else {
-                        if (Bukkit.isPrimaryThread()) {
-                            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), safeText);
-                        } else {
-                            TaskScheduler.runSync(plugin, () -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), safeText));
-                        }
+                        TaskScheduler.runSync(plugin, () -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), safeText));
                     }
                 }
             }

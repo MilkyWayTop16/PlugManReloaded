@@ -33,7 +33,7 @@ public final class NettyGuard {
     record CacheKey(Class<?> clazz, ClassLoader loader) {}
 
     public static void cleanPlayerPipelines(@Nullable Plugin targetPlugin) {
-        if (targetPlugin == null || Bukkit.getServer() == null) return;
+        if (targetPlugin == null) return;
         ClassLoader targetCl = targetPlugin.getClass().getClassLoader();
         if (targetCl == null) return;
 
@@ -168,7 +168,7 @@ public final class NettyGuard {
     }
 
     public static boolean hasInjectedHandlers(@Nullable Plugin targetPlugin) {
-        if (targetPlugin == null || Bukkit.getServer() == null) return false;
+        if (targetPlugin == null) return false;
         ClassLoader targetCl = targetPlugin.getClass().getClassLoader();
         if (targetCl == null) return false;
 

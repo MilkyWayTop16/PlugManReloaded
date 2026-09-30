@@ -1,6 +1,7 @@
 package ru.milkyway.plugmanreloaded.bridge;
 
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.Nullable;
 import ru.milkyway.plugmanreloaded.PlugManReloaded;
@@ -31,6 +32,7 @@ public class FoliaBridge extends ModernPaperBridge {
     }
 
     private void cancelFoliaTasks(Plugin targetPlugin) {
+        if (targetPlugin == null) return;
         try {
             Object globalScheduler = ReflectionHelper.invokeMethod(Bukkit.getServer(), "getGlobalRegionScheduler");
             if (globalScheduler != null) {
@@ -40,9 +42,16 @@ public class FoliaBridge extends ModernPaperBridge {
             if (asyncScheduler != null) {
                 ReflectionHelper.invokeMethod(asyncScheduler, "cancelTasks", targetPlugin);
             }
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                try {
+                    Object entityScheduler = ReflectionHelper.invokeMethod(player, "getScheduler");
+                    if (entityScheduler != null) {
+                        ReflectionHelper.invokeMethod(entityScheduler, "cancelTasks", targetPlugin);
+                    }
+                } catch (Throwable ignored) {}
+            }
         } catch (Throwable t) {
             Log.debug("foliabridge.cancel-tasks-failed", t, "plugin", targetPlugin.getName());
         }
     }
 }
-

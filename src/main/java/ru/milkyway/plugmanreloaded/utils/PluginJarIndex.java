@@ -55,7 +55,9 @@ public final class PluginJarIndex {
 
     public PluginJarIndex(PlugManReloaded plugin) {
         this.plugin = plugin;
-        scanAndPublish();
+        if (plugin != null) {
+            scanAndPublish();
+        }
     }
 
     public void invalidate() {

@@ -313,7 +313,7 @@ public abstract class AbstractSubCommand implements SubCommand {
 
     protected List<String> allDeletablePlugins() {
         LifecycleManager lifecycle = plugin != null ? plugin.getPluginLifecycleManager() : null;
-        if (Bukkit.getServer() == null || lifecycle == null || plugin == null) return Collections.emptyList();
+        if (lifecycle == null) return Collections.emptyList();
         Set<String> set = new LinkedHashSet<>();
         boolean useJar = plugin.getConfigManager().isUseJarFileNames();
         if (useJar) {
@@ -347,7 +347,7 @@ public abstract class AbstractSubCommand implements SubCommand {
 
     protected List<String> allInspectablePlugins() {
         LifecycleManager lifecycle = plugin != null ? plugin.getPluginLifecycleManager() : null;
-        if (Bukkit.getServer() == null || lifecycle == null) return Collections.emptyList();
+        if (lifecycle == null) return Collections.emptyList();
         Set<String> set = new LinkedHashSet<>();
         for (Plugin p : Bukkit.getPluginManager().getPlugins()) {
             set.add(p.getName());
@@ -361,10 +361,14 @@ public abstract class AbstractSubCommand implements SubCommand {
     }
 
     protected List<String> loadedPlugins(Predicate<Plugin> filter) {
-        if (Bukkit.getServer() == null || plugin == null) return Collections.emptyList();
+
         Set<String> names = new LinkedHashSet<>();
-        LifecycleManager lifecycle = plugin.getPluginLifecycleManager();
-        boolean useJar = plugin.getConfigManager().isUseJarFileNames();
+        LifecycleManager lifecycle = plugin != null ? plugin.getPluginLifecycleManager() : null;
+        boolean useJar = plugin != null && plugin.getConfigManager() != null && plugin.getConfigManager().isUseJarFileNames();
+
+        if (Bukkit.getServer() == null) {
+            return Collections.emptyList();
+        }
 
         for (Plugin p : Bukkit.getPluginManager().getPlugins()) {
             if (filter.test(p)) {
@@ -397,9 +401,13 @@ public abstract class AbstractSubCommand implements SubCommand {
     }
 
     protected List<String> downloadSuggestions() {
-        if (plugin == null) return Collections.emptyList();
+
+        if (plugin == null || plugin.getConfigManager() == null) {
+            return Collections.emptyList();
+        }
+
         MainConfig mainConfig = plugin.getConfigManager().getMainConfig();
-        if (!mainConfig.isDownloadSuggestionsEnabled()) {
+        if (mainConfig == null || !mainConfig.isDownloadSuggestionsEnabled()) {
             return Collections.emptyList();
         }
 
@@ -408,9 +416,9 @@ public abstract class AbstractSubCommand implements SubCommand {
             return popular;
         }
 
-        LifecycleManager lifecycle = plugin.getPluginLifecycleManager();
+        LifecycleManager lifecycle = plugin != null ? plugin.getPluginLifecycleManager() : null;
         Set<String> presentKeys = new HashSet<>();
-        if (Bukkit.getServer() != null) {
+        if (Bukkit.getServer() != null && Bukkit.getPluginManager() != null) {
             for (Plugin p : Bukkit.getPluginManager().getPlugins()) {
                 presentKeys.add(p.getName().toLowerCase(Locale.ROOT));
             }

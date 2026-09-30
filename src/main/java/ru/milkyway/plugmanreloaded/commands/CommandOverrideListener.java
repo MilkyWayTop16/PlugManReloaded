@@ -64,7 +64,7 @@ public class CommandOverrideListener implements Listener {
         if (rawTokens.length == 0 || !isPluginsAlias(rawTokens[0])) return;
 
         CommandSender sender = event.getSender();
-        if (!hasPermission(sender)) return;
+        if (!canServeList(sender)) return;
 
         boolean endsWithSpace = buffer.endsWith(" ");
         String currentToken = endsWithSpace ? "" : rawTokens[rawTokens.length - 1];
@@ -109,23 +109,12 @@ public class CommandOverrideListener implements Listener {
         return lower.equals("pl") || lower.equals("plugins");
     }
 
-    public boolean canServeList(CommandSender sender) {
+    public boolean canServeList(@Nullable CommandSender sender) {
         return sender != null
                 && (sender.hasPermission("plugmanreloaded.list") || sender.hasPermission("plugmanreloaded.admin"));
     }
 
-    private boolean hasPermission(CommandSender sender) {
-        return sender.hasPermission("plugmanreloaded.list")
-                || sender.hasPermission("plugmanreloaded.admin")
-                || sender.hasPermission("bukkit.command.plugins");
-    }
-
     private void executeList(CommandSender sender, String[] tokens) {
-        if (!hasPermission(sender)) {
-            plugin.getConfigManager().executeActions(sender, "errors.no-permission");
-            return;
-        }
-
         String[] listArgs = new String[tokens.length];
         listArgs[0] = "list";
         if (tokens.length > 1) {

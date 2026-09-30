@@ -62,17 +62,19 @@ public class SafetyManager {
             return new SafetyAssessment(PluginRiskLevel.SAFE, Collections.emptySet());
         }
 
-        if (targetPlugin.equals(plugin) || targetPlugin.getName().equalsIgnoreCase(plugin.getName())) {
+        if (targetPlugin.equals(plugin) || (plugin != null && plugin.getName() != null && targetPlugin.getName().equalsIgnoreCase(plugin.getName()))) {
             return new SafetyAssessment(PluginRiskLevel.CRITICAL_PROTECTED, Collections.emptySet());
         }
 
-        Set<String> dependents = plugin.getPluginLifecycleManager().getDependencyManager().getDependents(targetPlugin.getName(), true);
+        Set<String> dependents = plugin != null && plugin.getPluginLifecycleManager() != null && plugin.getPluginLifecycleManager().getDependencyManager() != null
+                ? plugin.getPluginLifecycleManager().getDependencyManager().getDependents(targetPlugin.getName(), true)
+                : Collections.emptySet();
 
         if (isKnownHostile(targetPlugin)) {
             return new SafetyAssessment(PluginRiskLevel.UNLOADABLE_HOSTILE, dependents);
         }
 
-        File pluginFile = plugin.getPluginLifecycleManager().getPluginFile(targetPlugin);
+        File pluginFile = plugin != null && plugin.getPluginLifecycleManager() != null ? plugin.getPluginLifecycleManager().getPluginFile(targetPlugin) : null;
         if (pluginFile != null && JarValidator.hasPaperBootstrapper(pluginFile)) {
             return new SafetyAssessment(PluginRiskLevel.UNLOADABLE_HOSTILE, dependents);
         }

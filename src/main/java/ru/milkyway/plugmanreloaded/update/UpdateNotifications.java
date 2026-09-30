@@ -32,12 +32,10 @@ public final class UpdateNotifications {
             for (UpdateCandidate candidate : results) {
                 if (candidate.status().hasNewerVersion()) {
                     available++;
-                    if (Bukkit.getServer() != null) {
-                        Plugin matchedPlugin = Bukkit.getPluginManager().getPlugin(candidate.identity().pluginName());
-                        if (matchedPlugin != null) {
-                            Bukkit.getPluginManager().callEvent(new PluginUpdateFoundEvent(
-                                    matchedPlugin, candidate.toUpdateInfo()));
-                        }
+                    Plugin matchedPlugin = Bukkit.getPluginManager().getPlugin(candidate.identity().pluginName());
+                    if (matchedPlugin != null) {
+                        Bukkit.getPluginManager().callEvent(new PluginUpdateFoundEvent(
+                                matchedPlugin, candidate.toUpdateInfo()));
                     }
                 }
             }
@@ -74,10 +72,8 @@ public final class UpdateNotifications {
     }
 
     public boolean canReceiveNotify(Player player) {
-        return player != null && player.isOnline() && (
-                player.hasPermission("plugmanreloaded.admin")
+        return player.hasPermission("plugmanreloaded.admin")
                 || player.hasPermission("plugmanreloaded.notify")
-                || player.isOp()
-        );
+                || player.isOp();
     }
 }

@@ -103,12 +103,12 @@ public final class DirectSource implements UpdateSource {
 
         Set<String> loaders = Set.of("bukkit", "spigot", "paper", "purpur", "folia");
         if (descriptor.containsKey("loaders")) {
-            loaders = Set.of(descriptor.get("loaders").split(","));
+            loaders = parseCsvSet(descriptor.get("loaders"));
         }
 
         Set<String> gameVersions = Set.of("all");
         if (descriptor.containsKey("gameVersions")) {
-            gameVersions = Set.of(descriptor.get("gameVersions").split(","));
+            gameVersions = parseCsvSet(descriptor.get("gameVersions"));
         }
 
         versions.add(new RemoteVersion(
@@ -156,6 +156,20 @@ public final class DirectSource implements UpdateSource {
         int slash = clean.lastIndexOf('/');
         String name = slash >= 0 ? clean.substring(slash + 1) : clean;
         return name.isBlank() ? "downloaded-plugin.jar" : name;
+    }
+
+    private static Set<String> parseCsvSet(@Nullable String raw) {
+        if (raw == null || raw.isBlank()) {
+            return Collections.emptySet();
+        }
+        Set<String> result = new java.util.LinkedHashSet<>();
+        for (String part : raw.split(",")) {
+            String clean = part.trim().toLowerCase(java.util.Locale.ROOT);
+            if (!clean.isEmpty()) {
+                result.add(clean);
+            }
+        }
+        return Collections.unmodifiableSet(result);
     }
 }
 

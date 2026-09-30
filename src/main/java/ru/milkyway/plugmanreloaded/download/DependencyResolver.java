@@ -85,9 +85,12 @@ public class DependencyResolver {
     }
 
     public DependencyTree resolve(File targetJar, SearchResultEntry targetEntry, boolean withSoftDeps, @Nullable Path stagingDir) {
-        String targetName = targetEntry != null && targetEntry.title() != null && !targetEntry.title().isBlank()
+        String declaredJarName = targetJar != null ? JarValidator.readPluginName(targetJar) : null;
+        String targetName = declaredJarName != null && !declaredJarName.isBlank()
+                ? declaredJarName
+                : (targetEntry != null && targetEntry.title() != null && !targetEntry.title().isBlank()
                 ? targetEntry.title()
-                : (targetJar != null ? JarValidator.readPluginName(targetJar) : "Unknown");
+                : (targetJar != null ? JarValidator.readPluginName(targetJar) : "Unknown"));
         if (targetName == null) targetName = "Unknown";
 
         Accumulator acc = new Accumulator();

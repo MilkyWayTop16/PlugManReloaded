@@ -1,4 +1,4 @@
-package ru.milkyway.plugmanreloaded.api.impl;
+package ru.milkyway.plugmanreloaded;
 
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
@@ -36,7 +36,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
-public final class PlugManAPIImpl implements PlugManAPI {
+final class PlugManAPIImpl implements PlugManAPI {
     private final PlugManReloaded plugin;
     private final LifecycleManager lifecycleManager;
     private final DependencyManager graphManager;
@@ -54,7 +54,7 @@ public final class PlugManAPIImpl implements PlugManAPI {
     }
 
     private PluginResult runSyncIfNeeded(Supplier<PluginResult> action) {
-        if (Bukkit.getServer() == null || Bukkit.isPrimaryThread()) {
+        if (Bukkit.isPrimaryThread()) {
             return action.get();
         }
         CompletableFuture<PluginResult> future = new CompletableFuture<>();
@@ -171,11 +171,14 @@ public final class PlugManAPIImpl implements PlugManAPI {
 
     private void backupBeforeDelete(String pluginName, String version, File jar) {
         try {
+            if (plugin == null || plugin.getDataFolder() == null) return;
             File pluginsDir = plugin.getDataFolder().getParentFile();
+            int keepDays = plugin.getConfigManager() != null ? plugin.getConfigManager().getBackupKeepDays() : 7;
+            int maxBackups = plugin.getConfigManager() != null ? plugin.getConfigManager().getBackupMaxPerPlugin() : 5;
             BackupStore backups = new BackupStore(
                     pluginsDir,
-                    plugin.getConfigManager().getBackupKeepDays(),
-                    plugin.getConfigManager().getBackupMaxPerPlugin()
+                    keepDays,
+                    maxBackups
             );
             backups.backup(pluginName, version != null ? version : "1.0", jar);
         } catch (Throwable t) {

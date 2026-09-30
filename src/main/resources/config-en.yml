@@ -119,7 +119,7 @@ settings:
   # (These plugins embed themselves into the server's network stack or patch its internals
   # at startup. Their state cannot be restored after unloading, a server restart will be needed)
   #
-  # (With "safe-mode: true" such plugins require a confirmation or the "-y" flag.
+  # (With "safe-mode: true" such plugins require a confirmation or the "-y" flag
   # On top of that the plugin finds such libraries on its own by marker classes,
   # even if they were renamed or it is a fork)
   unsafe-to-unload:
@@ -176,8 +176,8 @@ settings:
     #
     # Why is it needed?
     #
-    #   Without a token GitHub itself allows only 60 requests per hour per server IP address.
-    #   With frequent update checks or a bulk search that limit can run out very quickly.
+    #   Without a token GitHub itself allows only 60 requests per hour per server IP address
+    #   With frequent update checks or a bulk search that limit can run out very quickly
     #   With a token the limit grows to 5000 requests per hour, so checking for updates
     #   and downloading plugins from GitHub will always work almost instantly and without delays)
     #

@@ -12,13 +12,13 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 public final class PluginMetaHelper {
 
@@ -163,17 +163,18 @@ public final class PluginMetaHelper {
         PluginDescriptionFile desc = plugin.getDescription();
 
         long size = (file != null && file.exists()) ? file.length() : 0;
-        Set<String> perms = desc.getPermissions().stream()
-                .map(Permission::getName)
-                .collect(Collectors.toSet());
+        Set<String> perms = new HashSet<>();
+        for (Permission perm : desc.getPermissions()) {
+            perms.add(perm.getName());
+        }
 
         boolean hasBoot = file != null && JarValidator.hasPaperBootstrapper(file);
 
         return new PluginInfo(
                 plugin.getName(),
-                desc.getVersion(),
+                getVersion(plugin),
                 desc.getMain(),
-                desc.getAuthors(),
+                getAuthors(plugin),
                 desc.getDescription() != null ? desc.getDescription() : "",
                 desc.getWebsite() != null ? desc.getWebsite() : "",
                 desc.getDepend(),

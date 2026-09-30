@@ -116,39 +116,33 @@ public class ConfigUpdater {
             List<String> inlineComments = null;
 
             if (SUPPORTS_COMMENTS) {
-                try {
-                    comments = source.getComments(key);
-                    inlineComments = source.getInlineComments(key);
-                } catch (Throwable ignored) {}
+                comments = source.getComments(key);
+                inlineComments = source.getInlineComments(key);
             }
 
             if (!target.contains(key)) {
                 target.set(key, source.get(key));
                 if (SUPPORTS_COMMENTS) {
-                    try {
-                        if (comments != null && !comments.isEmpty()) {
-                            target.setComments(key, comments);
-                        }
-                        if (inlineComments != null && !inlineComments.isEmpty()) {
-                            target.setInlineComments(key, inlineComments);
-                        }
-                    } catch (Throwable ignored) {}
+                    if (comments != null && !comments.isEmpty()) {
+                        target.setComments(key, comments);
+                    }
+                    if (inlineComments != null && !inlineComments.isEmpty()) {
+                        target.setInlineComments(key, inlineComments);
+                    }
                 }
                 changed = true;
             } else {
                 if (SUPPORTS_COMMENTS) {
-                    try {
-                        if (target.getComments(key) == null || target.getComments(key).isEmpty()) {
-                            if (comments != null && !comments.isEmpty()) {
-                                target.setComments(key, comments);
-                            }
+                    if (target.getComments(key) == null || target.getComments(key).isEmpty()) {
+                        if (comments != null && !comments.isEmpty()) {
+                            target.setComments(key, comments);
                         }
-                        if (target.getInlineComments(key) == null || target.getInlineComments(key).isEmpty()) {
-                            if (inlineComments != null && !inlineComments.isEmpty()) {
-                                target.setInlineComments(key, inlineComments);
-                            }
+                    }
+                    if (target.getInlineComments(key) == null || target.getInlineComments(key).isEmpty()) {
+                        if (inlineComments != null && !inlineComments.isEmpty()) {
+                            target.setInlineComments(key, inlineComments);
                         }
-                    } catch (Throwable ignored) {}
+                    }
                 }
 
                 if (source.isConfigurationSection(key) && target.isConfigurationSection(key)) {

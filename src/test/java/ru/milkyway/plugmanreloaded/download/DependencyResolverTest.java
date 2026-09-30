@@ -304,4 +304,19 @@ public class DependencyResolverTest {
         String buttonText = config.getString("actions.download.buttons.confirm-single.text");
         assertNotNull(buttonText, "actions.download.buttons.confirm-single.text must exist");
     }
+    @Test
+    public void testResolvePrioritizesDeclaredJarNameOverNumericTitle(@TempDir Path dir) throws Exception {
+        File jar = writeJar(dir, "MyRealPlugin", null);
+        DependencyResolver resolver = new DependencyResolver(null, null, null);
+
+        SearchResultEntry entry = new SearchResultEntry(
+                "spigot", "105658", "105658", "Author", "", "",
+                "https://www.spigotmc.org/resources/105658", null, 100, 5, 0.0,
+                Collections.emptyList(), List.of("paper"), Collections.emptyList(),
+                null, null, null, false, true
+        );
+
+        DependencyTree tree = resolver.resolve(jar, entry, false);
+        assertEquals("MyRealPlugin", tree.targetPluginName());
+    }
 }

@@ -258,4 +258,38 @@ class UpdateCommandTest {
         assertTrue(sentActions.contains("update.all-install-item-pending"));
         assertTrue(hotSwappedNow.isEmpty());
     }
+
+    @Test
+    @DisplayName("Verify handleCancel consumes confirmation session without token")
+    void testHandleCancelConsumesConfirmationSessionWithoutToken() throws Exception {
+        sun.misc.Unsafe unsafe = getUnsafe();
+        PlugManReloaded plugin = (PlugManReloaded) unsafe.allocateInstance(PlugManReloaded.class);
+        ConfirmationManager confirmationManager = new ConfirmationManager();
+        ConfigManager configManager = (ConfigManager) unsafe.allocateInstance(ConfigManager.class);
+        setField(configManager, "messagesConfig", new YamlConfiguration());
+        setField(plugin, "configManager", configManager);
+        setField(plugin, "confirmationManager", confirmationManager);
+
+        CommandSender sender = createSender();
+        String token = confirmationManager.createSession(sender, "update", "PluginA");
+
+        List<String> sentActions = new ArrayList<>();
+        UpdateCommand cmd = new UpdateCommand(plugin) {
+            @Override
+            protected void sendAction(CommandSender s, String path) {
+                sentActions.add(path);
+            }
+
+            @Override
+            protected void sendAction(CommandSender s, String path, Map<String, String> placeholders) {
+                sentActions.add(path);
+            }
+        };
+
+        boolean handled = cmd.execute(sender, new String[]{"update", "cancel", "PluginA"});
+        assertTrue(handled);
+        assertTrue(sentActions.contains("update.cancelled"));
+
+        assertFalse(confirmationManager.validateAndConsume(sender, "update", "PluginA", token));
+    }
 }

@@ -172,7 +172,7 @@ public final class JarValidator {
             boolean hasBoot = hasPaperBootstrapper(file);
             if (hasBoot || (isPaper && PlatformDetector.isModernPaper())) {
                 return new PreFlightReport(isReloadOrRestart ? PreFlightStatus.REQUIRES_COLD_RESTART : PreFlightStatus.STARTUP_ONLY_LOAD, declaredName, declaredVersion, reqJava, currJava,
-                        Collections.emptyList(), isPaper, true, null);
+                        Collections.emptyList(), isPaper, true, LogCatalog.get("jarvalidator.requires-cold-restart"));
             }
 
             List<String> missing = readMissingDependencies(file);

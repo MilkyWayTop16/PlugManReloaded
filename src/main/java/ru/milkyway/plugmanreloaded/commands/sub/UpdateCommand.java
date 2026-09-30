@@ -138,14 +138,14 @@ public class UpdateCommand extends AbstractSubCommand {
     }
 
     private boolean consumeBulkToken(final @NotNull CommandSender sender, final @NotNull String token) {
-        if (plugin == null) return false;
+
         final ConfirmationManager confirmations = plugin.getConfirmationManager();
         return confirmations.validateAndConsume(sender, "update", "all", token)
                 || confirmations.validateAndConsume(sender, "update", "*", token);
     }
 
     private boolean checkOnePlugin(final @NotNull CommandSender sender, final @NotNull CommandContext ctx) {
-        if (plugin == null) return true;
+
         final String targetName = ctx.target();
         final Plugin target = plugin.getPluginLifecycleManager().getPlugin(targetName);
         final File jarFile = target == null ? plugin.getPluginLifecycleManager().getJarIndex().find(targetName) : null;
@@ -200,7 +200,7 @@ public class UpdateCommand extends AbstractSubCommand {
     }
 
     private boolean shouldRestartDependents(final @NotNull CommandContext ctx, final @Nullable Plugin target) {
-        if (plugin == null || ctx.hasFlag("s") || ctx.hasFlag("single")) {
+        if (ctx.hasFlag("s") || ctx.hasFlag("single")) {
             return false;
         }
         if (ctx.hasFlag("c") || ctx.hasFlag("cascade") || plugin.getConfigManager().isCascadeReloadByDefault()) {
@@ -221,7 +221,7 @@ public class UpdateCommand extends AbstractSubCommand {
             return true;
         }
 
-        if (plugin == null) return true;
+
 
         if (token != null && !token.isEmpty()) {
             final boolean consumed = plugin.getConfirmationManager()
@@ -260,6 +260,15 @@ public class UpdateCommand extends AbstractSubCommand {
                 sendAction(sender, "errors.confirm-expired");
                 return true;
             }
+        } else if (plugin != null) {
+            if (canceled != null && !canceled.isBlank() && !canceled.equalsIgnoreCase("all") && !canceled.equals("*")) {
+                plugin.getConfirmationManager().consumeIfPresent(sender, "update", canceled);
+                plugin.getConfirmationManager().consumeIfPresent(sender, "update-source", canceled);
+            }
+            if (ctx.isAll() || canceled == null || canceled.isBlank() || canceled.equalsIgnoreCase("all") || canceled.equals("*")) {
+                plugin.getConfirmationManager().consumeIfPresent(sender, "update", "all");
+                plugin.getConfirmationManager().consumeIfPresent(sender, "update", "*");
+            }
         }
 
         if (plugin != null && sender instanceof Player player && plugin.getManualSources().get(player) != null) {
@@ -277,7 +286,7 @@ public class UpdateCommand extends AbstractSubCommand {
     }
 
     Set<String> dependentsOf(final @NotNull UpdateCandidate candidate) {
-        if (plugin == null) return Set.of();
+
         final String pluginName = candidate.identity().pluginName();
         final Plugin target = plugin.getPluginLifecycleManager().getPlugin(pluginName);
         final Set<String> direct = target != null
@@ -336,7 +345,7 @@ public class UpdateCommand extends AbstractSubCommand {
     }
 
     private void offerInstall(final @NotNull CommandSender sender, final @NotNull UpdateCandidate candidate) {
-        if (plugin == null) return;
+
         final boolean isPrerelease = candidate.status() == UpdateStatus.PRERELEASE_ONLY
                 || (candidate.version() != null && candidate.version().channel() != null && candidate.version().channel().isPrerelease());
         final String token = plugin.getConfirmationManager()
@@ -448,8 +457,13 @@ public class UpdateCommand extends AbstractSubCommand {
                 return;
             }
         } else if (isExplicitAll && plugin != null) {
-            final boolean hasPrerelease = withUpdates.stream()
-                    .anyMatch(c -> c.version() != null && c.version().channel() != null && c.version().channel().isPrerelease());
+            boolean hasPrerelease = false;
+            for (UpdateCandidate c : withUpdates) {
+                if (c.version() != null && c.version().channel() != null && c.version().channel().isPrerelease()) {
+                    hasPrerelease = true;
+                    break;
+                }
+            }
             summary.put("token", plugin.getConfirmationManager().createSession(sender, "update", "all", hasPrerelease ? "prerelease" : null));
             summary.put("is-prerelease", String.valueOf(hasPrerelease));
             sendAction(sender, "update.confirm-all", summary);

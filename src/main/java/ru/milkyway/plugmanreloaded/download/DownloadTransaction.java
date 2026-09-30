@@ -217,14 +217,13 @@ final class DownloadTransaction {
     }
 
     private File resolveTargetFile(PluginDownloader.StagedItem item, File pluginsDir) {
-        if (Bukkit.getServer() == null || Bukkit.getScheduler() == null) {
-            return new File(pluginsDir, item.declaredName() + ".jar");
-        }
-        File existing = plugin.getPluginLifecycleManager().getJarIndex().find(item.declaredName());
-        if (existing != null && existing.exists()) {
-            PluginJarIndex.JarDescriptor descriptor = plugin.getPluginLifecycleManager().getJarIndex().readDescriptor(existing);
-            if (descriptor != null && item.declaredName().equalsIgnoreCase(descriptor.declaredName())) {
-                return existing;
+        if (plugin != null && plugin.getPluginLifecycleManager() != null) {
+            File existing = plugin.getPluginLifecycleManager().getJarIndex().find(item.declaredName());
+            if (existing != null && existing.exists()) {
+                PluginJarIndex.JarDescriptor descriptor = plugin.getPluginLifecycleManager().getJarIndex().readDescriptor(existing);
+                if (descriptor != null && item.declaredName().equalsIgnoreCase(descriptor.declaredName())) {
+                    return existing;
+                }
             }
         }
         return new File(pluginsDir, item.declaredName() + ".jar");

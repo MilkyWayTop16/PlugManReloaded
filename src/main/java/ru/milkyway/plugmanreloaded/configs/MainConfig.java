@@ -65,8 +65,12 @@ public class MainConfig {
 
     public MainConfig(PlugManReloaded plugin) {
         this.plugin = plugin;
-        this.configFile = new File(plugin.getDataFolder(), "config.yml");
-        load();
+        this.configFile = (plugin != null && plugin.getDataFolder() != null)
+                ? new File(plugin.getDataFolder(), "config.yml")
+                : null;
+        if (configFile != null) {
+            load();
+        }
     }
 
     public void load() {
@@ -126,7 +130,9 @@ public class MainConfig {
             this.ignoredPlugins.add(s.toLowerCase(Locale.ROOT));
         }
 
-        this.ignoredPlugins.add(plugin.getName().toLowerCase(Locale.ROOT));
+        if (plugin != null && plugin.getName() != null) {
+            this.ignoredPlugins.add(plugin.getName().toLowerCase(Locale.ROOT));
+        }
         this.ignoredPlugins.add("plugmanreloaded");
 
         this.updatesCheckOnStart = config.getBoolean("settings.updates.check-on-start", true);

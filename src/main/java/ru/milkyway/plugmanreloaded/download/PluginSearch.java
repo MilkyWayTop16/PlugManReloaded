@@ -35,10 +35,42 @@ public class PluginSearch {
             .<Integer, String>build()
             .asMap();
 
+    private static final Cache<String, String> GLOBAL_KNOWN_TITLES = CacheBuilder.newBuilder()
+            .maximumSize(1000)
+            .expireAfterWrite(30, TimeUnit.MINUTES)
+            .build();
+
+    public static void rememberTitleGlobally(@Nullable String projectId, @Nullable String sourceId, @Nullable String title) {
+        if (projectId == null || projectId.isBlank() || title == null || title.isBlank()) {
+            return;
+        }
+        String cleanTitle = title.trim();
+        String cleanId = projectId.trim().toLowerCase(Locale.ROOT);
+        GLOBAL_KNOWN_TITLES.put(cleanId, cleanTitle);
+        if (sourceId != null && !sourceId.isBlank()) {
+            GLOBAL_KNOWN_TITLES.put(sourceId.trim().toLowerCase(Locale.ROOT) + ":" + cleanId, cleanTitle);
+        }
+    }
+
+    public static @Nullable String findKnownTitleGlobally(@Nullable String query, @Nullable String preferredSource) {
+        if (query == null || query.isBlank()) {
+            return null;
+        }
+        String clean = query.trim().toLowerCase(Locale.ROOT);
+        if (preferredSource != null && !preferredSource.isBlank()) {
+            String scoped = GLOBAL_KNOWN_TITLES.getIfPresent(preferredSource.trim().toLowerCase(Locale.ROOT) + ":" + clean);
+            if (scoped != null) {
+                return scoped;
+            }
+        }
+        return GLOBAL_KNOWN_TITLES.getIfPresent(clean);
+    }
+
     private final PlugManReloaded plugin;
     private final ServerProfile serverProfile;
     private volatile SourceCatalog catalog;
     private final Cache<String, List<SearchResultEntry>> cache;
+    private final Cache<String, String> knownTitles;
     private final ExecutorService searchExecutor;
 
     public PluginSearch(PlugManReloaded plugin, ServerProfile serverProfile, SourceCatalog catalog) {
@@ -64,10 +96,49 @@ public class PluginSearch {
             builder.ticker(ticker);
         }
         this.cache = builder.build();
+
+        CacheBuilder<Object, Object> titleBuilder = CacheBuilder.newBuilder()
+                .maximumSize(500)
+                .expireAfterWrite(30, TimeUnit.MINUTES);
+        if (ticker != null) {
+            titleBuilder.ticker(ticker);
+        }
+        this.knownTitles = titleBuilder.build();
+    }
+
+    public void rememberTitle(@Nullable String projectId, @Nullable String sourceId, @Nullable String title) {
+        if (projectId == null || projectId.isBlank() || title == null || title.isBlank()) {
+            return;
+        }
+        String cleanTitle = title.trim();
+        String cleanId = projectId.trim().toLowerCase(Locale.ROOT);
+        knownTitles.put(cleanId, cleanTitle);
+        if (sourceId != null && !sourceId.isBlank()) {
+            knownTitles.put(sourceId.trim().toLowerCase(Locale.ROOT) + ":" + cleanId, cleanTitle);
+        }
+        rememberTitleGlobally(projectId, sourceId, title);
+    }
+
+    @Nullable
+    public String findKnownTitle(@Nullable String query, @Nullable String preferredSource) {
+        if (query == null || query.isBlank()) {
+            return null;
+        }
+        String clean = query.trim().toLowerCase(Locale.ROOT);
+        if (preferredSource != null && !preferredSource.isBlank()) {
+            String scoped = knownTitles.getIfPresent(preferredSource.trim().toLowerCase(Locale.ROOT) + ":" + clean);
+            if (scoped != null) {
+                return scoped;
+            }
+        }
+        String hit = knownTitles.getIfPresent(clean);
+        return hit != null ? hit : findKnownTitleGlobally(query, preferredSource);
     }
 
     void clearCache() {
         cache.invalidateAll();
+        knownTitles.invalidateAll();
+        GLOBAL_KNOWN_TITLES.invalidateAll();
     }
 
     void reloadCatalog(SourceCatalog catalog) {
@@ -105,6 +176,9 @@ public class PluginSearch {
 
         List<SearchResultEntry> cached = cache.getIfPresent(cacheKey);
         if (cached != null) {
+            for (SearchResultEntry entry : cached) {
+                rememberTitle(entry.projectId(), entry.sourceId(), entry.title());
+            }
             Log.debug("pluginsearch.cache-hit", "query", query, "count", String.valueOf(cached.size()));
             return cached;
         }
@@ -176,6 +250,10 @@ public class PluginSearch {
         List<SearchResultEntry> finalResult = enrichVersions(result);
         long elapsed = System.currentTimeMillis() - startTime;
         Log.info("pluginsearch.search-finished", "query", query, "count", String.valueOf(finalResult.size()), "elapsed", String.valueOf(elapsed));
+
+        for (SearchResultEntry entry : finalResult) {
+            rememberTitle(entry.projectId(), entry.sourceId(), entry.title());
+        }
 
         if (complete) {
             cache.put(cacheKey, finalResult);
@@ -263,8 +341,11 @@ public class PluginSearch {
     }
 
     private static SearchResultEntry hangarVersion(SearchResultEntry entry) {
+        String slug = entry.projectId().contains("/")
+                ? entry.projectId().substring(entry.projectId().indexOf('/') + 1)
+                : entry.projectId();
         HttpJson.RawResponse response = HttpJson.getRaw(
-                "https://hangar.papermc.io/api/v1/projects/" + entry.projectId() + "/latestrelease");
+                "https://hangar.papermc.io/api/v1/projects/" + HttpJson.encodePath(slug) + "/latestrelease");
         if (!response.ok() || response.body() == null) {
             return entry;
         }
@@ -547,6 +628,7 @@ public class PluginSearch {
                                 null, null, null, premium, direct
                         );
                         results.add(entry);
+                        rememberTitle(entry.projectId(), entry.sourceId(), entry.title());
                         return results;
                     }
                 }

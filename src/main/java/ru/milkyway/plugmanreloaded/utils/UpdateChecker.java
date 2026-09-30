@@ -94,10 +94,11 @@ public class UpdateChecker implements Listener {
         long previous = lastCheckTime.get();
         if (now - previous < MIN_CHECK_INTERVAL && latestVersion != null) return;
         if (!lastCheckTime.compareAndSet(previous, now)) return;
-
         TaskScheduler.runAsync(plugin, () -> {
             try {
-                HttpJson.Response response = HttpJson.get(GITHUB_API_URL);
+                String token = plugin.getConfigManager().getGithubToken();
+                String auth = token != null && !token.isBlank() ? "Bearer " + token.trim() : null;
+                HttpJson.Response response = HttpJson.get(GITHUB_API_URL, auth);
                 if (response.ok() && response.body().isJsonObject()) {
                     JsonObject obj = response.body().getAsJsonObject();
                     if (obj.has("tag_name") && !obj.get("tag_name").isJsonNull()) {

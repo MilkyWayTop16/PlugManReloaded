@@ -103,9 +103,12 @@ public class DisableCommand extends AbstractSubCommand {
     }
 
     private boolean disableAll(CommandSender sender) {
-        List<Plugin> enabled = Arrays.stream(Bukkit.getPluginManager().getPlugins())
-                .filter(p -> p.isEnabled() && !plugin.getPluginLifecycleManager().isProtected(p))
-                .toList();
+        List<Plugin> enabled = new java.util.ArrayList<>();
+        for (Plugin p : Bukkit.getPluginManager().getPlugins()) {
+            if (p.isEnabled() && !plugin.getPluginLifecycleManager().isProtected(p)) {
+                enabled.add(p);
+            }
+        }
         if (enabled.isEmpty()) {
             sendAction(sender, "disable.all-empty");
             return true;

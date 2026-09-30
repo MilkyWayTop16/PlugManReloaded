@@ -10,6 +10,7 @@ import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import ru.milkyway.plugmanreloaded.update.PluginMatcher;
+import ru.milkyway.plugmanreloaded.update.ServerProfile;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -81,6 +82,28 @@ class PluginDownloaderTest {
 
         DownloadModels.SearchResultEntry direct = entry("owner/custom-project", "owner/custom-project", "Unknown", null);
         assertFalse(PluginDownloader.artifactMatchesExpectedProject(direct, "InternalPluginName"));
+
+        DownloadModels.SearchResultEntry numericSpigot = new DownloadModels.SearchResultEntry(
+                "spigot", "105658", "105658", "author", "1.0", "", "https://spigotmc.org/resources/105658", null,
+                0, 0, 0, Collections.emptyList(), List.of("paper"), Collections.emptyList(),
+                null, null, null, false, true
+        );
+        assertTrue(PluginDownloader.artifactMatchesExpectedProject(numericSpigot, "ajLeaderboards"));
+
+        DownloadModels.SearchResultEntry resourceNamed = new DownloadModels.SearchResultEntry(
+                "spigot", "105658", "Resource 105658", "author", "1.0", "", "https://spigotmc.org/resources/105658", null,
+                0, 0, 0, Collections.emptyList(), List.of("paper"), Collections.emptyList(),
+                null, null, null, false, true
+        );
+        assertTrue(PluginDownloader.artifactMatchesExpectedProject(resourceNamed, "ajLeaderboards"));
+
+        PluginSearch.rememberTitleGlobally("99999", "spigot", "DecentHolograms");
+        DownloadModels.SearchResultEntry withKnown = new DownloadModels.SearchResultEntry(
+                "spigot", "99999", "RandomTitle", "author", "1.0", "", "https://spigotmc.org/resources/99999", null,
+                0, 0, 0, Collections.emptyList(), List.of("paper"), Collections.emptyList(),
+                null, null, null, false, true
+        );
+        assertTrue(PluginDownloader.artifactMatchesExpectedProject(withKnown, "DecentHolograms"));
     }
 
     @Test
@@ -144,6 +167,20 @@ class PluginDownloaderTest {
 
         assertNotNull(failure);
         assertEquals(DownloadModels.DownloadStatus.HASH_MISMATCH, failure.outcome());
+    }
+
+    @Test
+    void spigotResolutionPreservesEntryVersion() {
+        DownloadResolver resolver = new DownloadResolver(null, ServerProfile.detect());
+        DownloadModels.SearchResultEntry entry = new DownloadModels.SearchResultEntry(
+                "spigot", "12345", "ajLeaderboards", "ajgeiss0702", "2.11.0", "", "https://spigotmc.org/resources/12345", "https://api.spiget.org/v2/resources/12345/download",
+                0, 0, 0, Collections.emptyList(), List.of("paper"), Collections.emptyList(),
+                null, null, null, false, true
+        );
+        DownloadResolver.DownloadResolution resolution = resolver.resolve(entry);
+        assertNotNull(resolution.info());
+        assertEquals("2.11.0", resolution.info().versionNumber());
+        assertEquals("ajLeaderboards.jar", resolution.info().fileName());
     }
 
     private static JsonObject file(String name, boolean primary) {

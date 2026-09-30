@@ -2,6 +2,7 @@ package ru.milkyway.plugmanreloaded.update.install;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import ru.milkyway.plugmanreloaded.PlugManReloaded;
 import ru.milkyway.plugmanreloaded.update.UpdateModels.*;
 
 import java.io.File;
@@ -121,5 +122,81 @@ class UpdateInstallerTest {
         assertThrows(Exception.class, () -> UpdateInstaller.replacePendingArtifact(
                 tempDir.resolve("missing.jar"), target, backups, "Plugin", "1.0"));
         assertEquals("previous pending", Files.readString(target.toPath()));
+    }
+
+    @Test
+    void stagesPaperPluginForRestartWithoutFailure(@TempDir Path tempDir) throws Exception {
+        ru.milkyway.plugmanreloaded.BukkitServerMock.ensureInitialized();
+        sun.misc.Unsafe unsafe;
+        try {
+            java.lang.reflect.Field f = sun.misc.Unsafe.class.getDeclaredField("theUnsafe");
+            f.setAccessible(true);
+            unsafe = (sun.misc.Unsafe) f.get(null);
+        } catch (Exception e) {
+            return;
+        }
+
+        PlugManReloaded plugin = (PlugManReloaded) unsafe.allocateInstance(PlugManReloaded.class);
+        Path pluginsDir = tempDir.resolve("plugins");
+        Files.createDirectories(pluginsDir);
+        File dataFolder = pluginsDir.resolve("PlugManReloaded").toFile();
+        dataFolder.mkdirs();
+
+        java.lang.reflect.Field dataFolderField = org.bukkit.plugin.java.JavaPlugin.class.getDeclaredField("dataFolder");
+        dataFolderField.setAccessible(true);
+        dataFolderField.set(plugin, dataFolder);
+
+        ru.milkyway.plugmanreloaded.managers.LifecycleManager lm = (ru.milkyway.plugmanreloaded.managers.LifecycleManager) unsafe.allocateInstance(ru.milkyway.plugmanreloaded.managers.LifecycleManager.class);
+        java.lang.reflect.Field lmField = PlugManReloaded.class.getDeclaredField("pluginLifecycleManager");
+        lmField.setAccessible(true);
+        lmField.set(plugin, lm);
+
+        ru.milkyway.plugmanreloaded.managers.SafetyManager sm = (ru.milkyway.plugmanreloaded.managers.SafetyManager) unsafe.allocateInstance(ru.milkyway.plugmanreloaded.managers.SafetyManager.class);
+        java.lang.reflect.Field smField = ru.milkyway.plugmanreloaded.managers.LifecycleManager.class.getDeclaredField("safetyManager");
+        smField.setAccessible(true);
+        smField.set(lm, sm);
+
+        ru.milkyway.plugmanreloaded.managers.ConfigManager cm = (ru.milkyway.plugmanreloaded.managers.ConfigManager) unsafe.allocateInstance(ru.milkyway.plugmanreloaded.managers.ConfigManager.class);
+        java.lang.reflect.Field cmField = PlugManReloaded.class.getDeclaredField("configManager");
+        cmField.setAccessible(true);
+        cmField.set(plugin, cm);
+
+        ru.milkyway.plugmanreloaded.configs.MainConfig mc = (ru.milkyway.plugmanreloaded.configs.MainConfig) unsafe.allocateInstance(ru.milkyway.plugmanreloaded.configs.MainConfig.class);
+        java.lang.reflect.Field uField = ru.milkyway.plugmanreloaded.configs.MainConfig.class.getDeclaredField("unsafeToUnload");
+        uField.setAccessible(true);
+        uField.set(mc, java.util.Collections.emptySet());
+        java.lang.reflect.Field mcField = ru.milkyway.plugmanreloaded.managers.ConfigManager.class.getDeclaredField("mainConfig");
+        mcField.setAccessible(true);
+        mcField.set(cm, mc);
+
+        UpdateInstaller installer = (UpdateInstaller) unsafe.allocateInstance(UpdateInstaller.class);
+        java.lang.reflect.Field pField = UpdateInstaller.class.getDeclaredField("plugin");
+        pField.setAccessible(true);
+        pField.set(installer, plugin);
+        java.lang.reflect.Field bField = UpdateInstaller.class.getDeclaredField("backups");
+        bField.setAccessible(true);
+        bField.set(installer, new BackupStore(pluginsDir.toFile(), 10));
+
+        Path stagedJar = tempDir.resolve("staged-paper-plugin.jar");
+        try (java.util.jar.JarOutputStream jos = new java.util.jar.JarOutputStream(new java.io.FileOutputStream(stagedJar.toFile()))) {
+            jos.putNextEntry(new java.util.jar.JarEntry("paper-plugin.yml"));
+            jos.write("name: DoubleDoors\nversion: 1.4.9\nmain: com.example.Main\n".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            jos.closeEntry();
+        }
+
+        PluginIdentity id = identity("DoubleDoors", "1.2.0", pluginsDir.resolve("DoubleDoors-1.2.0.jar").toFile());
+        RemoteVersion ver = version("1.4.9");
+
+        java.lang.reflect.Method swapMethod = UpdateInstaller.class.getDeclaredMethod("swap",
+                PluginIdentity.class, RemoteVersion.class, Path.class, Path.class, Path.class,
+                boolean.class, List.class, String.class, long.class, boolean.class, boolean.class);
+        swapMethod.setAccessible(true);
+
+        InstallResult result = (InstallResult) swapMethod.invoke(installer, id, ver, stagedJar, null, null, false, List.of(), "sha256", 1024L, false, true);
+
+        assertNotNull(result);
+        assertEquals(InstallStatus.PENDING_RESTART, result.outcome());
+        Path updateJar = pluginsDir.resolve("update").resolve("DoubleDoors-1.2.0.jar");
+        org.junit.jupiter.api.Assertions.assertTrue(Files.exists(updateJar), "Paper plugin update must be placed into plugins/update/");
     }
 }

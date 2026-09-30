@@ -58,7 +58,9 @@ public class DownloadService {
             }
 
             if (entry == null) {
-               entry = new DownloadModels.SearchResultEntry(source.sourceId(), source.ref(), source.ref(), "Unknown", "1.0", "", source.url() != null ? source.url() : url, (String)null, 0L, 0, (double)100.0F, Collections.emptyList(), List.of("paper", "spigot"), Collections.emptyList(), (String)null, (String)null, (String)null, false, true);
+               String knownTitle = this.searchEngine.findKnownTitle(source.ref(), source.sourceId());
+               String title = knownTitle != null && !knownTitle.isBlank() ? knownTitle : source.ref();
+               entry = new DownloadModels.SearchResultEntry(source.sourceId(), source.ref(), title, "Unknown", "", "", source.url() != null ? source.url() : url, (String)null, 0L, 0, (double)100.0F, Collections.emptyList(), List.of("paper", "spigot"), Collections.emptyList(), (String)null, (String)null, (String)null, false, true);
             }
 
             DownloadModels.SearchResultEntry finalEntry = entry;
@@ -147,7 +149,7 @@ public class DownloadService {
    }
 
    private void executeTransactionInternal(String lockKey, DownloadModels.DependencyTree tree, Consumer<DownloadModels.DownloadResult> callback) {
-      List<DownloadModels.SearchResultEntry> dependencies = new ArrayList(tree.orderedDependencies());
+      List<DownloadModels.SearchResultEntry> dependencies = new ArrayList<>(tree.orderedDependencies());
       Consumer<DownloadModels.DownloadResult> transactionCallback = (res) -> {
          this.lockManager.unlock(lockKey);
          callback.accept(res);

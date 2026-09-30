@@ -84,12 +84,13 @@ abstract class AbstractReloadCommand extends AbstractSubCommand {
 
         String token = ctx.token();
         if (token != null) {
-            if (!plugin.getConfirmationManager().validateAndConsume(sender, actionKey(), targetName, token)) {
+            if (!plugin.getConfirmationManager().validateAndConsume(sender, actionKey(), targetPlugin.getName(), token)) {
                 sendAction(sender, "errors.confirm-expired");
                 return true;
             }
+            force = true;
         } else if (force || cascade) {
-            plugin.getConfirmationManager().consumeIfPresent(sender, actionKey(), targetName);
+            plugin.getConfirmationManager().consumeIfPresent(sender, actionKey(), targetPlugin.getName());
         }
 
         if (plugin.getConfigManager().isSafeModeEnabled() && !cascade && !force && isRisky(assessment)) {

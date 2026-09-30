@@ -7,6 +7,7 @@ import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.Nullable;
 import ru.milkyway.plugmanreloaded.bridge.PlatformDetector;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -109,6 +110,11 @@ public final class TaskScheduler {
 
         if (PlatformDetector.isFolia()) {
             ReflectionHelper.invokeMethodOrThrow(getFoliaAsyncScheduler(), "runNow", plugin, asConsumer(task));
+            return;
+        }
+
+        if (Bukkit.getServer() == null || Bukkit.getScheduler() == null) {
+            CompletableFuture.runAsync(task);
             return;
         }
 

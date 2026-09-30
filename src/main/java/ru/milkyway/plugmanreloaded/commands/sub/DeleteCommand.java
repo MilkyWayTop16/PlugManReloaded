@@ -11,6 +11,7 @@ import ru.milkyway.plugmanreloaded.managers.DependencyManager;
 import ru.milkyway.plugmanreloaded.utils.PluginJarIndex;
 import ru.milkyway.plugmanreloaded.update.install.BackupStore;
 import ru.milkyway.plugmanreloaded.utils.Log;
+import ru.milkyway.plugmanreloaded.utils.MetaspaceCleanup;
 import ru.milkyway.plugmanreloaded.utils.PluginMetaHelper;
 import ru.milkyway.plugmanreloaded.utils.TaskScheduler;
 
@@ -284,7 +285,7 @@ public class DeleteCommand extends AbstractSubCommand {
             }
         }
 
-        plugin.getHotSwapManager().temporarilyIgnore(jarFile.getName(), 5000L);
+        plugin.getHotSwapManager().temporarilyIgnore(jarFile.getName(), 20000L);
 
         boolean deleted = false;
         try {
@@ -294,6 +295,7 @@ public class DeleteCommand extends AbstractSubCommand {
         }
 
         if (!deleted) {
+            MetaspaceCleanup.runNow();
             sendAction(sender, "delete.pending-file", placeholders);
             TaskScheduler.runSyncLater(plugin, () -> retryDelete(sender, jarFile, placeholders,
                     deleteDataFolder, target.pluginName(), dataFolder, 1), RETRY_DELAYS_TICKS[0]);

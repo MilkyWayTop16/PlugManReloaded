@@ -45,9 +45,13 @@ public class ReloadCommand extends AbstractReloadCommand {
 
     @Override
     protected List<Plugin> bulkTargets() {
-        return Arrays.stream(Bukkit.getPluginManager().getPlugins())
-                .filter(p -> !plugin.getPluginLifecycleManager().isProtected(p) && p.isEnabled())
-                .toList();
+        List<Plugin> valid = new java.util.ArrayList<>();
+        for (Plugin p : Bukkit.getPluginManager().getPlugins()) {
+            if (!plugin.getPluginLifecycleManager().isProtected(p) && p.isEnabled()) {
+                valid.add(p);
+            }
+        }
+        return valid;
     }
 
     @Override

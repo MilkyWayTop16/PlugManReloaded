@@ -13,6 +13,8 @@ import ru.milkyway.plugmanreloaded.managers.SanitizerManager;
 import ru.milkyway.plugmanreloaded.update.SourceCatalog;
 import ru.milkyway.plugmanreloaded.utils.JarValidator;
 import ru.milkyway.plugmanreloaded.utils.Log;
+import ru.milkyway.plugmanreloaded.bridge.PlatformDetector;
+import ru.milkyway.plugmanreloaded.utils.JarValidator.PreFlightStatus;
 import ru.milkyway.plugmanreloaded.utils.PluginJarIndex;
 import ru.milkyway.plugmanreloaded.utils.TaskScheduler;
 
@@ -49,7 +51,7 @@ public final class UpdateInstaller {
     }
 
     private record Preparation(InstallResult error, Path jarBackup, Path folderBackup, Path staged,
-                               List<String> dependencyWarnings, String artifactSha256, long artifactSize, boolean hasLibraries) {}
+                               List<String> dependencyWarnings, String artifactSha256, long artifactSize, boolean hasLibraries, boolean requiresRestart) {}
 
     public void install(UpdateCandidate candidate, Consumer<InstallResult> callback) {
         install(candidate, true, callback);
@@ -90,7 +92,7 @@ public final class UpdateInstaller {
                 return;
             }
             TaskScheduler.runSync(plugin, () -> wrappedCallback.accept(swap(identity, version, prep.staged(), prep.jarBackup(),
-                    prep.folderBackup(), restartDependents, prep.dependencyWarnings(), prep.artifactSha256(), prep.artifactSize(), prep.hasLibraries())));
+                    prep.folderBackup(), restartDependents, prep.dependencyWarnings(), prep.artifactSha256(), prep.artifactSize(), prep.hasLibraries(), prep.requiresRestart())));
         });
     }
 
@@ -110,32 +112,40 @@ public final class UpdateInstaller {
 
         DownloadClient.Downloaded downloaded = DownloadClient.download(version.downloadUrl(), staged, userAgent);
         if (downloaded == null) {
-            return new Preparation(InstallResult.failed(InstallStatus.DOWNLOAD_FAILED, identity.pluginName(), "actions.update.details.download-failed"), null, null, null, List.of(), "", -1L, false);
+            return new Preparation(InstallResult.failed(InstallStatus.DOWNLOAD_FAILED, identity.pluginName(), "actions.update.details.download-failed"), null, null, null, List.of(), "", -1L, false, false);
         }
 
         String hashProblem = verifyHash(version, downloaded);
         if (hashProblem != null) {
             deleteQuietly(staged);
-            return new Preparation(InstallResult.failed(InstallStatus.HASH_MISMATCH, identity.pluginName(), hashProblem), null, null, null, List.of(), "", -1L, false);
+            return new Preparation(InstallResult.failed(InstallStatus.HASH_MISMATCH, identity.pluginName(), hashProblem), null, null, null, List.of(), "", -1L, false, false);
         }
 
         JarValidator.PreFlightReport report = JarValidator.validatePreFlight(staged.toFile(), identity.pluginName(), false);
-        if (!report.isValid()) {
+        boolean canProceed = report.isValid()
+                || report.status() == PreFlightStatus.MISSING_DEPENDENCIES
+                || report.status() == PreFlightStatus.STARTUP_ONLY_LOAD
+                || report.status() == PreFlightStatus.REQUIRES_COLD_RESTART;
+        if (!canProceed) {
             deleteQuietly(staged);
             InstallStatus outcome = switch (report.status()) {
                 case INCOMPATIBLE_JAVA -> InstallStatus.NOT_INSTALLABLE;
                 case NAME_MISMATCH, NO_DESCRIPTOR -> InstallStatus.WRONG_PLUGIN;
-                case MISSING_DEPENDENCIES -> InstallStatus.MISSING_DEPENDENCY;
                 default -> InstallStatus.NOT_INSTALLABLE;
             };
-            return new Preparation(InstallResult.failed(outcome, identity.pluginName(), report.errorMessage()), null, null, null, List.of(), "", -1L, false);
+            return new Preparation(InstallResult.failed(outcome, identity.pluginName(), report.errorMessage()), null, null, null, List.of(), "", -1L, false, false);
         }
+
+        boolean requiresRestart = report.hasBootstrapper()
+                || (report.isPaperPlugin() && PlatformDetector.isModernPaper())
+                || report.status() == PreFlightStatus.STARTUP_ONLY_LOAD
+                || report.status() == PreFlightStatus.REQUIRES_COLD_RESTART;
 
         Path jarBackup = backups.backup(identity.pluginName(), identity.currentVersion(), identity.jarFile());
         if (jarBackup == null) {
             deleteQuietly(staged);
             return new Preparation(InstallResult.failed(InstallStatus.NOT_INSTALLABLE, identity.pluginName(),
-                    "actions.update.details.backup-failed"), null, null, null, List.of(), "", -1L, false);
+                    "actions.update.details.backup-failed"), null, null, null, List.of(), "", -1L, false, false);
         }
 
         Plugin loadedPlugin = plugin.getPluginLifecycleManager().getPlugin(identity.pluginName());
@@ -149,11 +159,11 @@ public final class UpdateInstaller {
             warnings = checkDependencyUpdates(identity.pluginName(), stagedDesc.depend());
         }
 
-        return new Preparation(null, jarBackup, folderBackup, staged, warnings, downloaded.sha256(), downloaded.size(), stagedDesc != null && stagedDesc.hasLibraries());
+        return new Preparation(null, jarBackup, folderBackup, staged, warnings, downloaded.sha256(), downloaded.size(), stagedDesc != null && stagedDesc.hasLibraries(), requiresRestart);
     }
 
     private List<String> checkDependencyUpdates(String pluginName, List<String> dependencies) {
-        if (dependencies == null || dependencies.isEmpty() || plugin == null) return List.of();
+        if (dependencies == null || dependencies.isEmpty()) return List.of();
         List<String> warnings = new ArrayList<>();
         List<UpdateCandidate> recent = plugin.getUpdateService().getLastResults();
         for (String dep : dependencies) {
@@ -171,7 +181,9 @@ public final class UpdateInstaller {
             if (candidate == null) {
                 try {
                     candidate = plugin.getUpdateService().checkSync(installedDep, false);
-                } catch (Throwable ignored) {}
+                } catch (Throwable t) {
+                    Log.debug("updateinstaller.dependency-check-failed", t, "dependency", dep);
+                }
             }
             if (candidate != null && candidate.status().hasNewerVersion() && candidate.version() != null) {
                 String newVer = candidate.version().versionNumber();
@@ -202,7 +214,7 @@ public final class UpdateInstaller {
 
     private InstallResult swap(PluginIdentity identity, RemoteVersion version, Path staged, Path jarBackup,
                                Path folderBackup, boolean restartDependents, List<String> dependencyWarnings,
-                               String artifactSha256, long artifactSize, boolean hasLibraries) {
+                               String artifactSha256, long artifactSize, boolean hasLibraries, boolean requiresRestart) {
         File oldTarget = identity.jarFile();
         String from = identity.currentVersion();
         String to = version.versionNumber();
@@ -218,7 +230,8 @@ public final class UpdateInstaller {
                 || risk == SafetyManager.PluginRiskLevel.API_PROVIDER
                 || risk == SafetyManager.PluginRiskLevel.LOW_LEVEL_NETWORK
                 || plugin.getConfigManager().isUnsafeToUnload(identity.pluginName())
-                || hasLibraries;
+                || hasLibraries
+                || requiresRestart;
 
         if (isUnsafe) {
             return stageForRestart(identity, version, staged, oldTarget, from, to, dependencyWarnings,
@@ -279,7 +292,6 @@ public final class UpdateInstaller {
 
         PluginResult loadResult = plugin.getPluginLifecycleManager().load(target);
         if (!loadResult.success()) {
-            Log.warn("updateinstaller.new-version-load-failed", "plugin", identity.pluginName());
             if (!target.equals(oldTarget)) {
                 deleteFileWithRetry(target);
             }
@@ -316,12 +328,7 @@ public final class UpdateInstaller {
                                           String artifactSha256, long artifactSize) {
         try {
             File pluginsDir = plugin.getDataFolder().getParentFile();
-            File updateFolder = null;
-            try {
-                if (Bukkit.getServer() != null) {
-                    updateFolder = Bukkit.getUpdateFolderFile();
-                }
-            } catch (Throwable ignored) {}
+            File updateFolder = Bukkit.getUpdateFolderFile();
             if (updateFolder == null) {
                 updateFolder = new File(pluginsDir, "update");
             }

@@ -1,4 +1,4 @@
-#
+﻿#
 #
 #         █▀█ █░░ █░█ █▀▀ █▀▄▀█ ▄▀█ █▄░█ █▀█ █▀▀ █░░ █▀█ ▄▀█ █▀▄ █▀▀ █▀▄
 #         █▀▀ █▄▄ █▄█ █▄█ █░▀░█ █▀█ █░▀█ █▀▄ ██▄ █▄▄ █▄█ █▀█ █▄▀ ██▄ █▄▀
@@ -373,7 +373,7 @@ actions:
       - "[message] &#FB8808▶ Ошибочка! &fЧасть плагинов (&#FB8808{count}&f/&#FB8808{total}&f) включена за &#FFFF00{time}мс&f, но &#FB8808{failed-count} &fшт. не удалось: &#FB8808{failed-plugins}"
       - "[sound] ENTITY_VILLAGER_NO"
     all-failed:
-      - "[message] &#FB8808▶ Ошибочка! &fНи один из плагинов (&#FB88080&f/&#FB8808{total}&f) не удалось включить! См. консоль."
+      - "[message] &#FB8808▶ Ошибочка! &fНи один из плагинов (&#FB88080&f/&#FB8808{total}&f) не удалось включить! См. консоль"
       - "[sound] BLOCK_ANVIL_LAND"
     all-success:
       - "[message] &#FFFF00◆ &fВсе ранее выключенные плагины (&#FFFF00{count}&f/&#FFFF00{total}&f) успешно &#FFFF00включены &fза &#FFFF00{time}мс."
@@ -396,7 +396,7 @@ actions:
       - "[message] &#FB8808▶ Ошибочка! &fЧасть плагинов (&#FB8808{count}&f/&#FB8808{total}&f) выключена за &#FFFF00{time}мс&f, но &#FB8808{failed-count} &fшт. не удалось: &#FB8808{failed-plugins}"
       - "[sound] ENTITY_VILLAGER_NO"
     all-failed:
-      - "[message] &#FB8808▶ Ошибочка! &fНи один из плагинов (&#FB88080&f/&#FB8808{total}&f) не удалось выключить! См. консоль."
+      - "[message] &#FB8808▶ Ошибочка! &fНи один из плагинов (&#FB88080&f/&#FB8808{total}&f) не удалось выключить! См. консоль"
       - "[sound] BLOCK_ANVIL_LAND"
     all-success:
       - "[message] &#FFFF00◆ &fВсе плагины (&#FFFF00{count}&f/&#FFFF00{total}&f) успешно &#FFFF00выключены &fза &#FFFF00{time}мс."
@@ -455,7 +455,7 @@ actions:
       - "[message] &#FB8808▶ Ошибочка! &fЧасть плагинов (&#FB8808{count}&f/&#FB8808{total}&f) загружена за &#FFFF00{time}мс&f, но &#FB8808{failed-count} &fшт. не удалось: &#FB8808{failed-plugins}"
       - "[sound] ENTITY_VILLAGER_NO"
     all-failed:
-      - "[message] &#FB8808▶ Ошибочка! &fНи один из плагинов (&#FB88080&f/&#FB8808{total}&f) не удалось загрузить! См. консоль."
+      - "[message] &#FB8808▶ Ошибочка! &fНи один из плагинов (&#FB88080&f/&#FB8808{total}&f) не удалось загрузить! См. консоль"
       - "[sound] BLOCK_ANVIL_LAND"
     all-success:
       - "[message] &#FFFF00◆ &fВсе незагруженные плагины (&#FFFF00{count}&f/&#FFFF00{total}&f) успешно &#FFFF00загружены &fза &#FFFF00{time}мс."
@@ -478,7 +478,7 @@ actions:
       - "[message] &#FB8808▶ Ошибочка! &fЧасть плагинов (&#FB8808{count}&f/&#FB8808{total}&f) выгружена из памяти за &#FFFF00{time}мс&f, но &#FB8808{failed-count} &fшт. не удалось: &#FB8808{failed-plugins}"
       - "[sound] ENTITY_VILLAGER_NO"
     all-failed:
-      - "[message] &#FB8808▶ Ошибочка! &fНи один из плагинов (&#FB88080&f/&#FB8808{total}&f) не удалось выгрузить! См. консоль."
+      - "[message] &#FB8808▶ Ошибочка! &fНи один из плагинов (&#FB88080&f/&#FB8808{total}&f) не удалось выгрузить! См. консоль"
       - "[sound] BLOCK_ANVIL_LAND"
     all-success:
       - "[message] &#FFFF00◆ &fВсе плагины (&#FFFF00{count}&f/&#FFFF00{total}&f) успешно &#FFFF00выгружены &fиз памяти за &#FFFF00{time}мс."
@@ -610,7 +610,7 @@ actions:
       - "[message] &#FB8808▶ Ошибочка! &fЧасть плагинов (&#FB8808{count}&f/&#FB8808{total}&f) перезагружена за &#FFFF00{time}мс&f, но &#FB8808{failed-count} &fшт. не удалось: &#FB8808{failed-plugins}"
       - "[sound] ENTITY_VILLAGER_NO"
     all-failed:
-      - "[message] &#FB8808▶ Ошибочка! &fНи один из плагинов (&#FB88080&f/&#FB8808{total}&f) не удалось перезагрузить! См. консоль."
+      - "[message] &#FB8808▶ Ошибочка! &fНи один из плагинов (&#FB88080&f/&#FB8808{total}&f) не удалось перезагрузить! См. консоль"
       - "[sound] BLOCK_ANVIL_LAND"
     all-success:
       - "[message] &#FFFF00◆ &fВсе плагины (&#FFFF00{count}&f/&#FFFF00{total}&f) успешно &#FFFF00перезагружены &fза &#FFFF00{time}мс."
@@ -676,7 +676,7 @@ actions:
       - "[message] &#FB8808▶ Ошибочка! &fЧасть плагинов (&#FB8808{count}&f/&#FB8808{total}&f) перезапущена с диска за &#FFFF00{time}мс&f, но &#FB8808{failed-count} &fшт. не удалось: &#FB8808{failed-plugins}"
       - "[sound] ENTITY_VILLAGER_NO"
     all-failed:
-      - "[message] &#FB8808▶ Ошибочка! &fНи один из плагинов (&#FB88080&f/&#FB8808{total}&f) не удалось перезапустить! См. консоль."
+      - "[message] &#FB8808▶ Ошибочка! &fНи один из плагинов (&#FB88080&f/&#FB8808{total}&f) не удалось перезапустить! См. консоль"
       - "[sound] BLOCK_ANVIL_LAND"
     all-success:
       - "[message] &#FFFF00◆ &fВсе плагины (&#FFFF00{count}&f/&#FFFF00{total}&f) успешно &#FFFF00перезапущены &fс диска за &#FFFF00{time}мс."
@@ -1045,16 +1045,16 @@ actions:
       - "[message] &#FFFF00◆ &fПлагин &#FFFF00«{plugin}» &fуспешно &#FFFF00обновлён &fс версии &#FFFF00v{from} &fна &#FFFF00v{to} &f(&#FFFF00{index}&f/&#FFFF00{total}&f)"
       - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
     all-install-item-pending:
-      - "[message] &#FFFF00◆ &fПлагин &#FFFF00«{plugin}» &fуспешно &#FFFF00обновлён &fс версии &#FFFF00v{from} &fна &#FFFF00v{to} &f(&#FFFF00{index}&f/&#FFFF00{total}&f)"
+      - "[message] &#FFFF00◆ &fПлагин &#FFFF00«{plugin}» &fуспешно &#FFFF00обновлён &fс версии &#FFFF00v{from} &fна &#FFFF00v{to}&f, но применится при &#FFFF00перезапуске &f(&#FFFF00{index}&f/&#FFFF00{total}&f)"
       - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"
     all-install-item-failed:
       - "[message] &#FB8808▶ Ошибочка! Не удалось &#FB8808обновить &fплагин &#FB8808«{plugin}»&f: &#FB8808{detail} &f(&#FB8808{index}&f/&#FB8808{total}&f)"
       - "[sound] BLOCK_ANVIL_LAND"
     all-install-partial:
-      - "[message] &#FB8808▶ Ошибочка! &fЧасть обновлений (&#FB8808{count}&f/&#FB8808{total}&f) установлена за &#FFFF00{time}мс&f, но некоторые не удалось установить! См. консоль."
+      - "[message] &#FB8808▶ Ошибочка! &fЧасть обновлений (&#FB8808{count}&f/&#FB8808{total}&f) установлена за &#FFFF00{time}мс&f, но некоторые не удалось установить! См. консоль"
       - "[sound] ENTITY_VILLAGER_NO"
     all-install-failed:
-      - "[message] &#FB8808▶ Ошибочка! &fНи одно обновление (&#FB88080&f/&#FB8808{total}&f) не удалось установить! См. консоль."
+      - "[message] &#FB8808▶ Ошибочка! &fНи одно обновление (&#FB88080&f/&#FB8808{total}&f) не удалось установить! См. консоль"
       - "[sound] BLOCK_ANVIL_LAND"
     all-install-success:
       - "[message] &#FFFF00◆ Готово! &fМассовое обновление плагинов &#FFFF00успешно &fзавершено! Обновлено &#FFFF00{count} плагина(ов) &fиз &#FFFF00{total} &fза &#FFFF00{time}мс."
@@ -1065,7 +1065,9 @@ actions:
     all-install-skipped:
       - "[message] &#FB8808▶ Важно знать! &fНекоторые плагин(ы) (например, &#FB8808{plugins}&f) были &#FB8808пропущены&f, так как либо они &#FB8808платные&f, либо &#FB8808не поддерживают &fавтоматическое скачивание..."
       - "[sound] BLOCK_ANVIL_LAND"
-    all-pending-restart: []
+    all-pending-restart:
+      - "[message] &#FB8808▶ Внимание! &fПлагин(ы) &#FB8808{plugins} &fобновлены в папку &#FB8808update/ &fи вступят в силу после &#FB8808перезапуска &fсервера"
+      - "[sound] BLOCK_LEVER_CLICK"
     summary:
       - "[message] "
       - "[message]   &#FFFF00▶ &fРезультат проверок:"
@@ -1539,7 +1541,7 @@ actions:
       - "[message] {cards}"
       - "[sound] BLOCK_LEVER_CLICK"
     search-card:
-      - "  &#FFFF00{index}. &fПлагин &#FFFF00«{title}» &f(&#FFFF00v{version}&f) от автора &#FFFF00{author}&f:"
+      - "  &#FFFF00{index}. &fПлагин &#FFFF00«{title}» &f(&#FFFF00{version}&f) от автора &#FFFF00{author}&f:"
       - ""
       - "     &#FFFF00◆ &fПлощадка: &#FFFF00{source} &f| Скачиваний: &#FFFF00{downloads} &f| Звёзд: &#FFFF00{stars}"
       - ""
@@ -1553,7 +1555,7 @@ actions:
       - "[sound] BLOCK_ANVIL_LAND"
     confirm-single:
       - "[message] "
-      - "[message]   &#FFFF00◆ &fТочно ли вы хотите &#FFFF00скачать &fплагин &#FFFF00«{plugin}» &f(&#FFFF00v{version}&f)"
+      - "[message]   &#FFFF00◆ &fТочно ли вы хотите &#FFFF00скачать &fплагин &#FFFF00«{plugin}» &f(&#FFFF00{version}&f)"
       - "[message]     &fот автора &#FFFF00{author} &fс площадки &#FFFF00{source}&f, у которого "
       - "[message]                &#FFFF00{downloads} &fскачиваний и &#FFFF00{stars} &fзвёзд?"
       - "[message] "
@@ -1620,6 +1622,7 @@ actions:
       invalid-plan-file: "подготовленный файл установки отсутствует или находится вне директории транзакции"
       duplicate-plugin: "план установки содержит один и тот же плагин несколько раз"
       staged-file-changed: "подготовленный файл изменился после проверки"
+      rate-limited: "превышен лимит запросов к площадке, попробуйте позже"
     reasons:
       incompatible-java: "Плагину требуется Java {required-java}+, а на сервере установлена Java {current-java}"
       invalid-jar: "Скачанный файл повреждён или не является допустимым .jar-архивом"
@@ -1650,7 +1653,7 @@ actions:
         text: "&#FFFF00[Подробнее]"
         hover:
           - ""
-          - " &#FFFF00▶ &fИнформация о плагине &#FFFF00«{title}» &f(&#FFFF00v{version}&f): "
+          - " &#FFFF00▶ &fИнформация о плагине &#FFFF00«{title}» &f(&#FFFF00{version}&f): "
           - ""
           - "  &#FFFF00◆ &fАвтор: &#FFFF00{author} "
           - "  &#FFFF00◆ &fПлощадка: &#FFFF00{source} "

@@ -1,6 +1,7 @@
 package ru.milkyway.plugmanreloaded.commands.sub;
 
 import ru.milkyway.plugmanreloaded.download.DownloadModels.*;
+import ru.milkyway.plugmanreloaded.download.PluginSearch;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -16,8 +17,12 @@ import ru.milkyway.plugmanreloaded.utils.HexColors;
 import ru.milkyway.plugmanreloaded.utils.PluginMetaHelper;
 import ru.milkyway.plugmanreloaded.utils.TaskScheduler;
 
+import ru.milkyway.plugmanreloaded.update.input.SourceUrlParser;
+
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class DownloadCommand extends AbstractSubCommand {
 
@@ -126,7 +131,7 @@ public class DownloadCommand extends AbstractSubCommand {
             return true;
         }
 
-        String resolvedName = tree != null ? tree.targetPluginName() : (ctx.hasTarget() ? ctx.target() : detailText("actions.download.details.unknown-plugin"));
+        String resolvedName = tree != null ? tree.targetPluginName() : resolveDisplayName(ctx.hasTarget() ? ctx.target() : null);
         Map<String, String> placeholders = new HashMap<>();
         placeholders.put("plugin", resolvedName);
         sendAction(sender, "download.cancelled", placeholders);
@@ -151,7 +156,7 @@ public class DownloadCommand extends AbstractSubCommand {
         DependencyTree tree = pendingTrees.remove(token.toLowerCase(Locale.ROOT));
         if (tree == null) {
             Map<String, String> map = new HashMap<>();
-            map.put("plugin", ctx.hasTarget() ? ctx.target() : detailText("actions.download.details.unknown-plugin"));
+            map.put("plugin", resolveDisplayName(ctx.hasTarget() ? ctx.target() : null));
             sendAction(sender, "download.timeout", map);
             return true;
         }
@@ -174,9 +179,84 @@ public class DownloadCommand extends AbstractSubCommand {
         return true;
     }
 
+    private String resolveDisplayName(@Nullable String target) {
+        if (target == null || target.isBlank()) {
+            return detailText("actions.download.details.unknown-plugin");
+        }
+        String candidate = extractCandidateNameFromUrl(target);
+        if (candidate != null && !candidate.isBlank()) {
+            return candidate;
+        }
+        String cleanTarget = target.trim();
+        String sourceId = null;
+        String id = cleanTarget;
+        if (cleanTarget.contains(":")) {
+            int colon = cleanTarget.indexOf(':');
+            sourceId = cleanTarget.substring(0, colon).trim();
+            id = cleanTarget.substring(colon + 1).trim();
+        }
+        if (id.matches("^\\d+$")) {
+            String known = null;
+            if (plugin != null && plugin.getDownloadService() != null && plugin.getDownloadService().getSearchEngine() != null) {
+                known = plugin.getDownloadService().getSearchEngine().findKnownTitle(id, sourceId != null ? sourceId : "spigot");
+            }
+            if (known == null) {
+                known = PluginSearch.findKnownTitleGlobally(id, sourceId != null ? sourceId : "spigot");
+            }
+            if (known != null && !known.isBlank()) {
+                return known;
+            }
+        }
+        return cleanTarget;
+    }
+
+    private static final Pattern SPIGOT_URL_NAME_PATTERN = Pattern.compile("resources/([^/]+?)\\.(\\d+)");
+
+    private @Nullable String extractCandidateNameFromUrl(String url) {
+        if (url == null || url.isBlank()) return null;
+        Matcher spigot = SPIGOT_URL_NAME_PATTERN.matcher(url);
+        if (spigot.find()) {
+            String name = spigot.group(1);
+            String id = spigot.group(2);
+            if (plugin != null && plugin.getDownloadService() != null && plugin.getDownloadService().getSearchEngine() != null) {
+                plugin.getDownloadService().getSearchEngine().rememberTitle(id, "spigot", name);
+            }
+            return name;
+        }
+        var parsed = SourceUrlParser.parse(url);
+        if (parsed.success() && parsed.source() != null) {
+            String sourceId = parsed.source().sourceId();
+            String ref = parsed.source().ref();
+            if (ref != null && !ref.isBlank()) {
+                String known = null;
+                if (plugin != null && plugin.getDownloadService() != null && plugin.getDownloadService().getSearchEngine() != null) {
+                    known = plugin.getDownloadService().getSearchEngine().findKnownTitle(ref, sourceId);
+                }
+                if (known == null) {
+                    known = PluginSearch.findKnownTitleGlobally(ref, sourceId);
+                }
+                if (known != null && !known.isBlank()) {
+                    return known;
+                }
+                if (!ref.matches("^\\d+$")) {
+                    if (ref.contains("/")) {
+                        return ref.substring(ref.lastIndexOf('/') + 1);
+                    }
+                    return ref;
+                }
+            }
+        }
+        return null;
+    }
+
     private boolean handleUrlDownload(CommandSender sender, String url, boolean autoConfirm, boolean withSoftDeps) {
+        String candidate = extractCandidateNameFromUrl(url);
+        String displayQuery = candidate != null && !candidate.isBlank() ? candidate : url;
+
         Map<String, String> searchingMap = new HashMap<>();
-        searchingMap.put("query", url);
+        searchingMap.put("query", displayQuery);
+        searchingMap.put("plugin", displayQuery);
+        searchingMap.put("title", HexColors.escapeTags(displayQuery));
         sendAction(sender, "download.searching", searchingMap);
 
         plugin.getDownloadService().downloadFromUrl(
@@ -188,8 +268,18 @@ public class DownloadCommand extends AbstractSubCommand {
     }
 
     private boolean handleSearchOrDownload(CommandSender sender, String query, String preferredSource, boolean autoConfirm, boolean withSoftDeps, boolean isExplicitSelect) {
+        String knownTitle = plugin != null && plugin.getDownloadService() != null && plugin.getDownloadService().getSearchEngine() != null
+                ? plugin.getDownloadService().getSearchEngine().findKnownTitle(query, preferredSource)
+                : null;
+        if (knownTitle == null) {
+            knownTitle = PluginSearch.findKnownTitleGlobally(query, preferredSource);
+        }
+        String displayTitle = knownTitle != null && !knownTitle.isBlank() ? knownTitle : query;
+
         Map<String, String> searchingMap = new HashMap<>();
-        searchingMap.put("query", query);
+        searchingMap.put("query", displayTitle);
+        searchingMap.put("plugin", displayTitle);
+        searchingMap.put("title", HexColors.escapeTags(displayTitle));
         if (preferredSource != null && !preferredSource.isBlank()) {
             searchingMap.put("source", formatSourceName(preferredSource));
             searchingMap.put("source-id", preferredSource);
@@ -204,7 +294,9 @@ public class DownloadCommand extends AbstractSubCommand {
             if (hits.isEmpty()) {
                 TaskScheduler.runSync(plugin, () -> {
                     Map<String, String> map = new HashMap<>();
-                    map.put("query", query);
+                    map.put("query", displayTitle);
+                    map.put("plugin", displayTitle);
+                    map.put("title", HexColors.escapeTags(displayTitle));
                     sendAction(sender, "download.not-found", map);
                 });
                 return;
@@ -237,9 +329,19 @@ public class DownloadCommand extends AbstractSubCommand {
             cardsBuilder.append(formatCard(config, hits.get(i), i + 1));
         }
 
+        String knownTitle = plugin != null && plugin.getDownloadService() != null && plugin.getDownloadService().getSearchEngine() != null
+                ? plugin.getDownloadService().getSearchEngine().findKnownTitle(query, null)
+                : null;
+        if (knownTitle == null && !hits.isEmpty() && hits.get(0).title() != null && query.matches("^\\d+$")) {
+            knownTitle = hits.get(0).title();
+        }
+        String headerQuery = knownTitle != null && !knownTitle.isBlank() ? knownTitle : query;
+
         String cardsStr = cardsBuilder.toString();
         Map<String, String> headerMap = new HashMap<>();
-        headerMap.put("query", query);
+        headerMap.put("query", headerQuery);
+        headerMap.put("plugin", headerQuery);
+        headerMap.put("title", HexColors.escapeTags(headerQuery));
         headerMap.put("cards", cardsStr);
         headerMap.put("results", cardsStr);
         headerMap.put("plugins", cardsStr);
@@ -249,6 +351,9 @@ public class DownloadCommand extends AbstractSubCommand {
     }
 
     private String formatCard(FileConfiguration config, SearchResultEntry entry, int index) {
+        if (plugin != null && plugin.getDownloadService() != null && plugin.getDownloadService().getSearchEngine() != null) {
+            plugin.getDownloadService().getSearchEngine().rememberTitle(entry.projectId(), entry.sourceId(), entry.title());
+        }
         Map<String, String> p = new HashMap<>();
         p.put("index", String.valueOf(index));
         p.put("title", HexColors.escapeTags(entry.title()));
@@ -257,7 +362,7 @@ public class DownloadCommand extends AbstractSubCommand {
         p.put("source", formatSourceName(entry.sourceId()));
         String rawVer = entry.version() != null && !entry.version().isBlank() ? entry.version() : "";
         String versionLatest = plugin.getConfigManager().text("actions.download.version-latest");
-        String cleanVer = !rawVer.isBlank() ? PluginMetaHelper.cleanVersion(rawVer) : versionLatest;
+        String cleanVer = !rawVer.isBlank() ? "v" + PluginMetaHelper.cleanVersion(rawVer) : versionLatest;
         p.put("version", cleanVer);
         p.put("downloads", formatCount(entry.downloads()));
         p.put("stars", String.valueOf(entry.stars()));
@@ -379,11 +484,14 @@ public class DownloadCommand extends AbstractSubCommand {
 
         Map<String, String> map = new HashMap<>();
         map.put("plugin", tree.targetPluginName());
-        map.put("title", HexColors.escapeTags(target.title() != null ? target.title() : tree.targetPluginName()));
+        String rawTitle = target.title() != null && !target.title().isBlank() && !target.title().matches("^\\d+$")
+                ? target.title()
+                : tree.targetPluginName();
+        map.put("title", HexColors.escapeTags(rawTitle));
         map.put("token", token);
         String rawVer = target.version() != null && !target.version().isBlank() ? target.version() : "";
         String versionLatest = plugin.getConfigManager().text("actions.download.version-latest");
-        map.put("version", !rawVer.isBlank() ? PluginMetaHelper.cleanVersion(rawVer) : versionLatest);
+        map.put("version", !rawVer.isBlank() ? "v" + PluginMetaHelper.cleanVersion(rawVer) : versionLatest);
         String authorUnknown = plugin.getConfigManager().text("actions.download.author-unknown");
         map.put("author", HexColors.escapeTags(target.author() != null ? target.author() : authorUnknown));
         String url = target.url() != null ? target.url() : "";
@@ -486,8 +594,13 @@ public class DownloadCommand extends AbstractSubCommand {
     private void handleDownloadResult(CommandSender sender, DownloadResult result) {
         FileConfiguration config = plugin.getConfigManager().getMessagesConfig();
         Map<String, String> map = new HashMap<>();
-        map.put("plugin", result.pluginName() != null ? result.pluginName() : detailText("actions.download.details.unknown-plugin"));
-        map.put("version", result.version() != null ? result.version() : "1.0");
+        String rawPlugin = result.pluginName();
+        String resolvedPlugin = rawPlugin != null && !rawPlugin.isBlank()
+                ? (rawPlugin.matches("^\\d+$") ? resolveDisplayName(rawPlugin) : rawPlugin)
+                : detailText("actions.download.details.unknown-plugin");
+        map.put("plugin", resolvedPlugin);
+        String rawVer = result.version() != null && !result.version().isBlank() ? result.version() : "1.0";
+        map.put("version", PluginMetaHelper.cleanVersion(rawVer));
         map.put("source", formatSourceName(result.sourceId()));
         String detail = detailText(result.message());
         map.put("detail", detail);
@@ -510,7 +623,7 @@ public class DownloadCommand extends AbstractSubCommand {
 
     private String resolveReason(FileConfiguration config, DownloadResult result, Map<String, String> placeholders) {
         String detail = detailText(result.message());
-        if (!detail.equals(result.message())) {
+        if (result.message() != null && !result.message().isBlank() && !detail.equals(result.message())) {
             return applyPlaceholders(detail, placeholders);
         }
 

@@ -17,9 +17,16 @@ import ru.milkyway.plugmanreloaded.BukkitServerMock;
 import ru.milkyway.plugmanreloaded.PlugManReloaded;
 import ru.milkyway.plugmanreloaded.managers.ConfigManager;
 
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -297,5 +304,53 @@ class ManualSourceLifecycleTest {
         for (Field f : ManualSourceSession.class.getDeclaredFields()) {
             assertFalse(Player.class.isAssignableFrom(f.getType()));
         }
+    }
+
+    @Test
+    @DisplayName("Verify identityFor retrieves version using PluginMetaHelper.getVersion")
+    void testIdentityForUsesPluginMetaHelper() throws Exception {
+        ClassReader reader = new ClassReader(ManualSources.class.getName());
+        List<String> invokedMethods = new ArrayList<>();
+
+        reader.accept(new ClassVisitor(Opcodes.ASM9) {
+            @Override
+            public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
+                if (!"identityFor".equals(name)) return null;
+                return new MethodVisitor(Opcodes.ASM9) {
+                    @Override
+                    public void visitMethodInsn(int opcode, String owner, String name, String descriptor, boolean isInterface) {
+                        invokedMethods.add(owner + "." + name);
+                        super.visitMethodInsn(opcode, owner, name, descriptor, isInterface);
+                    }
+                };
+            }
+        }, 0);
+
+        assertTrue(invokedMethods.stream().anyMatch(m -> m.contains("PluginMetaHelper.getVersion")),
+                "ManualSources.identityFor must call PluginMetaHelper.getVersion on the target plugin");
+    }
+
+    @Test
+    @DisplayName("Verify verifyAndSave uses formatSourceDisplayName for all error messages")
+    void testVerifyAndSaveUsesFormatSourceDisplayName() throws Exception {
+        ClassReader reader = new ClassReader(ManualSources.class.getName());
+        List<String> invokedMethods = new ArrayList<>();
+
+        reader.accept(new ClassVisitor(Opcodes.ASM9) {
+            @Override
+            public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
+                if (!"verifyAndSave".equals(name)) return null;
+                return new MethodVisitor(Opcodes.ASM9) {
+                    @Override
+                    public void visitMethodInsn(int opcode, String owner, String name, String descriptor, boolean isInterface) {
+                        invokedMethods.add(owner + "." + name);
+                        super.visitMethodInsn(opcode, owner, name, descriptor, isInterface);
+                    }
+                };
+            }
+        }, 0);
+
+        long formatCount = invokedMethods.stream().filter(m -> m.contains("formatSourceDisplayName")).count();
+        assertTrue(formatCount >= 3, "verifyAndSave must call formatSourceDisplayName for all reporting branches");
     }
 }

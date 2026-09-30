@@ -93,6 +93,10 @@ public class SourceUrlParserTest {
         var r1 = SourceUrlParser.parse("https://spigotmc.ru/resources/deluxemenus.43/");
         assertTrue(r1.success());
         assertTrue(r1.source().url().contains("deluxemenus.43"));
+
+        var r2 = SourceUrlParser.parse("https://spigotmc.ru/dev/v1/resource/2206/version/");
+        assertTrue(r2.success());
+        assertEquals("https://spigotmc.ru/resources/2206/", r2.source().url());
     }
 
     @Test

@@ -336,6 +336,14 @@ public final class SourceCatalog {
         return null;
     }
 
+    public boolean hasUserOverride(@Nullable String mainClass, @Nullable String pluginName) {
+        return lookupUser(mainClass, pluginName) != null;
+    }
+
+    public boolean hasExplicitSource(@Nullable String mainClass, @Nullable String pluginName) {
+        return pinnedSource(mainClass, pluginName) != null || hasUserOverride(mainClass, pluginName);
+    }
+
     public static CatalogSource pinnedInstallation(String sourceId, String ref, String url,
                                                     String artifactVersion, String artifactSha256,
                                                     long artifactSize, String artifactFile) {

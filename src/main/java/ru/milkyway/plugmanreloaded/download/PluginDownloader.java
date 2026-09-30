@@ -58,20 +58,20 @@ public class PluginDownloader {
       TaskScheduler.runAsync(this.plugin, () -> {
          try {
             Files.createDirectories(stagingDir);
-            List<DownloadModels.SearchResultEntry> allEntries = new ArrayList();
+            List<DownloadModels.SearchResultEntry> allEntries = new ArrayList<>();
             if (dependencyEntries != null) {
                allEntries.addAll(dependencyEntries);
             }
 
             allEntries.add(targetEntry);
-            List<StagedItem> stagedItems = new ArrayList();
+            List<StagedItem> stagedItems = new ArrayList<>();
 
             for(DownloadModels.SearchResultEntry entry : allEntries) {
                StageAttempt attempt = this.stageAndValidate(entry, stagingDir);
                if (attempt.item() == null) {
                   StageFailure failure = attempt.failure() != null ? attempt.failure() : new StageFailure(DownloadModels.DownloadStatus.DOWNLOAD_FAILED, "actions.download.details.stage-failed");
                   cleanupQuietly(stagingDir);
-                  TaskScheduler.runSync(this.plugin, () -> callback.accept(DownloadModels.DownloadResult.failed(failure.outcome(), entry.title(), entry.sourceId(), failure.detail())));
+                  TaskScheduler.runSync(this.plugin, () -> callback.accept(DownloadModels.DownloadResult.failed(failure.outcome(), this.resolveEntryTitle(entry), entry.sourceId(), failure.detail())));
                   return;
                }
 
@@ -89,7 +89,7 @@ public class PluginDownloader {
          } catch (LinkageError | Exception t) {
             cleanupQuietly(stagingDir);
             Log.error("plugindownloader.transaction-error", t, new String[]{"error", ((Throwable)t).getMessage()});
-            TaskScheduler.runSync(this.plugin, () -> callback.accept(DownloadModels.DownloadResult.failed(DownloadModels.DownloadStatus.ACTIVATION_FAILED, targetEntry.title(), targetEntry.sourceId(), t.getMessage())));
+            TaskScheduler.runSync(this.plugin, () -> callback.accept(DownloadModels.DownloadResult.failed(DownloadModels.DownloadStatus.ACTIVATION_FAILED, this.resolveEntryTitle(targetEntry), targetEntry.sourceId(), t.getMessage())));
          }
 
       });
@@ -121,61 +121,128 @@ public class PluginDownloader {
    private StageAttempt stageAndValidate(DownloadModels.SearchResultEntry entry, Path stagingDir) {
       try {
          DownloadResolver.DownloadResolution resolution = this.downloadResolver.resolve(entry);
-         DownloadResolver.ResolvedDownload info = resolution.info();
-         if (info != null && info.downloadUrl() != null && !info.downloadUrl().isBlank()) {
+         java.util.List<DownloadResolver.ResolvedDownload> candidates = resolution.candidates();
+         boolean hasAnyValidUrl = false;
+         if (candidates != null) {
+            for (DownloadResolver.ResolvedDownload candidate : candidates) {
+               if (candidate.downloadUrl() != null && !candidate.downloadUrl().isBlank()) {
+                  hasAnyValidUrl = true;
+                  break;
+               }
+            }
+         }
+
+         if (!hasAnyValidUrl) {
+            Log.debug("plugindownloader.direct-link-failed", "title", entry != null ? entry.title() : "unknown");
+            String detail = resolution.failureDetail() != null ? resolution.failureDetail() : "actions.download.details.no-direct-link";
+            return PluginDownloader.StageAttempt.failed(DownloadModels.DownloadStatus.DOWNLOAD_FAILED, detail);
+         }
+
+         DownloadModels.DownloadStatus lastStatus = DownloadModels.DownloadStatus.DOWNLOAD_FAILED;
+         String lastError = "actions.download.details.stage-failed";
+         boolean hadIncompatibleJava = false;
+         String javaIncompatibleError = null;
+
+         for (int i = 0; i < candidates.size(); i++) {
+            DownloadResolver.ResolvedDownload info = candidates.get(i);
+            if (info.downloadUrl() == null || info.downloadUrl().isBlank()) {
+               continue;
+            }
             String safeName = info.fileName() != null && !info.fileName().isBlank() ? info.fileName().replaceAll("[^A-Za-z0-9._-]", "_") : entry.projectId().replaceAll("[^A-Za-z0-9._-]", "_") + ".jar";
             String var10001 = String.valueOf(UUID.randomUUID());
             Path targetStaged = stagingDir.resolve(var10001 + "_" + safeName + ".tmp");
             DownloadClient.Downloaded downloaded = DownloadClient.download(info.downloadUrl(), targetStaged, this.userAgent);
-            if (downloaded != null && Files.exists(targetStaged, new LinkOption[0])) {
-               if (!validateMagicBytes(targetStaged)) {
-                  Files.deleteIfExists(targetStaged);
-                  return PluginDownloader.StageAttempt.failed(DownloadModels.DownloadStatus.INVALID_PLUGIN, "actions.download.details.not-a-jar");
-               } else {
-                  if (info.sha512() != null && !info.sha512().isBlank()) {
-                     String calcSha512 = calculateHash(targetStaged, "SHA-512");
-                     if (!info.sha512().equalsIgnoreCase(calcSha512)) {
-                        Files.deleteIfExists(targetStaged);
-                        return PluginDownloader.StageAttempt.failed(DownloadModels.DownloadStatus.HASH_MISMATCH, "actions.download.details.sha512-mismatch");
-                     }
-                  } else if (info.sha256() != null && !info.sha256().isBlank() && !info.sha256().equalsIgnoreCase(downloaded.sha256())) {
-                     Files.deleteIfExists(targetStaged);
-                     return PluginDownloader.StageAttempt.failed(DownloadModels.DownloadStatus.HASH_MISMATCH, "actions.download.details.sha256-mismatch");
-                  }
-
-                  File stagedFile = targetStaged.toFile();
-                  JarValidator.PreFlightReport report = JarValidator.validatePreFlight(stagedFile, (String)null, false);
-                  if (!report.isValid() && report.status() != PreFlightStatus.MISSING_DEPENDENCIES) {
-                     DownloadModels.DownloadStatus var10000;
-                     switch (report.status()) {
-                        case INCOMPATIBLE_JAVA -> var10000 = DownloadModels.DownloadStatus.INCOMPATIBLE_JAVA;
-                        case NO_DESCRIPTOR -> var10000 = DownloadModels.DownloadStatus.INVALID_MANIFEST;
-                        default -> var10000 = DownloadModels.DownloadStatus.INVALID_MANIFEST;
-                     }
-
-                     DownloadModels.DownloadStatus outcome = var10000;
-                     Files.deleteIfExists(targetStaged);
-                     return PluginDownloader.StageAttempt.failed(outcome, report.errorMessage());
-                  } else {
-                     String declaredName = report.declaredName() != null ? report.declaredName() : entry.title();
-                     if (!artifactMatchesExpectedProject(entry, declaredName)) {
-                        Files.deleteIfExists(targetStaged);
-                        return PluginDownloader.StageAttempt.failed(DownloadModels.DownloadStatus.INVALID_PLUGIN, "actions.download.details.identity-mismatch");
-                     } else {
-                        boolean requiresRestart = report.hasBootstrapper() || (report.isPaperPlugin() && PlatformDetector.isModernPaper());
-                        String ver = info.versionNumber() != null ? info.versionNumber() : (report.declaredVersion() != null ? report.declaredVersion() : "1.0");
-                        return PluginDownloader.StageAttempt.success(new StagedItem(targetStaged, declaredName, ver, entry.sourceId(), entry.projectId(), entry.url(), requiresRestart, entry, downloaded.sha256(), Files.size(targetStaged)));
-                     }
-                  }
-               }
-            } else {
-               return PluginDownloader.StageAttempt.failed(DownloadModels.DownloadStatus.DOWNLOAD_FAILED, "actions.download.details.network");
+            
+            if (downloaded == null || !Files.exists(targetStaged, new LinkOption[0])) {
+               lastError = "actions.download.details.network";
+               continue;
             }
-         } else {
-            Log.debug("plugindownloader.direct-link-failed", new String[]{"title", entry.title()});
-            String detail = resolution.failureDetail() != null ? resolution.failureDetail() : "actions.download.details.no-direct-link";
-            return PluginDownloader.StageAttempt.failed(DownloadModels.DownloadStatus.DOWNLOAD_FAILED, detail);
+
+            if (!validateMagicBytes(targetStaged)) {
+               Files.deleteIfExists(targetStaged);
+               lastStatus = DownloadModels.DownloadStatus.INVALID_PLUGIN;
+               lastError = "actions.download.details.not-a-jar";
+               continue;
+            }
+
+            if (info.sha512() != null && !info.sha512().isBlank()) {
+               String calcSha512 = calculateHash(targetStaged, "SHA-512");
+               if (!info.sha512().equalsIgnoreCase(calcSha512)) {
+                  Files.deleteIfExists(targetStaged);
+                  lastStatus = DownloadModels.DownloadStatus.HASH_MISMATCH;
+                  lastError = "actions.download.details.sha512-mismatch";
+                  continue;
+               }
+            } else if (info.sha256() != null && !info.sha256().isBlank() && !info.sha256().equalsIgnoreCase(downloaded.sha256())) {
+               Files.deleteIfExists(targetStaged);
+               lastStatus = DownloadModels.DownloadStatus.HASH_MISMATCH;
+               lastError = "actions.download.details.sha256-mismatch";
+               continue;
+            }
+
+            File stagedFile = targetStaged.toFile();
+            JarValidator.PreFlightReport report = JarValidator.validatePreFlight(stagedFile, (String)null, false);
+            boolean canProceed = report.isValid()
+                    || report.status() == PreFlightStatus.MISSING_DEPENDENCIES
+                    || report.status() == PreFlightStatus.STARTUP_ONLY_LOAD
+                    || report.status() == PreFlightStatus.REQUIRES_COLD_RESTART;
+            
+            if (!canProceed) {
+               Files.deleteIfExists(targetStaged);
+               if (report.status() == PreFlightStatus.INCOMPATIBLE_JAVA) {
+                  hadIncompatibleJava = true;
+                  if (javaIncompatibleError == null) {
+                     javaIncompatibleError = report.errorMessage();
+                  }
+                  lastStatus = DownloadModels.DownloadStatus.INCOMPATIBLE_JAVA;
+                  lastError = report.errorMessage();
+                  String ver = info.versionNumber() != null ? info.versionNumber() : "unknown";
+                  Log.debug("plugindownloader.candidate-java-incompatible", "version", ver, "plugin", entry.title(), "reqJava", String.valueOf(report.requiredJava()), "currJava", String.valueOf(report.currentJava()));
+                  continue;
+               }
+               
+               lastStatus = report.status() == PreFlightStatus.NO_DESCRIPTOR ? DownloadModels.DownloadStatus.INVALID_MANIFEST : DownloadModels.DownloadStatus.INVALID_PLUGIN;
+               lastError = report.errorMessage();
+               continue;
+            }
+
+            String declaredName = report.declaredName() != null ? report.declaredName() : entry.title();
+            if (!artifactMatchesExpectedProject(entry, declaredName)) {
+               Files.deleteIfExists(targetStaged);
+               lastStatus = DownloadModels.DownloadStatus.INVALID_PLUGIN;
+               lastError = "actions.download.details.identity-mismatch";
+               continue;
+            }
+
+            if (entry.projectId() != null && !entry.projectId().isBlank() && declaredName != null && !declaredName.isBlank()) {
+               PluginSearch.rememberTitleGlobally(entry.projectId(), entry.sourceId(), declaredName);
+               if (this.plugin != null && this.plugin.getDownloadService() != null && this.plugin.getDownloadService().getSearchEngine() != null) {
+                  this.plugin.getDownloadService().getSearchEngine().rememberTitle(entry.projectId(), entry.sourceId(), declaredName);
+               }
+            }
+
+            if (hadIncompatibleJava && i > 0) {
+               String ver = info.versionNumber() != null ? info.versionNumber() : "unknown";
+               Log.info("plugindownloader.java-fallback-applied", "plugin", declaredName, "version", ver);
+            }
+
+            boolean requiresRestart = report.hasBootstrapper()
+                    || (report.isPaperPlugin() && PlatformDetector.isModernPaper())
+                    || report.status() == PreFlightStatus.STARTUP_ONLY_LOAD
+                    || report.status() == PreFlightStatus.REQUIRES_COLD_RESTART;
+            String declaredVer = report.declaredVersion();
+            boolean hasDeclared = declaredVer != null && !declaredVer.isBlank() && !"1.0".equals(declaredVer);
+            String ver = hasDeclared
+                    ? declaredVer
+                    : (info.versionNumber() != null && !info.versionNumber().isBlank() ? info.versionNumber() : (declaredVer != null && !declaredVer.isBlank() ? declaredVer : "1.0"));
+            return PluginDownloader.StageAttempt.success(new StagedItem(targetStaged, declaredName, ver, entry.sourceId(), entry.projectId(), entry.url(), requiresRestart, entry, downloaded.sha256(), Files.size(targetStaged)));
          }
+
+         if (hadIncompatibleJava && javaIncompatibleError != null) {
+            return PluginDownloader.StageAttempt.failed(DownloadModels.DownloadStatus.INCOMPATIBLE_JAVA, javaIncompatibleError);
+         }
+
+         return PluginDownloader.StageAttempt.failed(lastStatus, lastError);
       } catch (LinkageError | Exception t) {
          Log.debug("plugindownloader.stage-validate-failed", t, new String[]{"title", entry.title()});
          return PluginDownloader.StageAttempt.failed(DownloadModels.DownloadStatus.DOWNLOAD_FAILED, ((Throwable)t).getMessage());
@@ -295,13 +362,47 @@ public class PluginDownloader {
    }
 
    static boolean artifactMatchesExpectedProject(DownloadModels.SearchResultEntry entry, String declaredName) {
-      return entry != null && declaredName != null && !declaredName.isBlank() ? PluginMatcher.isExactOrCleanMatch(declaredName, entry.title(), entry.projectId()) : false;
+      if (entry == null || declaredName == null || declaredName.isBlank()) {
+         return false;
+      }
+      if (PluginMatcher.isExactOrCleanMatch(declaredName, entry.title(), entry.projectId())) {
+         return true;
+      }
+      String known = PluginSearch.findKnownTitleGlobally(entry.projectId(), entry.sourceId());
+      if (known != null && PluginMatcher.isExactOrCleanMatch(declaredName, known, null)) {
+         return true;
+      }
+      String title = entry.title();
+      boolean isNumericOrPlaceholder = title == null || title.isBlank()
+              || title.matches("^(?i)(?:resource\\s+)?\\d+$")
+              || title.equalsIgnoreCase(entry.projectId());
+      if (isNumericOrPlaceholder && entry.projectId() != null && entry.projectId().matches("^\\d+$")) {
+         return true;
+      }
+      return false;
+   }
+
+   private String resolveEntryTitle(DownloadModels.SearchResultEntry entry) {
+      if (entry == null) {
+         return null;
+      }
+      String title = entry.title();
+      if (title == null || title.matches("^\\d+$")) {
+         String known = PluginSearch.findKnownTitleGlobally(entry.projectId(), entry.sourceId());
+         if (known == null && this.plugin != null && this.plugin.getDownloadService() != null && this.plugin.getDownloadService().getSearchEngine() != null) {
+            known = this.plugin.getDownloadService().getSearchEngine().findKnownTitle(entry.projectId(), entry.sourceId());
+         }
+         if (known != null && !known.isBlank()) {
+            return known;
+         }
+      }
+      return title;
    }
 
    static @Nullable StageFailure validateStagedItems(Path stagingDirectory, List<StagedItem> items) {
       if (items != null && !items.isEmpty()) {
          Path root = stagingDirectory.toAbsolutePath().normalize();
-         Set<String> names = new HashSet();
+         Set<String> names = new HashSet<>();
 
          for(StagedItem item : items) {
             Path artifact = item.stagedPath().toAbsolutePath().normalize();

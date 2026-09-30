@@ -3,3 +3,6 @@
 !/.gitignore
 !/pom.xml
 !/README.md
+!/checkstyle.xml
+!/.cfduplication.yml
+!/.codefactor.json

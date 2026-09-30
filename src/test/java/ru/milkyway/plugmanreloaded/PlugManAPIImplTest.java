@@ -10,7 +10,7 @@ import org.junit.jupiter.api.io.TempDir;
 import ru.milkyway.plugmanreloaded.api.FailureReason;
 import ru.milkyway.plugmanreloaded.api.PlugManAPI;
 import ru.milkyway.plugmanreloaded.api.PluginResult;
-import ru.milkyway.plugmanreloaded.api.impl.PlugManAPIImpl;
+
 import ru.milkyway.plugmanreloaded.bridge.PlatformBridge;
 import ru.milkyway.plugmanreloaded.configs.MainConfig;
 import ru.milkyway.plugmanreloaded.managers.ConfigManager;

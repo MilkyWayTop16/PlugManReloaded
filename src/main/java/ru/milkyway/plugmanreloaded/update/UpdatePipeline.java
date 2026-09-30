@@ -46,8 +46,9 @@ public final class UpdatePipeline {
             Log.warn("updatepipeline.pinned-artifact-mismatch", "plugin", identity.pluginName());
             return UpdateCandidate.noSource(identity);
         }
+        boolean userOverride = catalog.hasUserOverride(identity.mainClass(), identity.pluginName());
         UpdateCandidate candidate = resolveSingleFromCatalog(identity, resolver, pinned);
-        if (pinned != null) {
+        if (pinned != null || userOverride) {
             return candidate != null ? candidate : UpdateCandidate.failed(identity, UpdateStatus.NETWORK_ERROR);
         }
         if (candidate != null && isConfirmed(candidate)) {
@@ -134,6 +135,17 @@ public final class UpdatePipeline {
             UpdateSource.ProjectMatch match =
                     source.identifyFromCatalog(identity, entry.ref(), entry.options());
             if (match == null) continue;
+
+            if (pinned != null || catalog.hasUserOverride(identity.mainClass(), identity.pluginName())) {
+                match = new UpdateSource.ProjectMatch(
+                        match.pluginName(),
+                        match.projectRef(),
+                        match.projectUrl(),
+                        MatchConfidence.CONFIRMED,
+                        MatchReason.CATALOG,
+                        match.knownVersionNumber()
+                );
+            }
 
             List<RemoteVersion> versions = source.listVersions(match);
             if (versions.isEmpty()) continue;

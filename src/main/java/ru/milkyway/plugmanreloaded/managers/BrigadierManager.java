@@ -49,7 +49,7 @@ public class BrigadierManager {
         if (plugin == null || plugin.getConfigManager() == null || !plugin.getConfigManager().isAutoSyncCommands()) return;
 
         if (!plugin.isEnabled()) {
-            if (Bukkit.getServer() != null && Bukkit.isPrimaryThread()) {
+            if (Bukkit.isPrimaryThread()) {
                 performSyncCommands();
             }
             return;

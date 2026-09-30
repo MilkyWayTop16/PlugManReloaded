@@ -409,6 +409,22 @@ public class PluginSearchTest {
         assertTrue(engine.cacheSize() <= 200);
     }
 
+    @Test
+    public void testHangarSlugExtractionFromOwnerSlug() throws Exception {
+        java.lang.reflect.Method method = PluginSearch.class.getDeclaredMethod("hangarVersion", SearchResultEntry.class);
+        method.setAccessible(true);
+
+        SearchResultEntry entry = new SearchResultEntry(
+                "hangar", "MiniPlaceholders/MiniPlaceholders", "MiniPlaceholders", "MiniPlaceholders", "",
+                "", "https://hangar.papermc.io/MiniPlaceholders/MiniPlaceholders", null,
+                0, 0, 0, Collections.emptyList(), List.of("paper"), Collections.emptyList(),
+                null, null, null, false, true
+        );
+
+        SearchResultEntry result = (SearchResultEntry) method.invoke(null, entry);
+        assertNotNull(result);
+    }
+
     private static class TestTicker extends com.google.common.base.Ticker {
         private long nanos = 0;
 
@@ -420,5 +436,23 @@ public class PluginSearchTest {
         public long read() {
             return nanos;
         }
+    }
+    @Test
+    public void testRememberAndFindKnownTitle() {
+        PluginSearch engine = new PluginSearch(null, null, null);
+        engine.clearCache();
+
+        assertNull(engine.findKnownTitle(null, null));
+        assertNull(engine.findKnownTitle("", "spigot"));
+        assertNull(engine.findKnownTitle("105658", "spigot"));
+
+        engine.rememberTitle("105658", "spigot", "ajLeaderboards");
+
+        assertEquals("ajLeaderboards", engine.findKnownTitle("105658", null));
+        assertEquals("ajLeaderboards", engine.findKnownTitle("105658", "spigot"));
+        assertEquals("ajLeaderboards", engine.findKnownTitle("105658", "SpigotMC"));
+
+        engine.clearCache();
+        assertNull(engine.findKnownTitle("105658", "spigot"));
     }
 }

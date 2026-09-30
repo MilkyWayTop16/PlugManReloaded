@@ -97,11 +97,11 @@ public final class LifecycleManager {
             if (f != null) {
                 String fName = f.getName().toLowerCase(Locale.ROOT);
                 if (fName.equals(clean) || fName.equals(nameWithJar)) {
-                    return plugin;
+                return plugin;
                 }
                 int dot = fName.lastIndexOf('.');
                 if (dot == clean.length() && fName.regionMatches(0, clean, 0, dot)) {
-                    return plugin;
+                return plugin;
                 }
             }
         }
@@ -143,11 +143,11 @@ public final class LifecycleManager {
     public @Nullable File getPluginFile(@Nullable Plugin targetPlugin) {
         if (targetPlugin == null) return null;
         File cached = pluginFileCache.get(targetPlugin);
-        if (cached != null && cached.exists()) {
+        if (cached != null) {
             return cached;
         }
         File resolved = bridge.getPluginFile(targetPlugin);
-        if (resolved != null && resolved.exists()) {
+        if (resolved != null) {
             pluginFileCache.put(targetPlugin, resolved);
         }
         return resolved;
@@ -186,23 +186,19 @@ public final class LifecycleManager {
             return report.toFailure(file);
         }
 
-        if (Bukkit.getServer() != null) {
-            PluginPreLoadEvent pre =
+        PluginPreLoadEvent pre =
                     new PluginPreLoadEvent(report.pluginNameOr(file), file);
             Bukkit.getPluginManager().callEvent(pre);
-            if (pre.isCancelled()) {
-                return PluginResult.ofError(FailureReason.OPERATION_CANCELLED, "plugin", pre.getPluginName());
-            }
+        if (pre.isCancelled()) {
+            return PluginResult.ofError(FailureReason.OPERATION_CANCELLED, "plugin", pre.getPluginName());
         }
 
         Log.debug("lifecyclemanager.loading-file", "file", file.getName());
         PluginResult res = bridge.loadPlugin(file);
         if (res.success()) {
             jarIndex.invalidate();
-            if (Bukkit.getServer() != null) {
                 Plugin p = report.declaredName() != null ? Bukkit.getPluginManager().getPlugin(report.declaredName()) : null;
-                Bukkit.getPluginManager().callEvent(new PluginLoadedEvent(p, file));
-            }
+            Bukkit.getPluginManager().callEvent(new PluginLoadedEvent(p, file));
         }
         return res;
     }
@@ -221,12 +217,12 @@ public final class LifecycleManager {
                 return PluginResult.ofError(FailureReason.HAS_DEPENDENTS, "plugin", targetPlugin.getName(), "dependents", String.join(", ", dependents));
             }
         }
-        if (targetPlugin != null && Bukkit.getServer() != null) {
-            PluginPreUnloadEvent pre =
+        if (targetPlugin != null) {
+        PluginPreUnloadEvent pre =
                     new PluginPreUnloadEvent(targetPlugin, deep);
             Bukkit.getPluginManager().callEvent(pre);
-            if (pre.isCancelled()) {
-                return PluginResult.ofError(FailureReason.OPERATION_CANCELLED, "plugin", targetPlugin.getName());
+        if (pre.isCancelled()) {
+            return PluginResult.ofError(FailureReason.OPERATION_CANCELLED, "plugin", targetPlugin.getName());
             }
         }
         String pName = targetPlugin != null ? targetPlugin.getName() : "null";
@@ -234,9 +230,7 @@ public final class LifecycleManager {
         PluginResult res = bridge.unloadPlugin(targetPlugin);
         if (res.success()) {
             invalidatePluginFile(targetPlugin);
-            if (Bukkit.getServer() != null) {
-                Bukkit.getPluginManager().callEvent(new PluginUnloadedEvent(pName, deep));
-            }
+            Bukkit.getPluginManager().callEvent(new PluginUnloadedEvent(pName, deep));
         }
         return res;
     }
@@ -245,12 +239,12 @@ public final class LifecycleManager {
         if (isProtected(targetPlugin)) {
             return PluginResult.ofError(protectedReason(targetPlugin), "plugin", targetPlugin != null ? targetPlugin.getName() : "null");
         }
-        if (targetPlugin != null && Bukkit.getServer() != null) {
-            PluginPreReloadEvent pre =
+        if (targetPlugin != null) {
+        PluginPreReloadEvent pre =
                     new PluginPreReloadEvent(targetPlugin);
             Bukkit.getPluginManager().callEvent(pre);
-            if (pre.isCancelled()) {
-                return PluginResult.ofError(FailureReason.OPERATION_CANCELLED, "plugin", targetPlugin.getName());
+        if (pre.isCancelled()) {
+            return PluginResult.ofError(FailureReason.OPERATION_CANCELLED, "plugin", targetPlugin.getName());
             }
         }
         Log.debug("lifecyclemanager.reloading", "plugin", targetPlugin != null ? targetPlugin.getName() : "null");
@@ -267,10 +261,8 @@ public final class LifecycleManager {
             PluginResult res = bridge.reloadPlugin(targetPlugin);
             if (res.success()) {
                 invalidatePluginFile(targetPlugin);
-                if (Bukkit.getServer() != null) {
                     Plugin reloaded = getPlugin(targetPlugin.getName());
                     Bukkit.getPluginManager().callEvent(new PluginReloadedEvent(reloaded != null ? reloaded : targetPlugin, res.elapsedMs()));
-                }
             }
             return res;
         } catch (Exception | LinkageError t) {
@@ -294,11 +286,11 @@ public final class LifecycleManager {
             return report.toFailure(file);
         }
 
-        if (targetPlugin != null && Bukkit.getServer() != null) {
-            PluginPreReloadEvent pre = new PluginPreReloadEvent(targetPlugin);
+        if (targetPlugin != null) {
+        PluginPreReloadEvent pre = new PluginPreReloadEvent(targetPlugin);
             Bukkit.getPluginManager().callEvent(pre);
-            if (pre.isCancelled()) {
-                return PluginResult.ofError(FailureReason.OPERATION_CANCELLED, "plugin", targetPlugin.getName());
+        if (pre.isCancelled()) {
+            return PluginResult.ofError(FailureReason.OPERATION_CANCELLED, "plugin", targetPlugin.getName());
             }
         }
 
@@ -308,10 +300,8 @@ public final class LifecycleManager {
             if (res.success()) {
                 invalidatePluginFile(targetPlugin);
                 jarIndex.invalidate();
-                if (Bukkit.getServer() != null) {
                     Plugin reloaded = getPlugin(targetPlugin.getName());
                     Bukkit.getPluginManager().callEvent(new PluginReloadedEvent(reloaded != null ? reloaded : targetPlugin, res.elapsedMs()));
-                }
             }
             return res;
         } catch (Exception | LinkageError t) {
@@ -352,11 +342,11 @@ public final class LifecycleManager {
             }
         }
 
-        if (targetPlugin != null && Bukkit.getServer() != null) {
-            PluginPreReloadEvent pre = new PluginPreReloadEvent(targetPlugin);
+        if (targetPlugin != null) {
+        PluginPreReloadEvent pre = new PluginPreReloadEvent(targetPlugin);
             Bukkit.getPluginManager().callEvent(pre);
-            if (pre.isCancelled()) {
-                return PluginResult.ofError(FailureReason.OPERATION_CANCELLED, "plugin", targetPlugin.getName());
+        if (pre.isCancelled()) {
+            return PluginResult.ofError(FailureReason.OPERATION_CANCELLED, "plugin", targetPlugin.getName());
             }
         }
 
@@ -405,10 +395,8 @@ public final class LifecycleManager {
         }
 
         long elapsed = System.currentTimeMillis() - startTime;
-        if (Bukkit.getServer() != null) {
-            Plugin reloaded = getPlugin(targetPlugin.getName());
-            Bukkit.getPluginManager().callEvent(new PluginReloadedEvent(reloaded != null ? reloaded : targetPlugin, elapsed));
-        }
+        Plugin reloaded = getPlugin(targetPlugin.getName());
+        Bukkit.getPluginManager().callEvent(new PluginReloadedEvent(reloaded != null ? reloaded : targetPlugin, elapsed));
 
         return PluginResult.ofSuccess(isRestart ? "cascade-restart.success" : "cascade-reload.success",
                 "plugin", targetPlugin.getName(),
@@ -419,7 +407,7 @@ public final class LifecycleManager {
     private CascadePlan planCascade(Plugin targetPlugin) {
         List<String> order = new ArrayList<>();
         for (String name : dependencyManager.calculateCascadeOrder(targetPlugin.getName(), true)) {
-            Plugin p = getPlugin(name);
+        Plugin p = getPlugin(name);
             if (p == null || !isProtected(p)) {
                 order.add(name);
             }
@@ -436,7 +424,7 @@ public final class LifecycleManager {
         List<String> skipped = new ArrayList<>();
 
         for (String pluginName : order) {
-            Plugin p = getPlugin(pluginName);
+        Plugin p = getPlugin(pluginName);
             if (p == null) continue;
 
             File jarFile = getPluginFile(p);
@@ -467,15 +455,13 @@ public final class LifecycleManager {
 
         List<String> unloaded = new ArrayList<>();
         for (String pluginName : unloadOrder) {
-            Plugin p = getPlugin(pluginName);
+        Plugin p = getPlugin(pluginName);
             if (p == null) continue;
 
-            if (Bukkit.getServer() != null) {
-                PluginPreUnloadEvent pre = new PluginPreUnloadEvent(p, true);
-                Bukkit.getPluginManager().callEvent(pre);
-                if (pre.isCancelled()) {
-                    return new UnloadPhase(unloaded, pluginName, message("actions.errors.details.operation-cancelled"));
-                }
+            PluginPreUnloadEvent pre = new PluginPreUnloadEvent(p, true);
+            Bukkit.getPluginManager().callEvent(pre);
+            if (pre.isCancelled()) {
+                return new UnloadPhase(unloaded, pluginName, message("actions.errors.details.operation-cancelled"));
             }
 
             PluginResult result = bridge.unloadPlugin(p);
@@ -483,9 +469,7 @@ public final class LifecycleManager {
                 return new UnloadPhase(unloaded, pluginName, result.detail(message("actions.errors.details.unload-failed")));
             }
             invalidatePluginFile(p);
-            if (Bukkit.getServer() != null) {
-                Bukkit.getPluginManager().callEvent(new PluginUnloadedEvent(pluginName, true));
-            }
+            Bukkit.getPluginManager().callEvent(new PluginUnloadedEvent(pluginName, true));
             unloaded.add(pluginName);
         }
         return new UnloadPhase(unloaded, null, null);
@@ -542,14 +526,12 @@ public final class LifecycleManager {
             File jarFile = plan.files().get(pluginName);
             if (jarFile == null) continue;
 
-            if (Bukkit.getServer() != null) {
-                PluginPreLoadEvent pre = new PluginPreLoadEvent(pluginName, jarFile);
-                Bukkit.getPluginManager().callEvent(pre);
-                if (pre.isCancelled()) {
-                    failedPlugins.add(pluginName);
-                    failedNames.add(pluginName.toLowerCase(Locale.ROOT));
-                    continue;
-                }
+            PluginPreLoadEvent pre = new PluginPreLoadEvent(pluginName, jarFile);
+            Bukkit.getPluginManager().callEvent(pre);
+            if (pre.isCancelled()) {
+                failedPlugins.add(pluginName);
+                failedNames.add(pluginName.toLowerCase(Locale.ROOT));
+                continue;
             }
 
             if (!bridge.loadPlugin(jarFile).success()) {
@@ -558,14 +540,12 @@ public final class LifecycleManager {
                 continue;
             }
 
-            Plugin reloaded = getPlugin(pluginName);
-            if (Bukkit.getServer() != null) {
-                Bukkit.getPluginManager().callEvent(new PluginLoadedEvent(reloaded, jarFile));
-            }
+        Plugin reloaded = getPlugin(pluginName);
+            Bukkit.getPluginManager().callEvent(new PluginLoadedEvent(reloaded, jarFile));
             if (reloaded != null && reloaded.isEnabled() && !plan.wasEnabled().getOrDefault(pluginName, true)) {
                 PluginResult result = bridge.disablePlugin(reloaded);
                 if (!result.success() && reloaded.isEnabled()) {
-                    failedPlugins.add(pluginName);
+                failedPlugins.add(pluginName);
                 }
             }
         }
@@ -646,15 +626,15 @@ public final class LifecycleManager {
     public boolean isProtected(@Nullable String pluginName) {
         if (pluginName == null || pluginName.isBlank()) return false;
         if (pluginName.equalsIgnoreCase("plugmanreloaded")) return true;
-        if (plugin != null && pluginName.equalsIgnoreCase(plugin.getName())) return true;
+        if (plugin != null && plugin.getName() != null && pluginName.equalsIgnoreCase(plugin.getName())) return true;
         return plugin != null && plugin.getConfigManager() != null && plugin.getConfigManager().isPluginIgnored(pluginName);
     }
 
     public boolean isSelf(@Nullable Plugin targetPlugin) {
         if (targetPlugin == null) return false;
-        if (plugin != null && targetPlugin.equals(plugin)) return true;
+        if (targetPlugin.equals(plugin)) return true;
         if (targetPlugin.getName().equalsIgnoreCase("plugmanreloaded")) return true;
-        return plugin != null && targetPlugin.getName().equalsIgnoreCase(plugin.getName());
+        return plugin != null && plugin.getName() != null && targetPlugin.getName().equalsIgnoreCase(plugin.getName());
     }
 
     public FailureReason protectedReason(Plugin targetPlugin) {
@@ -988,22 +968,18 @@ public final class LifecycleManager {
                 continue;
             }
 
-            if (Bukkit.getServer() != null) {
-                PluginPreUnloadEvent pre = new PluginPreUnloadEvent(target, true);
-                Bukkit.getPluginManager().callEvent(pre);
-                if (pre.isCancelled()) {
-                    failed.add(pluginName);
-                    reasons.put(pluginName, message("actions.errors.details.operation-cancelled"));
-                    continue;
-                }
+            PluginPreUnloadEvent pre = new PluginPreUnloadEvent(target, true);
+            Bukkit.getPluginManager().callEvent(pre);
+            if (pre.isCancelled()) {
+                failed.add(pluginName);
+                reasons.put(pluginName, message("actions.errors.details.operation-cancelled"));
+                continue;
             }
 
             PluginResult result = bridge.unloadPlugin(target);
             if (result.success()) {
                 invalidatePluginFile(target);
-                if (Bukkit.getServer() != null) {
                     Bukkit.getPluginManager().callEvent(new PluginUnloadedEvent(pluginName, true));
-                }
                 unloaded.add(pluginName);
                 unloadedNames.add(pluginName.toLowerCase(Locale.ROOT));
             } else {
@@ -1039,15 +1015,13 @@ public final class LifecycleManager {
             File jarFile = plan.files().get(pluginName);
             if (jarFile == null) continue;
 
-            if (Bukkit.getServer() != null) {
-                PluginPreLoadEvent pre = new PluginPreLoadEvent(pluginName, jarFile);
-                Bukkit.getPluginManager().callEvent(pre);
-                if (pre.isCancelled()) {
-                    failed.add(pluginName);
-                    reasons.put(pluginName, message("actions.errors.details.operation-cancelled"));
-                    failedNames.add(pluginName.toLowerCase(Locale.ROOT));
-                    continue;
-                }
+            PluginPreLoadEvent pre = new PluginPreLoadEvent(pluginName, jarFile);
+            Bukkit.getPluginManager().callEvent(pre);
+            if (pre.isCancelled()) {
+                failed.add(pluginName);
+                reasons.put(pluginName, message("actions.errors.details.operation-cancelled"));
+                failedNames.add(pluginName.toLowerCase(Locale.ROOT));
+                continue;
             }
 
             PluginResult result = bridge.loadPlugin(jarFile);
@@ -1059,16 +1033,14 @@ public final class LifecycleManager {
             }
 
             successful.add(pluginName);
-            Plugin reloaded = getPlugin(pluginName);
-            if (Bukkit.getServer() != null) {
-                Bukkit.getPluginManager().callEvent(new PluginLoadedEvent(reloaded, jarFile));
-            }
+        Plugin reloaded = getPlugin(pluginName);
+            Bukkit.getPluginManager().callEvent(new PluginLoadedEvent(reloaded, jarFile));
             if (reloaded != null && reloaded.isEnabled() && !plan.wasEnabled().getOrDefault(pluginName, true)) {
                 PluginResult disableResult = bridge.disablePlugin(reloaded);
                 if (!disableResult.success() && reloaded.isEnabled()) {
                     successful.remove(pluginName);
-                    failed.add(pluginName);
-                    reasons.put(pluginName, disableResult.detail(message("actions.errors.details.disable-failed")));
+                failed.add(pluginName);
+                reasons.put(pluginName, disableResult.detail(message("actions.errors.details.disable-failed")));
                 }
             }
         }

@@ -1,5 +1,7 @@
 # PlugManReloaded
 
+[![CodeFactor](https://www.codefactor.io/repository/github/MilkyWayTop16/PlugManReloaded/badge)](https://www.codefactor.io/repository/github/MilkyWayTop16/PlugManReloaded)
+
 Next-Generation менеджер плагинов для серверов Minecraft на базе **Paper 1.16.5+**, **Purpur** и **Folia**. Позволяет загружать, выгружать, включать, выключать и перезагружать плагины без рестарта сервера — с динамическим анализом зависимостей, глубокой очисткой памяти (Metaspace) и защитой сетевого стека.
 
 Команды: `/plugmanreloaded`, `/plugman`, `/plm`.

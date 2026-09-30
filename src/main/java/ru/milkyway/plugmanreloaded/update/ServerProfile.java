@@ -70,12 +70,15 @@ public final class ServerProfile {
             Log.debug("serverprofile.getminecraftversion-failed", t);
         }
 
-        String bukkitVersion = Bukkit.getBukkitVersion();
-        if (bukkitVersion != null) {
-            Matcher matcher = VERSION_IN_BUKKIT_STRING.matcher(bukkitVersion.trim());
-            if (matcher.find()) {
-                return matcher.group(1);
+        try {
+            String bukkitVersion = Bukkit.getBukkitVersion();
+            if (bukkitVersion != null) {
+                Matcher matcher = VERSION_IN_BUKKIT_STRING.matcher(bukkitVersion.trim());
+                if (matcher.find()) {
+                    return matcher.group(1);
+                }
             }
+        } catch (Throwable ignored) {
         }
         Log.warn("serverprofile.version-detect-failed");
         return "";
