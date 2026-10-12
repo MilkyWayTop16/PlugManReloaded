@@ -1,9 +1,0 @@
-{
-  "ignore": [
-    "src/test/**",
-    ".experiment/**",
-    "test_plugins_cache/**",
-    "vanilla_cache/**",
-    "target/**"
-  ]
-}

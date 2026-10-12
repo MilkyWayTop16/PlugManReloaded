@@ -6,6 +6,3 @@
 !/LICENSE
 !/SECURITY.md
 !/.github/
-!/checkstyle.xml
-!/.cfduplication.yml
-!/.codefactor.json

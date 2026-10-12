@@ -20,8 +20,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
--------------------------------------------------------------------------------
-Portions of this software are based on and inspired by:
-- PlugMan (c) RyanTheAllmighty, drtshock, licensed under the MIT License
-- PlugManX (c) Test-Account666, licensed under the MIT License
--------------------------------------------------------------------------------
+---
+
+### Acknowledgements
+
+PlugManReloaded carries forward the legacy of server management tools in the Bukkit and Paper ecosystem. It builds upon architecture and concepts originally created by:
+
+- PlugMan (c) RyanTheAllmighty, drtshock (MIT License)
+- PlugManX (c) Test-Account666 (MIT License)
+
+Thank you to the original authors for making their work open source.
