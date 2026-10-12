@@ -38,8 +38,12 @@ public class SafetyManager {
             "org.geysermc.floodgate.FloodgatePlugin",
             "net.skinsrestorer.bukkit.SkinsRestorer",
             "net.skinsrestorer.bukkit.SkinsRestorerBukkit",
+            "net.skinsrestorer.bukkit.SRBukkitBootstrap",
+            "com.earth2me.essentials.Essentials",
             "com.sk89q.worldedit.WorldEdit",
-            "com.fastasyncworldedit.core.Fawe"
+            "com.fastasyncworldedit.core.Fawe",
+            "com.sk89q.worldguard.bukkit.WorldGuardPlugin",
+            "me.chocolf.moneyfrommobs.MoneyFromMobs"
     };
 
     public record SafetyAssessment(

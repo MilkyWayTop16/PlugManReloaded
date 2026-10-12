@@ -73,6 +73,13 @@ public class MainConfig {
         }
     }
 
+    public MainConfig(FileConfiguration config) {
+        this.plugin = null;
+        this.configFile = null;
+        this.config = config;
+        reloadValues();
+    }
+
     public void load() {
         if (!configFile.exists()) {
             plugin.saveResource("config.yml", false);
@@ -156,16 +163,13 @@ public class MainConfig {
             this.downloadSuggestedPlugins = suggestions;
         }
 
-        List<String> unsafe = config.getStringList("settings.unsafe-to-unload");
-        if (unsafe.isEmpty()) {
-            unsafe = List.of(
-                    "LuckPerms", "Vault", "PlaceholderAPI", "SkinsRestorer", "FastAsyncWorldEdit",
-                    "WorldEdit", "ProtocolLib", "ViaVersion", "ViaBackwards", "ViaRewind",
-                    "ProtocolSupport", "Geyser-Spigot", "floodgate", "packetevents"
-            );
-        }
-        this.unsafeToUnload = new HashSet<>();
-        for (String s : unsafe) {
+        this.unsafeToUnload = new HashSet<>(List.of(
+                "luckperms", "vault", "placeholderapi", "skinsrestorer", "fastasyncworldedit",
+                "worldedit", "worldguard", "essentials", "moneyfrommobs", "protocollib",
+                "viaversion", "viabackwards", "viarewind", "protocolsupport", "geyser-spigot",
+                "floodgate", "packetevents"
+        ));
+        for (String s : config.getStringList("settings.unsafe-to-unload")) {
             this.unsafeToUnload.add(s.toLowerCase(Locale.ROOT));
         }
     }

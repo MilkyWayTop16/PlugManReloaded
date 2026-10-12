@@ -12,6 +12,7 @@ import ru.milkyway.plugmanreloaded.update.UpdateCache;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -102,5 +103,45 @@ class GithubSourceTest {
         assertEquals("https://github.com/user/repo", match.projectUrl());
         assertEquals(MatchConfidence.CONFIRMED, match.confidence());
         assertEquals(MatchReason.CATALOG, match.reason());
+    }
+
+    @Test
+    @DisplayName("Verify extractGameVersions parses minecraft versions from tags, names, and assets")
+    void testExtractGameVersions() throws Exception {
+        GithubSource source = new GithubSource(new UpdateCache(60_000L), null);
+        var method = GithubSource.class.getDeclaredMethod("extractGameVersions", com.google.gson.JsonObject.class, com.google.gson.JsonObject.class);
+        method.setAccessible(true);
+
+        com.google.gson.JsonObject release = new com.google.gson.JsonObject();
+        release.addProperty("tag_name", "v1.2.0-1.21.4");
+        release.addProperty("name", "Release 1.2.0 for 1.20 - 1.21.4");
+
+        com.google.gson.JsonObject asset = new com.google.gson.JsonObject();
+        asset.addProperty("name", "Plugin-1.21.4.jar");
+
+        @SuppressWarnings("unchecked")
+        Set<String> versions = (Set<String>) method.invoke(source, release, asset);
+        assertFalse(versions.isEmpty());
+        assertTrue(versions.contains("1.21.4"));
+    }
+
+    @Test
+    @DisplayName("Verify extractLoaders defaults to server platforms when none specified")
+    void testExtractLoadersDefault() throws Exception {
+        GithubSource source = new GithubSource(new UpdateCache(60_000L), null);
+        var method = GithubSource.class.getDeclaredMethod("extractLoaders", com.google.gson.JsonObject.class, com.google.gson.JsonObject.class);
+        method.setAccessible(true);
+
+        com.google.gson.JsonObject release = new com.google.gson.JsonObject();
+        release.addProperty("tag_name", "v1.0.0");
+        release.addProperty("name", "v1.0.0");
+
+        com.google.gson.JsonObject asset = new com.google.gson.JsonObject();
+        asset.addProperty("name", "Plugin.jar");
+
+        @SuppressWarnings("unchecked")
+        Set<String> loaders = (Set<String>) method.invoke(source, release, asset);
+        assertTrue(loaders.contains("paper"));
+        assertTrue(loaders.contains("spigot"));
     }
 }

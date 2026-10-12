@@ -3,6 +3,9 @@
 !/.gitignore
 !/pom.xml
 !/README.md
+!/LICENSE
+!/SECURITY.md
+!/.github/
 !/checkstyle.xml
 !/.cfduplication.yml
 !/.codefactor.json

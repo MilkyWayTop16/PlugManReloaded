@@ -171,10 +171,22 @@ public class PluginSearch {
 
         long startTime = System.currentTimeMillis();
         String query = rawQuery.trim();
-        String matchingQuery = matchingQuery(query);
-        String cacheKey = cacheKey(query, preferredSource, limit);
 
-        List<SearchResultEntry> cached = cache.getIfPresent(cacheKey);
+        if (!query.contains(" ") && !query.contains("-") && !query.contains("_")) {
+            String[] words = query.split("(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])");
+            if (words.length > 1) {
+                query = String.join(" ", words);
+            }
+        }
+
+        String matchingQuery = matchingQuery(query);
+        String rawCacheKey = cacheKey(rawQuery.trim(), preferredSource, limit);
+        String transformedCacheKey = cacheKey(query, preferredSource, limit);
+
+        List<SearchResultEntry> cached = cache.getIfPresent(rawCacheKey);
+        if (cached == null && !rawCacheKey.equals(transformedCacheKey)) {
+            cached = cache.getIfPresent(transformedCacheKey);
+        }
         if (cached != null) {
             for (SearchResultEntry entry : cached) {
                 rememberTitle(entry.projectId(), entry.sourceId(), entry.title());
@@ -188,18 +200,19 @@ public class PluginSearch {
         List<CompletableFuture<List<SearchResultEntry>>> futures = new ArrayList<>();
 
         boolean searchAll = preferredSource == null || preferredSource.isBlank() || "all".equalsIgnoreCase(preferredSource);
+        final String finalQuery = query;
 
         if (searchAll || "modrinth".equalsIgnoreCase(preferredSource)) {
-            futures.add(CompletableFuture.supplyAsync(() -> searchModrinth(query), searchExecutor));
+            futures.add(CompletableFuture.supplyAsync(() -> searchModrinth(finalQuery), searchExecutor));
         }
         if (searchAll || "hangar".equalsIgnoreCase(preferredSource)) {
-            futures.add(CompletableFuture.supplyAsync(() -> searchHangar(query), searchExecutor));
+            futures.add(CompletableFuture.supplyAsync(() -> searchHangar(finalQuery), searchExecutor));
         }
         if (searchAll || "spigot".equalsIgnoreCase(preferredSource) || "spigotmc".equalsIgnoreCase(preferredSource)) {
-            futures.add(CompletableFuture.supplyAsync(() -> searchSpiget(query), searchExecutor));
+            futures.add(CompletableFuture.supplyAsync(() -> searchSpiget(finalQuery), searchExecutor));
         }
         if (searchAll || "github".equalsIgnoreCase(preferredSource)) {
-            futures.add(CompletableFuture.supplyAsync(() -> searchGithub(query), searchExecutor));
+            futures.add(CompletableFuture.supplyAsync(() -> searchGithub(finalQuery), searchExecutor));
         }
 
         boolean complete = false;
@@ -256,7 +269,10 @@ public class PluginSearch {
         }
 
         if (complete) {
-            cache.put(cacheKey, finalResult);
+            cache.put(rawCacheKey, finalResult);
+            if (!rawCacheKey.equals(transformedCacheKey)) {
+                cache.put(transformedCacheKey, finalResult);
+            }
         }
         return finalResult;
     }
@@ -315,12 +331,20 @@ public class PluginSearch {
         }
     }
 
-    private static SearchResultEntry modrinthVersion(SearchResultEntry entry) {
+    private SearchResultEntry modrinthVersion(SearchResultEntry entry) {
         String projectId = URLEncoder.encode(entry.projectId(), StandardCharsets.UTF_8);
         String serverLoaders = "%5B%22paper%22%2C%22purpur%22%2C%22folia%22%2C%22spigot%22%2C%22bukkit%22%5D";
 
+        String mcVersion = serverProfile != null ? serverProfile.minecraftVersion() : null;
+        String gameVersionsParam = mcVersion != null && !mcVersion.isBlank()
+                ? "&game_versions=" + URLEncoder.encode("[\"" + mcVersion + "\"]", StandardCharsets.UTF_8)
+                : "";
+
         String version = firstModrinthVersion(
-                "https://api.modrinth.com/v2/project/" + projectId + "/version?loaders=" + serverLoaders + "&limit=1");
+                "https://api.modrinth.com/v2/project/" + projectId + "/version?loaders=" + serverLoaders + gameVersionsParam + "&limit=1");
+        if (version == null) {
+            version = firstModrinthVersion("https://api.modrinth.com/v2/project/" + projectId + "/version?loaders=" + serverLoaders + "&limit=1");
+        }
         if (version == null) {
             version = firstModrinthVersion("https://api.modrinth.com/v2/project/" + projectId + "/version?limit=1");
         }
@@ -389,6 +413,25 @@ public class PluginSearch {
 
         String version = string(release, "tag_name", "");
         JarAsset jar = firstJarAsset(release);
+
+        if (!jar.present()) {
+            String body = string(release, "body", "");
+            java.util.regex.Matcher m = java.util.regex.Pattern.compile("modrinth\\.com/plugin/([\\w-]+)").matcher(body);
+            if (m.find()) {
+                String modrinthSlug = m.group(1);
+                String repoName = entry.projectId();
+                String cleanRepo = repoName.contains("/") ? repoName.substring(repoName.indexOf('/') + 1) : repoName;
+                String normalizedSlug = modrinthSlug.replace("-", "").replace("_", "").toLowerCase(Locale.ROOT);
+                String normalizedRepo = cleanRepo.replace("-", "").replace("_", "").toLowerCase(Locale.ROOT);
+                if (normalizedRepo.contains(normalizedSlug) || normalizedSlug.contains(normalizedRepo)) {
+                    List<SearchResultEntry> fallback = searchModrinth(modrinthSlug);
+                    if (fallback != null && !fallback.isEmpty()) {
+                        return fallback.get(0);
+                    }
+                }
+            }
+        }
+
         return entry.withRelease(
                 !version.isBlank() ? version : entry.version(),
                 jar.downloadUrl() != null ? jar.downloadUrl() : entry.downloadUrl(),

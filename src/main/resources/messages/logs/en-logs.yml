@@ -118,7 +118,7 @@ logs:
     stage-validate-failed: "[PluginDownloader] Error validating and staging {title}"
     post-install-refresh-failed: "[PluginDownloader] Failed to refresh commands and the index after installation"
     rollback-unload-failed: "[PluginDownloader] Install rollback: failed to unload &#FF5D00{plugin}&f, the plugin was left in server memory"
-    rollback-delete-failed: "[PluginDownloader] Install rollback: failed to delete &#FF5D00{file}&f, the file was left in plugins/"
+    rollback-delete-failed: "[PluginDownloader] Install rollback: failed to delete &#FF5D00{file}&f, the file was left in the plugins folder"
     source-write-failed: "[PluginDownloader] Failed to save the source for &#FF5D00{plugin}&f to sources-custom.yml — the update checker won't know where it was installed from"
     pre-install-unload-failed: "[PluginDownloader] Failed to unload running {plugin} before file replacement"
     backup-create-failed: "[PluginDownloader] Failed to create backup of old file for {plugin}"
@@ -227,7 +227,7 @@ logs:
     cascade-skipped: "[Cascade] Plugin &#ffff00{plugin} &fwas skipped during the cascade ({error})"
     cascade-no-jar: "[Cascade] No usable &#ffff00.jar &fwas found for &#ffff00{plugin}&f, unloading this plugin was cancelled"
     cascade-rollback-failed: "[Cascade] Cascade rollback: failed to bring back &#FF5D00{plugin}&f, the plugin stayed unloaded"
-    file-outside-plugins-dir: "[Lifecycle] File &#ffff00{file} &#FB8808is outside &fthe plugins/ folder, the load was &#FB8808rejected&f"
+    file-outside-plugins-dir: "[Lifecycle] File &#ffff00{file} &#FB8808is outside &fthe plugins folder, the load was &#FB8808rejected&f"
     canonical-path-check-failed: "[Lifecycle] An &#FF5D00error &foccurred while checking the canonical path for &#FF5D00{file}&f"
 
   downloadclient:
@@ -282,8 +282,8 @@ logs:
 
   pluginjarindex:
     canonical-path-check-failed: "[PluginJarIndex] Failed to check the canonical path for {file}"
-    query-no-match: "[PluginJarIndex] No jar in plugins/ matched query «{query}»"
-    indexed: "[PluginJarIndex] Indexed jar files in plugins/: {count}"
+    query-no-match: "[PluginJarIndex] No jar in the plugins folder matched query «{query}»"
+    indexed: "[PluginJarIndex] Indexed jar files in the plugins folder: {count}"
     duplicate-jar: "[PluginJarIndex] There are two files for plugin &#FF5D00{plugin}&f in the plugins folder: {first} and {second}. The server won't be able to load both, delete the extra one!"
     no-descriptor: "[PluginJarIndex] {file} has neither plugin.yml nor paper-plugin.yml"
     descriptor-read-failed: "[PluginJarIndex] Failed to read the descriptor from {file}: {error}"
@@ -451,6 +451,7 @@ logs:
 
   updatecommand:
     reloading-dependents: "Reloading dependent plugins after the batch update ({count} total): {plugins}"
+    dependents-deferred: "[BatchUpdater] Dependent plugins ({count} total) deferred until server restart for stability: {plugins}"
 
   chatbuttonfactory:
     url-looks-like-markup: "[ChatButtonFactory] The url value looks like markup rather than a link, the button won't be clickable: {value}"
@@ -516,7 +517,7 @@ logs:
     port-in-use: "Network port or address is already in use by another process"
     circular-deps: "A circular dependency between plugins was detected"
     invalid-description: "The plugin.yml / paper-plugin.yml file is corrupted or missing"
-    duplicate-plugin: "Plugin conflict: another plugin with the same name or provider already exists in the plugins/ folder"
+    duplicate-plugin: "Plugin conflict: another plugin with the same name or provider already exists in the plugins folder"
     paper-bootstrapper: "The plugin uses Paper Bootstrapper (early load before server start), the Paper core forbids loading such plugins on the fly"
 
   prefix:

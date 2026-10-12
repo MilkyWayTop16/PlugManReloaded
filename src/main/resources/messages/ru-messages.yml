@@ -1,4 +1,4 @@
-﻿#
+#
 #
 #         █▀█ █░░ █░█ █▀▀ █▀▄▀█ ▄▀█ █▄░█ █▀█ █▀▀ █░░ █▀█ ▄▀█ █▀▄ █▀▀ █▀▄
 #         █▀▀ █▄▄ █▄█ █▄█ █░▀░█ █▀█ █░▀█ █▀▄ ██▄ █▄▄ █▄█ █▀█ █▄▀ ██▄ █▄▀
@@ -1068,6 +1068,9 @@ actions:
     all-pending-restart:
       - "[message] &#FB8808▶ Внимание! &fПлагин(ы) &#FB8808{plugins} &fобновлены в папку &#FB8808update/ &fи вступят в силу после &#FB8808перезапуска &fсервера"
       - "[sound] BLOCK_LEVER_CLICK"
+    all-dependents-deferred:
+      - "[message] &#FB8808▶ Важно знать! &fЗависимые плагины &#FB8808{plugins} &fне были перезагружены на лету ради стабильности сервера и применятся при рестарте"
+      - "[sound] BLOCK_LEVER_CLICK"
     summary:
       - "[message] "
       - "[message]   &#FFFF00▶ &fРезультат проверок:"
@@ -1307,7 +1310,7 @@ actions:
           - ""
     skipped-dependents:
       - "[message] &#FB8808▶ Внимание! &fПри массовом обновлении пропущено &#FB8808{count} &fплагинов с зависимостями:"
-      - "[message]   &7{plugins}"
+      - "[message]   &#FB8808{plugins}"
       - "[message]   &#00FF5A◆ &fОбновите их по отдельности: &#00FF5A/plm update <плагин>"
       - "[sound] BLOCK_LEVER_CLICK"
 
@@ -1573,13 +1576,20 @@ actions:
       - "[message]   &#FFFF00◆ &fДля правильной работы плагина &#FFFF00«{plugin}» &fнеобходимо"
       - "[message]      &fзагрузить и подключить следующие зависимости:"
       - "[message] "
-      - "[message] {dependency-list}"
+      - "[message]      {dependency-list}"
       - "[message] "
       - "[message]       &#FFFF00◆ &fХотите скачать плагин вместе со всеми зависимостями?"
       - "[message] "
       - "[message]          {confirm-download-deps-button}   {cancel-button}"
       - "[message] "
       - "[sound] BLOCK_NOTE_BLOCK_PLING"
+    dependency-entry:
+      separator: "&f, "
+      required: "&#FFFF00{plugin} &f(&#FFFF00{source}&f)"
+      disabled: "&#FFFF00{plugin} &f(&#FB8808{status}&f)"
+      unloaded: "&#FFFF00{plugin} &f(&#FFAA00{status}&f)"
+      status-disabled: "отключен на сервере"
+      status-unloaded: "найден в папке с плагинами"
     cancelled:
       - "[message] &#FFFF00◆ &fУстановка плагина &#FFFF00«{plugin}» &fуспешно отменена!"
       - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"

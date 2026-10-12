@@ -147,4 +147,27 @@ public class VersionResolverTest {
                 "Без дат публикации порядок обязан определяться номером версии");
         assertEquals(UpdateStatus.UPDATE_AVAILABLE, candidate.status());
     }
+
+    @Test
+    void testResolveWithVersionRangeOnModernServer() {
+        ServerProfile profile = ServerProfile.of("1.21.4", Set.of("paper", "bukkit"), 21);
+        VersionResolver resolver = new VersionResolver(profile, false);
+
+        PluginIdentity identity = new PluginIdentity("Vault", "net.milkbowl.vault.Vault", "1.7.2",
+                List.of("MilkBowl"), "https://example.com", null, null, null);
+        UpdateSource.ProjectMatch match = new UpdateSource.ProjectMatch("modrinth", "Vault",
+                MatchConfidence.LIKELY, MatchReason.CATALOG, null);
+
+        RemoteVersion v2 = new RemoteVersion("modrinth", "Vault", "https://example.com/project", "1.7.3",
+                ReleaseChannel.RELEASE, Set.of("1.16 - 1.21"), Set.of("paper", "bukkit"),
+                "https://example.com/v1.7.3.jar", "Vault-1.7.3.jar", null, null, 1024L, Instant.now());
+
+        UpdateCandidate candidate = resolver.resolve(identity, match, List.of(v2));
+
+        assertNotNull(candidate);
+        assertEquals(UpdateStatus.UPDATE_AVAILABLE, candidate.status(),
+                "Версия с диапазоном 1.16 - 1.21 обязана быть доступна для сервера 1.21.4");
+        assertNotNull(candidate.version());
+        assertEquals("1.7.3", candidate.version().versionNumber());
+    }
 }

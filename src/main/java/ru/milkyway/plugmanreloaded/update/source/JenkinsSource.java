@@ -129,7 +129,7 @@ public final class JenkinsSource implements UpdateSource {
                 "build-" + number,
                 ReleaseChannel.ALPHA,
                 Set.of(),
-                Set.of(),
+                Set.of("bukkit", "spigot", "paper", "purpur", "folia"),
                 endpoint + "/lastSuccessfulBuild/artifact/" + string(best, "relativePath"),
                 string(best, "fileName"),
                 null,

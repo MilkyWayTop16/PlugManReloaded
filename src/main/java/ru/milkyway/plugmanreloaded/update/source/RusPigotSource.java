@@ -324,7 +324,7 @@ public class RusPigotSource implements UpdateSource {
                     versionNumber,
                     ReleaseChannel.parse(versionNumber),
                     Set.of(),
-                    Set.of(),
+                    Set.of("bukkit", "spigot", "paper", "purpur", "folia"),
                     null,
                     null,
                     null,

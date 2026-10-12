@@ -517,17 +517,27 @@ public class DownloadCommand extends AbstractSubCommand {
         map.put("cancel-button", cancelBtn);
 
         if (tree.hasMissing()) {
-            StringBuilder depList = new StringBuilder();
+            List<String> items = new ArrayList<>();
+            String separator = config != null ? config.getString("actions.download.dependency-entry.separator", "&f, ") : "&f, ";
+            String reqTpl = config != null ? config.getString("actions.download.dependency-entry.required", "&#FFFF00{plugin} &f(&#FFFF00{source}&f)") : "&#FFFF00{plugin} &f(&#FFFF00{source}&f)";
+            String disTpl = config != null ? config.getString("actions.download.dependency-entry.disabled", "&#FFFF00{plugin} &f(&#FB8808{status}&f)") : "&#FFFF00{plugin} &f(&#FB8808{status}&f)";
+            String unlTpl = config != null ? config.getString("actions.download.dependency-entry.unloaded", "&#FFFF00{plugin} &f(&#FFAA00{status}&f)") : "&#FFFF00{plugin} &f(&#FFAA00{status}&f)";
+            String disStatus = config != null ? config.getString("actions.download.dependency-entry.status-disabled", "disabled on server") : "disabled on server";
+            String unlStatus = config != null ? config.getString("actions.download.dependency-entry.status-unloaded", "found in the plugins folder") : "found in the plugins folder";
+
             for (SearchResultEntry req : tree.requiredDependencies()) {
-                depList.append("    &#00FF5A◆ &f").append(HexColors.escapeTags(req.title())).append(" &8(").append(formatSourceName(req.sourceId())).append(")\n");
+                items.add(reqTpl.replace("{plugin}", HexColors.escapeTags(req.title()))
+                        .replace("{source}", formatSourceName(req.sourceId())));
             }
             for (String dis : tree.existingDisabledToEnable()) {
-                depList.append("    &#FFFF00◆ &f").append(dis).append(" &7(disabled on server)\n");
+                items.add(disTpl.replace("{plugin}", dis).replace("{status}", disStatus));
             }
             for (String unl : tree.existingUnloadedToLoad()) {
-                depList.append("    &#FFAA00◆ &f").append(unl).append(" &7(found in plugins/)\n");
+                items.add(unlTpl.replace("{plugin}", unl).replace("{status}", unlStatus));
             }
-            map.put("dependency-list", depList.toString().trim());
+            String joined = String.join(separator, items);
+            map.put("dependency-list", joined);
+            map.put("dependencies", joined);
             sendAction(sender, "download.confirm-dependencies", map);
         } else {
             sendAction(sender, "download.confirm-single", map);

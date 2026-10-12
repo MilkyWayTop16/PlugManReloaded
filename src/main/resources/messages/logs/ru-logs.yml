@@ -117,7 +117,7 @@ logs:
     stage-validate-failed: "[PluginDownloader] Ошибка проверки и подготовки {title}"
     post-install-refresh-failed: "[PluginDownloader] Не удалось обновить команды и индекс после установки"
     rollback-unload-failed: "[PluginDownloader] Откат установки: не удалось выгрузить &#FF5D00{plugin}&f, плагин остался в памяти сервера"
-    rollback-delete-failed: "[PluginDownloader] Откат установки: не удалось удалить &#FF5D00{file}&f, файл остался в plugins/"
+    rollback-delete-failed: "[PluginDownloader] Откат установки: не удалось удалить &#FF5D00{file}&f, файл остался в папке с плагинами"
     source-write-failed: "[PluginDownloader] Не удалось записать источник для &#FF5D00{plugin}&f в sources-custom.yml — проверка обновлений не будет знать, откуда он установлен"
     pre-install-unload-failed: "[PluginDownloader] Не удалось выгрузить текущую версию {plugin} перед заменой файла"
     backup-create-failed: "[PluginDownloader] Не удалось создать резервную копию старого файла {plugin}"
@@ -226,7 +226,7 @@ logs:
     cascade-skipped: "[Cascade] Каскад: плагин &#ffff00{plugin} &fпропущен при каскаде ({error})"
     cascade-no-jar: "[Cascade] Каскад: для &#ffff00{plugin} &fне найден пригодный &#ffff00.jar&f, выгрузка этого плагина отменена"
     cascade-rollback-failed: "[Cascade] Откат каскада: не удалось вернуть &#FF5D00{plugin}&f, плагин остался выгруженным"
-    file-outside-plugins-dir: "[Lifecycle] Файл &#ffff00{file} &#FB8808находится вне папки &fplugins/, загрузка &#FB8808отклонена&f"
+    file-outside-plugins-dir: "[Lifecycle] Файл &#ffff00{file} &#FB8808находится вне папки &fс плагинами, загрузка &#FB8808отклонена&f"
     canonical-path-check-failed: "[Lifecycle] Возникла &#FF5D00ошибка &fпроверки канонического пути для &#FF5D00{file}&f"
 
   downloadclient:
@@ -281,9 +281,9 @@ logs:
 
   pluginjarindex:
     canonical-path-check-failed: "[PluginJarIndex] Не удалось проверить канонический путь для {file}"
-    query-no-match: "[PluginJarIndex] По запросу «{query}» не найден ни один jar в plugins/"
-    indexed: "[PluginJarIndex] Проиндексировано jar-файлов в plugins/: {count}"
-    duplicate-jar: "[PluginJarIndex] В папке plugins лежат два файла плагина &#FF5D00{plugin}&f: {first} и {second}. Сервер не сможет загрузить оба, лишний нужно удалить!"
+    query-no-match: "[PluginJarIndex] По запросу «{query}» не найден ни один jar в папке с плагинами"
+    indexed: "[PluginJarIndex] Проиндексировано jar-файлов в папке с плагинами: {count}"
+    duplicate-jar: "[PluginJarIndex] В папке с плагинами лежат два файла плагина &#FF5D00{plugin}&f: {first} и {second}. Сервер не сможет загрузить оба, лишний нужно удалить!"
     no-descriptor: "[PluginJarIndex] В {file} нет ни plugin.yml, ни paper-plugin.yml"
     descriptor-read-failed: "[PluginJarIndex] Не удалось прочитать дескриптор из {file}: {error}"
 
@@ -450,6 +450,7 @@ logs:
 
   updatecommand:
     reloading-dependents: "Перезагрузка зависимых плагинов после пакетного обновления ({count} шт.): {plugins}"
+    dependents-deferred: "[BatchUpdater] Зависимые плагины ({count} шт.) отложены до рестарта сервера из-за соображений безопасности: {plugins}"
 
   chatbuttonfactory:
     url-looks-like-markup: "[ChatButtonFactory] Значение url похоже на разметку, а не на ссылку, кнопка не станет кликабельной: {value}"
@@ -515,7 +516,7 @@ logs:
     port-in-use: "Сетевой порт или адрес уже занят другим процессом"
     circular-deps: "Обнаружена циклическая зависимость между плагинами"
     invalid-description: "Файл plugin.yml / paper-plugin.yml повреждён или отсутствует"
-    duplicate-plugin: "Конфликт плагинов: в папке plugins/ уже есть другой плагин с таким же именем или провайдером"
+    duplicate-plugin: "Конфликт плагинов: в папке с плагинами уже есть другой плагин с таким же именем или провайдером"
     paper-bootstrapper: "Плагин использует Paper Bootstrapper (раннюю загрузку до старта сервера), ядро Paper запрещает загружать такие плагины на лету"
 
   prefix:

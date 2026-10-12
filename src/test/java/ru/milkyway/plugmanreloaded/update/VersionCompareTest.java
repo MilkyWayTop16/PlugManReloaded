@@ -1,5 +1,6 @@
 package ru.milkyway.plugmanreloaded.update;
 
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -84,5 +85,33 @@ class VersionCompareTest {
                 "1.1 (эквивалент 1.1.0) обязан быть новее 1.0.9");
         assertFalse(VersionCompare.isNewer("1.0", "1.0.0"),
                 "1.0 и 1.0.0 обязаны считаться эквивалентными — отсутствующий хвост трактуется как 0, а не игнорируется");
+    }
+
+    @Test
+    @DisplayName("supportsGameVersion with plus suffix (1.21+ on 1.21.4)")
+    void supportsGameVersionPlusSuffix() {
+        assertTrue(VersionCompare.supportsGameVersion(List.of("1.21+"), "1.21.4"),
+                "1.21+ должно поддерживать 1.21.4");
+    }
+
+    @Test
+    @DisplayName("supportsGameVersion with range (1.16 - 1.21 on 1.21.4)")
+    void supportsGameVersionRange116To121() {
+        assertTrue(VersionCompare.supportsGameVersion(List.of("1.16 - 1.21"), "1.21.4"),
+                "1.16 - 1.21 должно поддерживать 1.21.4");
+    }
+
+    @Test
+    @DisplayName("supportsGameVersion with range (1.16-1.20 on 1.20.4)")
+    void supportsGameVersionRange116To120() {
+        assertTrue(VersionCompare.supportsGameVersion(List.of("1.16-1.20"), "1.20.4"),
+                "1.16-1.20 должно поддерживать 1.20.4");
+    }
+
+    @Test
+    @DisplayName("supportsGameVersion with greater-or-equal (>=1.20 on 1.21.4)")
+    void supportsGameVersionGreaterOrEqual() {
+        assertTrue(VersionCompare.supportsGameVersion(List.of(">=1.20"), "1.21.4"),
+                ">=1.20 должно поддерживать 1.21.4");
     }
 }

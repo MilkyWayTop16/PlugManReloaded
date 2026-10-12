@@ -23,10 +23,12 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class GithubSource implements UpdateSource {
@@ -45,6 +47,13 @@ public final class GithubSource implements UpdateSource {
 
     private static final Pattern REPO_REF =
             Pattern.compile("[A-Za-z0-9._-]+/[A-Za-z0-9._-]+");
+
+    private static final Pattern GAME_VERSION_PATTERN = Pattern.compile(
+            "(?<![\\d.])(?:mc|minecraft)?[vV]?(?:(1\\.(?:1[2-9]|2[0-9])(?:\\.\\d+)?(?:\\+|\\s*-\\s*1\\.(?:1[2-9]|2[0-9])(?:\\.\\d+)?)?)|(2[4-9]\\.\\d+(?:\\.\\d+)?))(?!\\d)",
+            Pattern.CASE_INSENSITIVE
+    );
+
+    private static final Set<String> DEFAULT_LOADERS = Set.of("bukkit", "spigot", "paper", "purpur", "folia");
 
     private volatile long rateLimitWarnedUntil = 0L;
     private volatile long rateLimitedUntil = 0L;
@@ -357,14 +366,17 @@ public final class GithubSource implements UpdateSource {
             channel = ReleaseChannel.RELEASE;
         }
 
+        Set<String> loaders = extractLoaders(release, best);
+        Set<String> gameVersions = extractGameVersions(release, best);
+
         return new RemoteVersion(
                 ID,
                 match.projectRef(),
                 match.projectUrl(),
                 tag,
                 channel,
-                Set.of(),
-                Set.of(),
+                gameVersions,
+                loaders,
                 string(best, "browser_download_url"),
                 string(best, "name"),
                 null,
@@ -372,6 +384,42 @@ public final class GithubSource implements UpdateSource {
                 best.has("size") ? best.get("size").getAsLong() : 0L,
                 parseInstant(string(release, "published_at"))
         );
+    }
+
+    private Set<String> extractLoaders(JsonObject release, JsonObject asset) {
+        Set<String> loaders = new LinkedHashSet<>();
+        String text = (string(release, "name") + " " + string(asset, "name") + " " + string(release, "tag_name")).toLowerCase(Locale.ROOT);
+        for (String loader : List.of("paper", "purpur", "folia", "spigot", "bukkit", "velocity", "bungee", "fabric", "forge", "neoforge")) {
+            if (text.contains(loader)) {
+                loaders.add(loader);
+            }
+        }
+        if (loaders.isEmpty()) {
+            return DEFAULT_LOADERS;
+        }
+        return Collections.unmodifiableSet(loaders);
+    }
+
+    private Set<String> extractGameVersions(JsonObject release, JsonObject asset) {
+        Set<String> versions = new LinkedHashSet<>();
+        collectGameVersions(string(release, "name"), versions);
+        collectGameVersions(string(release, "tag_name"), versions);
+        collectGameVersions(string(asset, "name"), versions);
+        if (versions.isEmpty()) {
+            collectGameVersions(string(release, "body"), versions);
+        }
+        return versions.isEmpty() ? Set.of() : Collections.unmodifiableSet(versions);
+    }
+
+    private void collectGameVersions(@Nullable String text, Set<String> target) {
+        if (text == null || text.isBlank()) return;
+        Matcher m = GAME_VERSION_PATTERN.matcher(text);
+        while (m.find()) {
+            String v = m.group(1) != null ? m.group(1) : m.group(2);
+            if (v != null && !v.isBlank()) {
+                target.add(v.trim());
+            }
+        }
     }
 
     private @Nullable JsonObject pickAsset(JsonArray assets, String pluginName) {

@@ -22,35 +22,121 @@ public final class VersionCompare {
             return false;
         }
         String server = serverVersion.trim();
+        if (server.startsWith("v") || server.startsWith("V")) {
+            server = server.substring(1).trim();
+        }
+
         for (String gameVersion : gameVersions) {
             if (gameVersion == null || gameVersion.isBlank()) continue;
             String clean = gameVersion.trim();
+            if (clean.startsWith("v") || clean.startsWith("V")) {
+                clean = clean.substring(1).trim();
+            }
             if (clean.equalsIgnoreCase("all") || clean.equals("*")) {
                 return true;
             }
             if (clean.equalsIgnoreCase(server)) {
                 return true;
             }
+
             if (clean.endsWith(".x") || clean.endsWith(".X") || clean.endsWith(".*")) {
                 String prefix = clean.substring(0, clean.length() - 2);
                 if (server.equals(prefix) || server.startsWith(prefix + ".")) {
                     return true;
                 }
             }
+
             if (clean.matches("^\\d+\\.\\d+$")
                     && (server.equals(clean) || server.startsWith(clean + "."))) {
                 return true;
             }
-            int dash = clean.indexOf('-');
-            if (dash > 0) {
-                String min = clean.substring(0, dash).trim();
-                String max = clean.substring(dash + 1).trim();
-                if (compare(server, min) >= 0 && compare(server, max) <= 0) {
+
+            if (clean.endsWith("+")) {
+                String base = clean.substring(0, clean.length() - 1).trim();
+                if (server.equals(base) || server.startsWith(base + ".") || compare(server, base) >= 0) {
                     return true;
+                }
+            }
+
+            if (clean.startsWith(">=")) {
+                String base = clean.substring(2).trim();
+                if (server.equals(base) || server.startsWith(base + ".") || compare(server, base) >= 0) {
+                    return true;
+                }
+            } else if (clean.startsWith(">")) {
+                String base = clean.substring(1).trim();
+                if (compare(server, base) > 0) {
+                    return true;
+                }
+            }
+
+            if ((clean.startsWith("[") || clean.startsWith("(")) && (clean.endsWith("]") || clean.endsWith(")"))) {
+                String inner = clean.substring(1, clean.length() - 1).trim();
+                int comma = inner.indexOf(',');
+                if (comma >= 0) {
+                    String min = inner.substring(0, comma).trim();
+                    String max = inner.substring(comma + 1).trim();
+                    boolean minInc = clean.startsWith("[");
+                    boolean maxInc = clean.endsWith("]");
+                    if (isWithinRange(server, min, max, minInc, maxInc)) {
+                        return true;
+                    }
+                }
+            }
+
+            String normalizedRange = clean.replace('\u2013', '-').replace('\u2014', '-');
+            if (normalizedRange.contains(" to ")) {
+                normalizedRange = normalizedRange.replace(" to ", "-");
+            }
+            int dash = normalizedRange.indexOf('-');
+            if (dash > 0) {
+                String min = normalizedRange.substring(0, dash).trim();
+                String max = normalizedRange.substring(dash + 1).trim();
+                if (parseable(min) && parseable(max)) {
+                    if (isWithinRange(server, min, max, true, true)) {
+                        return true;
+                    }
                 }
             }
         }
         return false;
+    }
+
+    private static boolean isWithinRange(String server, String min, String max, boolean minInclusive, boolean maxInclusive) {
+        if (!min.isBlank()) {
+            if (min.endsWith(".x") || min.endsWith(".*")) {
+                min = min.substring(0, min.length() - 2);
+            }
+            if (minInclusive) {
+                if (!server.equals(min) && !server.startsWith(min + ".") && compare(server, min) < 0) {
+                    return false;
+                }
+            } else {
+                if (compare(server, min) <= 0) {
+                    return false;
+                }
+            }
+        }
+
+        if (!max.isBlank()) {
+            boolean maxWildcard = max.endsWith(".x") || max.endsWith(".*");
+            if (maxWildcard) {
+                max = max.substring(0, max.length() - 2);
+            }
+            boolean maxTwoPart = max.matches("^\\d+\\.\\d+$");
+            if (maxInclusive) {
+                if (maxTwoPart || maxWildcard) {
+                    if (server.equals(max) || server.startsWith(max + ".")) {
+                        return true;
+                    }
+                }
+                return compare(server, max) <= 0;
+            } else {
+                return compare(server, max) < 0;
+            }
+        }
+
+        return true;
     }
 
     public static int compare(String left, String right) {

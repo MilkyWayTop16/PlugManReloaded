@@ -11,7 +11,9 @@ import ru.milkyway.plugmanreloaded.managers.UpdateDisplayManager;
 import ru.milkyway.plugmanreloaded.update.UpdateModels.InstallResult;
 import ru.milkyway.plugmanreloaded.update.UpdateModels.InstallStatus;
 import ru.milkyway.plugmanreloaded.update.UpdateModels.UpdateCandidate;
+import ru.milkyway.plugmanreloaded.managers.SafetyManager;
 import ru.milkyway.plugmanreloaded.utils.Log;
+import ru.milkyway.plugmanreloaded.utils.TaskScheduler;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -134,7 +136,7 @@ public final class BatchUpdater {
                 ));
             }
 
-            reloadAffectedDependents(hotSwappedNow);
+            reloadAffectedDependents(sender, listener, hotSwappedNow);
             return;
         }
 
@@ -186,6 +188,12 @@ public final class BatchUpdater {
     }
 
     public void reloadAffectedDependents(final @Nullable List<UpdateCandidate> queue) {
+        reloadAffectedDependents(null, null, queue);
+    }
+
+    public void reloadAffectedDependents(final @Nullable CommandSender sender,
+                                         final @Nullable BatchUpdateListener listener,
+                                         final @Nullable List<UpdateCandidate> queue) {
         if (queue == null || queue.isEmpty()) return;
 
         final Set<String> queueNames = new HashSet<>();
@@ -199,6 +207,7 @@ public final class BatchUpdater {
         final Map<String, DependencyNode> graph = graphManager.buildGraph(true);
 
         final Set<String> affected = new HashSet<>();
+        final List<String> deferred = new ArrayList<>();
         for (final UpdateCandidate c : queue) {
             if (c == null) continue;
             final String name = c.identity().pluginName();
@@ -206,10 +215,24 @@ public final class BatchUpdater {
             for (final String dep : deps) {
                 if (!queueNames.contains(dep.toLowerCase(Locale.ROOT))) {
                     final Plugin depPlugin = plugin.getPluginLifecycleManager().getPlugin(dep);
-                    if (depPlugin != null && depPlugin.isEnabled() && !plugin.getPluginLifecycleManager().isProtected(depPlugin)) {
-                        affected.add(dep);
+                    if (depPlugin != null && depPlugin.isEnabled()) {
+                        if (isSafeToReload(depPlugin)) {
+                            affected.add(dep);
+                        } else if (!deferred.contains(dep)) {
+                            deferred.add(dep);
+                        }
                     }
                 }
+            }
+        }
+
+        if (!deferred.isEmpty()) {
+            Log.info("updatecommand.dependents-deferred", "count", String.valueOf(deferred.size()), "plugins", String.join(", ", deferred));
+            if (listener != null && sender != null) {
+                listener.sendAction(sender, "update.all-dependents-deferred", Map.of(
+                        "count", String.valueOf(deferred.size()),
+                        "plugins", String.join(", ", deferred)
+                ));
             }
         }
 
@@ -219,11 +242,31 @@ public final class BatchUpdater {
 
         final List<String> sorted = graphManager.sortNamesTopologically(affected);
         Log.info("updatecommand.reloading-dependents", "count", String.valueOf(sorted.size()), "plugins", String.join(", ", sorted));
-        for (final String depName : sorted) {
-            final Plugin p = plugin.getPluginLifecycleManager().getPlugin(depName);
-            if (p != null && p.isEnabled() && !plugin.getPluginLifecycleManager().isProtected(p)) {
-                plugin.getPluginLifecycleManager().reload(p);
-            }
+        scheduleSequentialReload(sorted, 0);
+    }
+
+    private boolean isSafeToReload(final @NotNull Plugin depPlugin) {
+        if (!depPlugin.isEnabled()) return false;
+        if (plugin.getPluginLifecycleManager().isProtected(depPlugin)) return false;
+        if (plugin.getConfigManager().isUnsafeToUnload(depPlugin.getName())) return false;
+        final SafetyManager.PluginRiskLevel risk = plugin.getPluginLifecycleManager().getSafetyManager().assess(depPlugin).riskLevel();
+        return risk != SafetyManager.PluginRiskLevel.UNLOADABLE_HOSTILE
+                && risk != SafetyManager.PluginRiskLevel.CRITICAL_PROTECTED
+                && risk != SafetyManager.PluginRiskLevel.API_PROVIDER
+                && risk != SafetyManager.PluginRiskLevel.LOW_LEVEL_NETWORK;
+    }
+
+    private void scheduleSequentialReload(final @NotNull List<String> sorted, final int index) {
+        if (index >= sorted.size()) {
+            return;
+        }
+        final String depName = sorted.get(index);
+        final Plugin p = plugin.getPluginLifecycleManager().getPlugin(depName);
+        if (p != null && isSafeToReload(p)) {
+            plugin.getPluginLifecycleManager().reload(p);
+        }
+        if (index + 1 < sorted.size()) {
+            TaskScheduler.runSyncLater(plugin, () -> scheduleSequentialReload(sorted, index + 1), 10L);
         }
     }
 }

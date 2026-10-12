@@ -1,4 +1,4 @@
-﻿#
+#
 #
 #         █▀█ █░░ █░█ █▀▀ █▀▄▀█ ▄▀█ █▄░█ █▀█ █▀▀ █░░ █▀█ ▄▀█ █▀▄ █▀▀ █▀▄
 #         █▀▀ █▄▄ █▄█ █▄█ █░▀░█ █▀█ █░▀█ █▀▄ ██▄ █▄▄ █▄█ █▀█ █▄▀ ██▄ █▄▀
@@ -1055,6 +1055,9 @@ actions:
     all-pending-restart:
       - "[message] &#FB8808▶ Attention! &fPlugin(s) &#FB8808{plugins} &fwere staged into &#FB8808update/ &fand will take effect after server &#FB8808restart&f"
       - "[sound] BLOCK_LEVER_CLICK"
+    all-dependents-deferred:
+      - "[message] &#FB8808▶ Heads up! &fDependent plugins &#FB8808{plugins} &fwere not reloaded on the fly for stability and will apply upon restart"
+      - "[sound] BLOCK_LEVER_CLICK"
     summary:
       - "[message] "
       - "[message]   &#FFFF00▶ &fCheck results:"
@@ -1294,7 +1297,7 @@ actions:
           - ""
     skipped-dependents:
       - "[message] &#FB8808▶ Attention! &fThe bulk update skipped &#FB8808{count} &fplugins that have dependents:"
-      - "[message]   &7{plugins}"
+      - "[message]   &#FB8808{plugins}"
       - "[message]   &#00FF5A◆ &fUpdate them one by one: &#00FF5A/plm update <plugin>"
       - "[sound] BLOCK_LEVER_CLICK"
 
@@ -1560,13 +1563,20 @@ actions:
       - "[message]   &#FFFF00◆ &fFor plugin &#FFFF00«{plugin}» &fto work properly, you need"
       - "[message]   &fto download and enable the following dependencies:"
       - "[message] "
-      - "[message] {dependency-list}"
+      - "[message]      {dependency-list}"
       - "[message] "
       - "[message]       &#FFFF00◆ &fDo you want to download it with all its dependencies?"
       - "[message] "
       - "[message]          {confirm-download-deps-button}   {cancel-button}"
       - "[message] "
       - "[sound] BLOCK_NOTE_BLOCK_PLING"
+    dependency-entry:
+      separator: "&f, "
+      required: "&#FFFF00{plugin} &f(&#FFFF00{source}&f)"
+      disabled: "&#FFFF00{plugin} &f(&#FB8808{status}&f)"
+      unloaded: "&#FFFF00{plugin} &f(&#FFAA00{status}&f)"
+      status-disabled: "disabled on server"
+      status-unloaded: "found in the plugins folder"
     cancelled:
       - "[message] &#FFFF00◆ &fInstalling plugin &#FFFF00«{plugin}» &fwas successfully cancelled!"
       - "[sound] ENTITY_EXPERIENCE_ORB_PICKUP"

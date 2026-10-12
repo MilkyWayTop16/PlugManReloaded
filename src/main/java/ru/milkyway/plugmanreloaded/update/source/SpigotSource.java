@@ -16,6 +16,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -213,10 +214,11 @@ public final class SpigotSource implements UpdateSource {
         boolean premium = isPremiumResource(match.projectRef());
         boolean canDownload = !premium && !isExternalResource(match.projectRef());
         Set<String> loaders = Set.of("bukkit", "spigot", "paper", "purpur", "folia");
+        Set<String> gameVersions = testedVersions(match.projectRef());
         boolean newest = true;
         for (JsonElement element : array) {
             if (!element.isJsonObject()) continue;
-            RemoteVersion version = parseVersion(element.getAsJsonObject(), match, premium, canDownload && newest, loaders);
+            RemoteVersion version = parseVersion(element.getAsJsonObject(), match, premium, canDownload && newest, loaders, gameVersions);
             if (version != null) {
                 versions.add(version);
                 newest = false;
@@ -248,7 +250,7 @@ public final class SpigotSource implements UpdateSource {
         if (Boolean.TRUE.equals(cache.get(missKey, Boolean.class))) {
             return;
         }
-        HttpJson.Response info = HttpJson.get(API + "/resources/" + resourceId + "?fields=id,name,premium,external,file");
+        HttpJson.Response info = HttpJson.get(API + "/resources/" + resourceId + "?fields=id,name,premium,external,file,testedVersions");
         if (!info.ok() || !info.body().isJsonObject()) {
             if (!info.transportFailure()) {
                 cache.put(missKey, Boolean.TRUE);
@@ -272,6 +274,32 @@ public final class SpigotSource implements UpdateSource {
         if (name != null && !name.isBlank()) {
             cache.put(ID + ":title:" + resourceId, name);
         }
+        Set<String> tested = new LinkedHashSet<>();
+        if (json.has("testedVersions") && json.get("testedVersions").isJsonArray()) {
+            for (JsonElement el : json.getAsJsonArray("testedVersions")) {
+                if (el != null && !el.isJsonNull() && el.isJsonPrimitive()) {
+                    String v = el.getAsString().trim();
+                    if (!v.isBlank()) {
+                        tested.add(v);
+                    }
+                }
+            }
+        }
+        cache.put(ID + ":tested:" + resourceId, Collections.unmodifiableSet(tested));
+    }
+
+    private Set<String> testedVersions(@Nullable String resourceId) {
+        if (resourceId == null || resourceId.isBlank()) {
+            return Set.of();
+        }
+        String key = ID + ":tested:" + resourceId;
+        @SuppressWarnings("unchecked")
+        Set<String> cached = cache.get(key, Set.class);
+        if (cached == null) {
+            loadResourceFlags(resourceId);
+            cached = cache.get(key, Set.class);
+        }
+        return cached != null ? cached : Set.of();
     }
 
     @Override
@@ -322,7 +350,7 @@ public final class SpigotSource implements UpdateSource {
     }
 
     private @Nullable RemoteVersion parseVersion(JsonObject json, ProjectMatch match, boolean premium, boolean withDownload,
-                                       Set<String> loaders) {
+                                       Set<String> loaders, Set<String> gameVersions) {
         try {
             String name = string(json, "name");
             if (name == null || name.isBlank()) {
@@ -342,7 +370,7 @@ public final class SpigotSource implements UpdateSource {
                     match.projectUrl(),
                     name,
                     ReleaseChannel.parse(name),
-                    Set.of(),
+                    gameVersions != null ? gameVersions : Set.of(),
                     loaders,
                     downloadUrl,
                     fileName,

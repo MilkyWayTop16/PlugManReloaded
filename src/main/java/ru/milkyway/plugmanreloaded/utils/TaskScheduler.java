@@ -102,6 +102,11 @@ public final class TaskScheduler {
                     plugin, asConsumer(task), safeDelayTicks);
         }
 
+        if (Bukkit.getServer() == null || Bukkit.getScheduler() == null) {
+            task.run();
+            return null;
+        }
+
         return Bukkit.getScheduler().runTaskLater(plugin, task, safeDelayTicks);
     }
 
