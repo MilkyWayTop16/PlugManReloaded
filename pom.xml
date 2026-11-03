@@ -6,7 +6,7 @@
 
     <groupId>ru.milkyway</groupId>
     <artifactId>PlugManReloaded</artifactId>
-    <version>1.1-beta</version>
+    <version>1.0-beta</version>
     <packaging>jar</packaging>
 
     <name>PlugManReloaded</name>
@@ -133,6 +133,7 @@
 
     <build>
         <defaultGoal>clean package</defaultGoal>
+        <finalName>PlugManReloaded v${project.version}</finalName>
         <resources>
             <resource>
                 <directory>src/main/resources</directory>

@@ -22,7 +22,7 @@ body:
     attributes:
       label: PlugManReloaded Version
       description: Run `/plm info PlugManReloaded` or check console startup log.
-      placeholder: "e.g. 1.1-beta"
+      placeholder: "e.g. v1.0-beta"
     validations:
       required: true
 

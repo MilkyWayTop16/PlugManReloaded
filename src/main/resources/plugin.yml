@@ -1,5 +1,5 @@
 name: PlugManReloaded
-version: '1.1-beta'
+version: 'v1.0-beta'
 main: ru.milkyway.plugmanreloaded.PlugManReloaded
 api-version: 1.16
 author: vkusniy_milkyway

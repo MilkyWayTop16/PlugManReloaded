@@ -209,7 +209,7 @@ class PlugManAPIImplTest {
     void deleteProtectedPluginByNameReturnsErrorAndPreservesJar(@TempDir Path tempDir) throws Exception {
         Path pluginsDir = tempDir.resolve("plugins");
         Files.createDirectories(pluginsDir);
-        Path jarPath = createPluginJar(pluginsDir.resolve("PlugManReloaded.jar"), "PlugManReloaded", "1.1-beta");
+        Path jarPath = createPluginJar(pluginsDir.resolve("PlugManReloaded.jar"), "PlugManReloaded", "v1.0-beta");
 
         sun.misc.Unsafe unsafe = getUnsafe();
         LifecycleManager lm = (LifecycleManager) unsafe.allocateInstance(LifecycleManager.class);

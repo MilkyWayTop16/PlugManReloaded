@@ -28,8 +28,8 @@ public class PluginJarInspectionIntegrationTest {
 
     @Test
     void testCompiledShadedJarStructure() throws IOException {
-        File targetJar = new File("target/PlugManReloaded-1.1-beta.jar");
-        Assumptions.assumeTrue(targetJar.exists(), "target/PlugManReloaded-1.1-beta.jar is packaged after test phase");
+        File targetJar = new File("target/PlugManReloaded v1.0-beta.jar");
+        Assumptions.assumeTrue(targetJar.exists(), "target/PlugManReloaded v1.0-beta.jar is packaged after test phase");
         assertTrue(targetJar.length() > 500_000, "Shaded jar size must be > 500KB");
 
         assertTrue(JarValidator.isValidPluginJar(targetJar));
